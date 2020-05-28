@@ -11,23 +11,27 @@ services:
         user: aquarion
         uid: 502
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: etc/Dockerfile/thalium.Dockerfile
     image: thalium
     container_name: thalium-app
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
       - .:/var/www
+      - /Volumes/RPG:/mnt/rpg
     networks:
       - thalium
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    build:
+      context: ./
+      dockerfile: etc/Dockerfile/elasticsearch.Dockerfile
     container_name: elasticsearch
     environment:
       - node.name=es01
       - cluster.name=es-docker-cluster
       # - discovery.seed_hosts=es02,es03
       # - cluster.initial_master_nodes=es01,es02,es03
+      - cluster.initial_master_nodes=es01
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
@@ -35,7 +39,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - elasticsearch:/usr/share/elasticsearch
+      - storage/elasticsearch:/usr/share/elasticsearch
     # ports:
     #   - 9200:9200
     networks:
