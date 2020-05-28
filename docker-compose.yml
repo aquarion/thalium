@@ -33,19 +33,17 @@ services:
       # - cluster.initial_master_nodes=es01,es02,es03
       - cluster.initial_master_nodes=es01
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - storage/elasticsearch:/usr/share/elasticsearch
+      - ./storage/elasticsearch:/usr/share/elasticsearch
     # ports:
     #   - 9200:9200
     networks:
       - thalium
-    volumes:
-      - .:/var/www
   db:
     image: mysql:5.7
     container_name: thalium-db
