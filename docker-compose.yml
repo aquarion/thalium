@@ -4,6 +4,14 @@ networks:
   thalium:
     driver: bridge
 
+volumes:
+  libris: 
+    driver: local
+    driver_opts:
+      type: cifs
+      device: //192.168.0.2/RPG
+      o: username=guest
+
 services:
   app:
     build:
@@ -18,9 +26,30 @@ services:
     working_dir: /var/www/
     volumes:
       - .:/var/www
-      - /Volumes/RPG:/mnt/rpg
+      - libris:/mnt/rpg
     networks:
       - thalium
+    depends_on:
+      - elasticsearch
+      - redis
+      - db
+      - nginx
+  scheduler:
+    build:
+      context: ./
+      dockerfile: etc/Dockerfile/scheduler.Dockerfile
+    container_name: scheduler-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - .:/var/www
+      - libris:/mnt/rpg
+    networks:
+      - thalium
+    depends_on:
+      - elasticsearch
+      - redis
+      - db
   elasticsearch:
     build:
       context: ./
@@ -33,7 +62,7 @@ services:
       # - cluster.initial_master_nodes=es01,es02,es03
       - cluster.initial_master_nodes=es01
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "ES_JAVA_OPTS=-Xms2g  -Xms2g"
     ulimits:
       memlock:
         soft: -1

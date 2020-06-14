@@ -23,6 +23,9 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 RUN pecl install xdebug-2.9.5 \
     && docker-php-ext-enable xdebug
 
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
