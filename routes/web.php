@@ -18,5 +18,6 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::get('/reindex', 'LibrisController@reindex');
+Route::get('/delete', 'LibrisController@delete');
 
 Route::get('/', 'LibrisController@home');
