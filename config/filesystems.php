@@ -68,7 +68,7 @@ return [
         'libris' => [
             'driver' => 'local',
             'root' => '/mnt/rpg/Systems',
-            'url' => env('APP_URL').'/libris_files',
+            'url' => env('APP_URL').'/_libris',
             'visibility' => 'public',
         ],
 

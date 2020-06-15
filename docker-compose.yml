@@ -62,7 +62,7 @@ services:
       # - cluster.initial_master_nodes=es01,es02,es03
       - cluster.initial_master_nodes=es01
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms2g  -Xms2g"
+      - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
     ulimits:
       memlock:
         soft: -1
@@ -105,5 +105,6 @@ services:
     volumes:
       - ./:/var/www
       - ./etc/nginx:/etc/nginx/conf.d
+      - libris:/mnt/rpg
     networks:
       - thalium

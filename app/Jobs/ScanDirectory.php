@@ -51,20 +51,16 @@ class ScanDirectory implements ShouldQueue
 
         foreach ($files as $filename) {
             $tags = explode('/', $filename);
-            // Execute scan job.
             Log::debug("[ScanDir] New File Scan Job: $filename");
             ScanPDF::dispatch($system, $tags, $filename);
-            //$return[$system]['files'][$filename] = $this->addDocument($system, $tags, $filename);
         }
 
 
         foreach ($subdirs as $directory) {
             $tags = explode('/', $directory);
-            $system = array_unshift($tags);
+            array_unshift($tags);
 
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
-            // Execute scan job.
-            //$return[$system]['files'][$filename] = $this->addDocument($system, $tags, $filename);
             ScanDirectory::dispatch($system, $tags, $directory);
         }
     }

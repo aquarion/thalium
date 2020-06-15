@@ -44,29 +44,35 @@ class ScanPDF implements ShouldQueue
     {
         $this->libris = $libris;
 
-        Log::debug("[ScanFile] Hello ".$this->filename);
+        Log::debug("[Scanfile] Hello ".$this->filename);
 
         $mimeType = Storage::disk('libris')->mimeType($this->filename);
 
         if($mimeType !== "application/pdf"){
-            Log::debug("[ScanFile] Ignoring $mimeType file ".$this->filename);
+            Log::debug("[Scanfile] Ignoring $mimeType file ".$this->filename);
+            $this->delete();
+            return;
         }
         
         if($doc = $this->libris->fetchDocument($this->filename)){
-            Log::Debug("[ScanFile] Already got");
-            Log::Debug($doc);
+            Log::Debug("[Scanfile] Already got ".$this->filename);
+            $this->delete();
             return;
         }
 
-        Redis::funnel('ScanPDF')->limit(1)->then(function () {
-            Log::debug("[ScanFile] Got lock for ".$this->filename);
+        Redis::funnel('ScanPDF')->limit(3)->then(function () {
+            Log::debug("[Scanfile] Got lock for ".$this->filename);
             $this->libris->addDocument($this->system, $this->tags, $this->filename);
+            Log::debug("[Scanfile] Finished ".$this->filename);
+            return;
         }, function () {
+            $release = 60+rand(0,20);
             // Could not obtain lock...
-
-            return $this->release(10);
+            Log::debug("[Scanfile] ".$this->filename." bounced ".$release);
+            return $this->release($release);
         });
-        Log::debug("[ScanFile] Finished ".$this->filename);
+
+        // Log::debug("[ScanFile] Bye ".$this->filename);
     }
 
     /**
@@ -76,7 +82,7 @@ class ScanPDF implements ShouldQueue
      */
     public function retryUntil()
     {
-        Log::debug("[ScanFile] Add 60 secs to ".$this->filename);
+        Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60*60*24);
     }
 }

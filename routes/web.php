@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::get('/reindex', 'LibrisController@reindex');
-Route::get('/delete', 'LibrisController@delete');
+Route::get('/delete', 'LibrisController@deleteIndex');
+Route::get('/update', 'LibrisController@updateIndex');
+Route::get('/download/{docid}', 'LibrisController@downloadDoc')->name("downloadDoc")->where('docid', '.*');;
+Route::get('/system/{system}', 'LibrisController@allBySystem');
 
 Route::get('/', 'LibrisController@home');

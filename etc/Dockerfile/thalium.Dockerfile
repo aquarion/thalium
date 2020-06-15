@@ -4,6 +4,8 @@ FROM php:7.4-fpm
 ARG user
 ARG uid
 
+COPY etc/debian_main.list /etc/apt/sources.list.d/debian_main
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -12,13 +14,14 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    ghostscript
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd dom
 
 RUN pecl install xdebug-2.9.5 \
     && docker-php-ext-enable xdebug
