@@ -28,10 +28,8 @@ class ScanPDF implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($system, $tags, $filename)
+    public function __construct($filename)
     {
-        $this->system = $system;
-        $this->tags = $tags;
         $this->filename = $filename;
     }
 
@@ -62,7 +60,7 @@ class ScanPDF implements ShouldQueue
 
         Redis::funnel('ScanPDF')->limit(3)->then(function () {
             Log::debug("[Scanfile] Got lock for ".$this->filename);
-            $this->libris->addDocument($this->system, $this->tags, $this->filename);
+            $this->libris->addDocument($this->filename);
             Log::debug("[Scanfile] Finished ".$this->filename);
             return;
         }, function () {
@@ -82,7 +80,7 @@ class ScanPDF implements ShouldQueue
      */
     public function retryUntil()
     {
-        Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
+        // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60*60*24);
     }
 }

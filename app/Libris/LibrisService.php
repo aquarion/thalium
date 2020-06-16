@@ -16,14 +16,24 @@ class LibrisService implements LibrisInterface
 {
     public $index_name = "libris";
 
-    public function addDocument($system, $tags, $filename)
+    public function addDocument($file)
     {
         set_time_limit ( 120 );
         ini_set('memory_limit', '2G');
 
-        $size = Storage::disk('libris')->size($filename);
+        $size = Storage::disk('libris')->size($file);
+        $mimeType = Storage::disk('libris')->mimeType($file);
 
-        $mimeType = Storage::disk('libris')->mimeType($filename);
+        $tags = explode('/', $file);
+
+        $system = array_shift($tags);
+        $system = preg_replace('!\.pdf$!', '', $system);
+        $system = preg_replace('!-|_!', ' ', $system);
+
+        $boom = explode("/", $file);
+        $filename = array_pop($boom);
+        $filename = preg_replace('!\.pdf$!', '', $filename);
+        $title = preg_replace('!-|_!', ' ', $filename);
 
         Log::info("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb");
 
@@ -31,7 +41,7 @@ class LibrisService implements LibrisInterface
              Log::info("[AddDoc] $filename is not a pdf");
              return true;
         }
-        if ($doc = $this->fetchDocument($filename)){
+        if ($doc = $this->fetchDocument($file)){
              Log::info("[AddDoc] $filename is already in the index");
              // return true;
         }
@@ -41,9 +51,10 @@ class LibrisService implements LibrisInterface
             return true;
         }
 
+        Log::debug("[AddDoc] Name: $filename, System: $system, Tags: ".implode(",",$tags));
 
         Log::debug("[AddDoc] Parsing $filename ...");
-        $pdf_content = Storage::disk('libris')->get($filename);
+        $pdf_content = Storage::disk('libris')->get($file);
 
         $ver_string = substr($pdf_content, 0, 72);
         preg_match('!\d+\.\d+!', $ver_string, $match); 
@@ -68,21 +79,23 @@ class LibrisService implements LibrisInterface
         }
 
 
+        Log::debug("[AddDoc] $filename Loading Parser");
         $parser = new \Smalot\PdfParser\Parser();
         $pdf    = $parser->parseContent($pdf_content);
         unset($pdf_content);
 
-        $pages  = $pdf->getPages();
-        $pageCount = count($pages);
-
+        Log::debug("[AddDoc] $filename Getting Details");
         $details  = $pdf->getDetails();
 
         $params = [
             'index' => $this->index_name,
-            'id' => $filename,
-            'routing' => $filename,
+            'id' => $file,
+            'routing' => $file,
             'body' => [
                 'system' => $system,
+                'filename' => $filename,
+                'path' => $file,
+                'title' => $title,
                 'tags' => $tags,
                 "page_relation" => [
                     "name" => "document",
@@ -91,34 +104,39 @@ class LibrisService implements LibrisInterface
                 "doc_type" => "document"
             ],
         ];
+        Log::debug("[AddDoc] $filename Indexing");
         $return = Elasticsearch::index($params);
 
-        return;
+        Log::info("[AddDoc] $filename Getting Pages");
+        $pages  = $pdf->getPages();
+        $pageCount = count($pages);
 
         foreach($pages as $pageIndex => $page){
             $pageNo = $pageIndex + 1;
             set_time_limit ( 30 );
 
-            Log::info("[AddDoc] $filename $pageNo/$pageCount");
             // $pageNo
             // $content
 
-            try {
                 $text = $page->getText();
-            } catch (\Exception $e) {
-                Log::error("Error on $filename $pageNo ".$e);
-            }
+            // try {
+            // } catch (\Exception $e) {
+            //     Log::error("Error on $filename $pageNo: ".$e->getMessage());
+            // }
 
             $params = [
                 'index' => $this->index_name,
-                'id' => $filename."/".$pageNo,
+                'id' => $file."/".$pageNo,
                 'routing' => $filename,
-                'pipeline' => 'attachment_pipeline', // <----- here
+                'pipeline' => 'attachment_pipeline',
                 'body' => [
                     'system' => $system,
                     'tags' => $tags,
                     'pageNo' => $pageNo,
                     "doc_type" => "page",
+                    'filename' => $filename,
+                    'path' => $file,
+                    'title' => $title,
                     'data' => base64_encode($text),
                     "page_relation" => [
                         "name" => "page",
@@ -128,6 +146,7 @@ class LibrisService implements LibrisInterface
             ];
             Elasticsearch::index($params);
         }
+        Log::debug("[AddDoc] $filename Added $pageCount Pages");
 
     }
 
@@ -164,6 +183,15 @@ class LibrisService implements LibrisInterface
                             'type' => 'keyword'
                         ],
                         'tags' => [
+                            'type' => 'keyword'
+                        ],
+                        'filename' => [
+                            'type' => 'keyword'
+                        ],
+                        'path' => [
+                            'type' => 'keyword'
+                        ],
+                        'title' => [
                             'type' => 'keyword'
                         ],
                         'content' => [
@@ -245,40 +273,60 @@ class LibrisService implements LibrisInterface
 
     }
 
+    public function indexFile($filename){
+        if(Storage::disk('libris')->missing($filename)){
+             Log::error("[indexFile] No Such File $filename");
+             return false;
+        }
+
+        $mimeType = Storage::disk('libris')->mimeType($filename);
+
+        if ($mimeType !== "application/pdf"){
+             Log::error("$filename is not a pdf");
+             return false;
+        }
+
+        Log::info("[indexFile] New File Scan Job: File: $filename");
+        ScanPDF::dispatch($filename);
+        return true;
+    }
+
+    public function indexDirectory($filename){
+        if(Storage::disk('libris')->getMetadata($filename)['type'] !== 'dir'){
+             Log::error("$filename is not a directory");
+             return false;
+        }
+        
+        $tags = explode('/', $filename);
+        $system = substr(array_unshift($tags), 0, -4);
+
+        Log::info("[indexDir] New Dir Scan Job: Sys: $system, Tags: ".implode(',', $tags).", File: $filename");
+        ScanDirectory::dispatch($filename);
+        return true;
+    }
+
     public function reindex()
     {
 
         $this->updatePipeline();
         $this->updateIndex();
 
+        $dirCount = 0;
+        $fileCount = 0;
+
         $systems = Storage::disk('libris')->directories('.');
         $files = Storage::disk('libris')->files('.');
 
         foreach ($systems as $system) {
-            Log::debug("[ScanDir] New Directory Scan Job: $system");
-            dump($system);
-            ScanDirectory::dispatch($system, array(), $system);
-            // break;
+            ScanDirectory::dispatch($system, array(), $system) && $dirCount++;
         }
 
         foreach ($files as $filename) {
-            $tags = explode('/', $filename);
-            $file = array_pop($tags);
-
-            // Execute scan job.
-            Log::debug("[ScanDir] New File Scan Job: $filename");
-
-            $mimeType = Storage::disk('libris')->mimeType($filename);
-
-            if ($mimeType !== "application/pdf"){
-                 Log::info("$filename is not a pdf");
-                 continue;
-             }
-
-            ScanPDF::dispatch(substr($filename, 0, -4), $tags, $filename);
+            $this->indexFile($filename) && $fileCount++;;
         }
 
-        return "Scanning ".count($systems)." directories";
+        Log::info("Scanning $dirCount directories & $fileCount files");
+        return true;
     }
 
     public function showAll($page = 0)

@@ -30,21 +30,12 @@ class LibrisController extends Controller
 
         $docresult = [];
         foreach($documents['hits']['hits'] as $doc){
-            $path = $doc['_id'];
-            $boom = explode("/", $path);
-            $filename = array_pop($boom);
-
-            $filename = preg_replace('!\.pdf$!', '', $filename);
-            $filename = preg_replace('!-|_!', ' ', $filename);
-
-            dd($doc);
-
-            $urlpath = route("downloadDoc", ['docid' => rawurlencode($doc['_routing'])] );
+            $urlpath = route("downloadDoc", ['docid' => $doc['_source']['path']] );
 
             $docresult[] = [
-                'name' => $filename,
-                'path' => $doc['_id'],
-                'download' => $urlpath,
+                'name' => $doc['_source']['title'],
+                'path' => $doc['_source']['path'],
+                'download' => Storage::disk('libris')->url($doc['_source']['path']),
             ];
         }
 
@@ -58,31 +49,9 @@ class LibrisController extends Controller
 
     }
 
-    public function reindex(LibrisInterface $libris)
-    {
-
-        // var_dump($libris->deleteIndex());
-
-        var_dump($libris->reindex());
-
-    }
-
     public function downloadDoc(LibrisInterface $libris, $docid)
     {
+        return response()->file(Storage::disk('libris')->get($docid));
 
-        Storage::disk('libris')->download($docid);
-
-    }
-
-    public function deleteIndex(LibrisInterface $libris)
-    {
-
-        var_dump($libris->deleteIndex());
-    }
-
-    public function updateIndex(LibrisInterface $libris)
-    {
-        var_dump($libris->updateIndex());
-       var_dump($libris->updatePipeline());
     }
 }

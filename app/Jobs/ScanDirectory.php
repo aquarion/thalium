@@ -17,20 +17,16 @@ class ScanDirectory implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $system;
-    protected $tags;
-    protected $directory;
+    protected $filename;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($system, $tags, $directory)
+    public function __construct($filename)
     {
-        $this->system = $system;
-        $this->tags = $tags;
-        $this->directory = $directory;
+        $this->filename = $filename;
     }
 
     /**
@@ -38,30 +34,23 @@ class ScanDirectory implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(LibrisInterface $libris)
     {
-        $system = $this->system;
-        $tags = $this->tags;
-        $directory = $this->directory;
-        Log::debug("[ScanDir] Sys: $system, Tags: ".implode(',', $tags).", Dir: $directory");
+        $filename = $this->filename;
+        Log::debug("[ScanDir] $filename");
 
-        $files = Storage::disk('libris')->files($directory);
-        $subdirs = Storage::disk('libris')->directories($directory);
-        
+        $files = Storage::disk('libris')->files($filename);
+        $subdirs = Storage::disk('libris')->directories($filename);
 
-        foreach ($files as $filename) {
-            $tags = explode('/', $filename);
-            Log::debug("[ScanDir] New File Scan Job: $filename");
-            ScanPDF::dispatch($system, $tags, $filename);
+        foreach ($files as $file) {
+            Log::debug("[ScanDir] New File Scan Job: $file");
+            $libris->indexFile($file);
         }
 
 
         foreach ($subdirs as $directory) {
-            $tags = explode('/', $directory);
-            array_unshift($tags);
-
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
-            ScanDirectory::dispatch($system, $tags, $directory);
+            $libris->indexDirectory($directory);
         }
     }
 
