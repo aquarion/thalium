@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/reindex', 'LibrisController@reindex');
 Route::get('/delete', 'LibrisController@deleteIndex');
 Route::get('/update', 'LibrisController@updateIndex');
-Route::get('/download/{docid}', 'LibrisController@downloadDoc')->name("downloadDoc")->where('docid', '.*');;
-Route::get('/system/{system}', 'LibrisController@allBySystem');
+Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
 
 Route::get('/', 'LibrisController@home');
+
+Route::get('/search', 'LibrisController@search')->name("search");

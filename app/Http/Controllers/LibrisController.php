@@ -4,6 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
+use Psr\Http\Message\ServerRequestInterface;
+use Illuminate\Http\Request;
+
+
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LibrisController extends Controller
 {
@@ -21,17 +27,16 @@ class LibrisController extends Controller
         return str_replace($entities, $replacements, $string);
     }
 
-    public function allBySystem(LibrisInterface $libris, $system, $page=1)
+    public function allBySystem(LibrisInterface $libris, Request $request, $system)
     {
-        $perpage = 10;
+        $page = $request->query('page', 1);
+        $perpage = 30;
 
-        $documents = $libris->AllBySystem($system);
+        $documents = $libris->AllBySystem($system, $page, $perpage);
         $total = $documents['hits']['total']['value'];
 
         $docresult = [];
         foreach($documents['hits']['hits'] as $doc){
-            $urlpath = route("downloadDoc", ['docid' => $doc['_source']['path']] );
-
             $docresult[] = [
                 'name' => $doc['_source']['title'],
                 'path' => $doc['_source']['path'],
@@ -39,19 +44,76 @@ class LibrisController extends Controller
             ];
         }
 
+        $paginate = new LengthAwarePaginator(
+            array(),
+            $total,
+            $perpage,
+            $page,
+        );
+
+        $paginate->setPath(url()->current());
+
         return view('system', [
             'system' => $system,
             'docs'   => $docresult,
             'page'   => $page,
-            'pages'  => ceil($total/$perpage)
+            'pages'  => ceil($total/$perpage),
+            'pagination' => $paginate,
         ]);
         // dd($libris->showAll());
 
     }
 
-    public function downloadDoc(LibrisInterface $libris, $docid)
-    {
-        return response()->file(Storage::disk('libris')->get($docid));
+    public function search(LibrisInterface $libris, Request $request){
+        $perpage = 20;
+
+        $query = $request->query('q');
+        $system = $request->query('s', false);
+        $document = $request->query('d', false);
+        $page = $request->query('page', 1);
+
+        $result = $libris->pageSearch($query,$system, $document, $page, $perpage);
+
+        $total = $result['hits']['total']['value'];
+
+        $appends = ['q' => $query ];
+
+        if($system){
+            $appends['s'] = $system;
+        }
+        if($document){
+            $appends['d'] = $documents;
+        }
+
+        $paginate = new LengthAwarePaginator(
+            array(),
+            $total,
+            $perpage,
+            $page,
+            [
+                'path' => url()->current(),
+                'appends' => $appends
+            ]
+        );
+
+        $paginate->appends($appends);
+
+
+        $values = [
+            'systems' => $result['aggregations']['systems']['buckets'],
+            'top_docs' => $result['aggregations']['parents']['buckets'],
+            'hits' => $result['hits']['hits'],
+            'query' => $query,
+            'system' => $system,
+            'document' => $document,
+            'pagination' => $paginate
+        ];
+
+        foreach($values['hits'] as &$doc){
+            $doc['_source']['download'] = Storage::disk('libris')->url($doc['_source']['path']);
+        }
+
+        return view('search', $values);
 
     }
 }

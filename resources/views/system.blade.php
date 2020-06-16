@@ -12,5 +12,8 @@
 	@endforeach
 	</ul>
 	Page {{ $page }} of {{ $pages }}
+
+
+  {!!  $pagination->render() !!}
   </div>
 @endsection
