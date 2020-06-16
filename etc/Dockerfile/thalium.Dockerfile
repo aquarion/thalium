@@ -4,7 +4,7 @@ FROM php:7.4-fpm
 ARG user
 ARG uid
 
-COPY etc/debian_main.list /etc/apt/sources.list.d/debian_main
+COPY etc/debian_contrib.list /etc/apt/sources.list.d/debian_contrib.list
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
