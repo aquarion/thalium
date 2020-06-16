@@ -37,6 +37,10 @@ class LibrisIndex extends Command
         parent::__construct();
     }
 
+    public function debug($out){
+        $this->line($out);
+    }
+
     /**
      * Execute the console command.
      *
@@ -52,7 +56,7 @@ class LibrisIndex extends Command
                 $libris->indexDirectory($filename);
             } else {
                 $this->info("Scanning file $filename");
-                $libris->addDocument($filename);
+                $libris->addDocument($filename, $this);
             }
         } else {
             $this->error($filename.' not found in Libris');

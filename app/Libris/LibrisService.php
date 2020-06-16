@@ -16,8 +16,14 @@ class LibrisService implements LibrisInterface
 {
     public $index_name = "libris";
 
-    public function addDocument($file)
+    public function addDocument($file, $log = false)
     {
+        // Hackity Hack Hack so I can use this as an artisan command
+        if(!$log){
+            $log = Log::stack(['stack']);
+        }
+
+
         set_time_limit ( 120 );
         ini_set('memory_limit', '2G');
 
@@ -35,56 +41,58 @@ class LibrisService implements LibrisInterface
         $filename = preg_replace('!\.pdf$!', '', $filename);
         $title = preg_replace('!-|_!', ' ', $filename);
 
-        Log::info("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb");
+        $log->info("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb");
 
         if ($mimeType !== "application/pdf"){
-             Log::info("[AddDoc] $filename is not a pdf");
+             $log->info("[AddDoc] $filename is not a pdf");
              return true;
         }
         if ($doc = $this->fetchDocument($file)){
-             Log::info("[AddDoc] $filename is already in the index");
+             $log->info("[AddDoc] $filename is already in the index");
              // return true;
         }
 
         if ($size > 1024 * 1024 * 512) {
-            Log::error("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb, too large to index");
+            $log->error("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb, too large to index");
             return true;
         }
 
-        Log::debug("[AddDoc] Name: $filename, System: $system, Tags: ".implode(",",$tags));
+        $log->debug("[AddDoc] Name: $filename, System: $system, Tags: ".implode(",",$tags));
 
-        Log::debug("[AddDoc] Parsing $filename ...");
+        $log->debug("[AddDoc] Parsing $filename ...");
         $pdf_content = Storage::disk('libris')->get($file);
 
-        $ver_string = substr($pdf_content, 0, 72);
-        preg_match('!\d+\.\d+!', $ver_string, $match); 
-        // save that number in a variable
-        $ver = floatval($match[0]);
 
-        if($ver > 1.4){
-            Log::debug("[AddDoc] $filename is version $ver, running though ghostscript...");
+        try {   
+            $log->debug("[AddDoc] $filename Loading Parser");
+            $parser = new \Smalot\PdfParser\Parser();   
+            $pdf    = $parser->parseContent($pdf_content);
+            unset($pdf_content);
+
+        } catch ( \Exception $e){
+
+            $log->debug("[AddDoc] $filename isn't readable directly, running though ghostscript...");
             $tempfile = tempnam(sys_get_temp_dir(),"scanfile-");
             $tempfile2 = tempnam(sys_get_temp_dir(),"scanfile-");
             file_put_contents($tempfile, $pdf_content); 
-            exec('gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile="'.$tempfile2.'" "'.$tempfile.'"', $output, $return);
+            exec('gs -q -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o "'.$tempfile2.'" "'.$tempfile.'"', $output, $return);
             // dump('gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile="'.$tempfile2.'" "'.$tempfile.'"');
             if ($return > 0) {
-                dump($output);
+                $log->error($output);
                 throw new \Exception("Ghostscript Failed");
             }
-            Log::debug("[AddDoc] $filename ... converted. Here we go...");
+            $log->debug("[AddDoc] $filename ... converted. Here we go...");
             $pdf_content = file_get_contents($tempfile2);
             unlink($tempfile);
             unlink($tempfile2);
+
+
+            $parser = new \Smalot\PdfParser\Parser();   
+            $pdf    = $parser->parseContent($pdf_content);
+            unset($pdf_content);
         }
 
-
-        Log::debug("[AddDoc] $filename Loading Parser");
-        $parser = new \Smalot\PdfParser\Parser();
-        $pdf    = $parser->parseContent($pdf_content);
-        unset($pdf_content);
-
-        Log::debug("[AddDoc] $filename Getting Details");
+        $log->debug("[AddDoc] $filename Getting Details");
         $details  = $pdf->getDetails();
 
         $params = [
@@ -104,10 +112,10 @@ class LibrisService implements LibrisInterface
                 "doc_type" => "document"
             ],
         ];
-        Log::debug("[AddDoc] $filename Indexing");
+        $log->debug("[AddDoc] $filename Indexing");
         $return = Elasticsearch::index($params);
 
-        Log::info("[AddDoc] $filename Getting Pages");
+        $log->info("[AddDoc] $filename Getting Pages");
         $pages  = $pdf->getPages();
         $pageCount = count($pages);
 
@@ -121,7 +129,7 @@ class LibrisService implements LibrisInterface
                 $text = $page->getText();
             // try {
             // } catch (\Exception $e) {
-            //     Log::error("Error on $filename $pageNo: ".$e->getMessage());
+            //     $log->error("Error on $filename $pageNo: ".$e->getMessage());
             // }
 
             $params = [
@@ -146,7 +154,7 @@ class LibrisService implements LibrisInterface
             ];
             Elasticsearch::index($params);
         }
-        Log::debug("[AddDoc] $filename Added $pageCount Pages");
+        $log->debug("[AddDoc] $filename Added $pageCount Pages");
 
     }
 
@@ -345,6 +353,22 @@ class LibrisService implements LibrisInterface
 
     }
 
+    public function Everything($page = 0)
+    {
+
+        $params = [
+            'index' => $this->index_name,
+            'body' => [
+                'query' => [
+                    "match_all" => [ "boost" => 1.0 ]
+                ]
+            ]
+        ];
+        //res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
+        return Elasticsearch::search($params);
+
+    }
+
     public function systems(){
 
         $filter = [ 
@@ -394,11 +418,15 @@ class LibrisService implements LibrisInterface
 
     }
 
-    public function AllBySystem($system){
+    public function AllBySystem($system, $page=1, $size){
+
+        $from = ($page-1) * $size;
 
         $params = [
             'index' => $this->index_name,
             'body' => [
+                'size' => $size,
+                'from' => $from,
                 'query' => [
                     'bool' => [
                         'must' => [
@@ -417,6 +445,71 @@ class LibrisService implements LibrisInterface
                 ]
             ];
         //res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
+        return Elasticsearch::search($params);
+    }
+
+    public function pageSearch($terms, $system, $document, $page=1, $size){
+
+        // $system = "Goblin Quest";
+
+        $from = ($page-1) * $size;
+
+        $params = [
+            'index' => $this->index_name,
+            'body' => [
+                'size' => $size,
+                'from' => $from,
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            'match_phrase' => [
+                                'attachment.content' => [ 
+                                    'query' => $terms,
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                  "highlight" => [
+                    "fields" => [
+                        "attachment.content" => new \stdClass()
+                    ]
+                  ]
+                ]
+            ];
+
+        if($system){
+            $params['body']['query']['bool']['filter'][] = [
+                            'match' => [ 'system' => $system ]
+                        ];
+        }
+
+        if($document){
+            $params['body']['query']['bool']['filter'][] = [
+                            'match' => [ 'path' => $document ]
+                        ];
+        }
+
+
+        $params['body']["aggs"] = [
+            "parents" => [
+              "terms"=> [
+                "field"=> "page_relation#document", 
+                "size"=> 30
+              ]
+            ],
+            "systems" => [
+              "terms"=> [
+                "field"=> "system", 
+                "size"=> 30
+            ]
+            ]
+          ];
+
+
+        Log::debug($params);
+
+
         return Elasticsearch::search($params);
     }
 }
