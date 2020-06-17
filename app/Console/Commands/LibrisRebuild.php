@@ -39,6 +39,7 @@ class LibrisRebuild extends Command
      */
     public function handle(LibrisInterface $libris)
     { 
+        $libris->reindex();
         $this->info("Rebuilding Index, Please stand by...");
     }
 }
