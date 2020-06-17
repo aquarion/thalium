@@ -21,10 +21,11 @@ class LibrisController extends Controller
 
     }
 
-    public function myUrlEncode($string) {
-        $entities = array('+');
-        $replacements = array('%20');
-        return str_replace($entities, $replacements, $string);
+    public function everything(LibrisInterface $libris)
+    {
+
+        dump($libris->Everything());
+
     }
 
     public function allBySystem(LibrisInterface $libris, Request $request, $system)
