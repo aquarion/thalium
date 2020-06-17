@@ -7,10 +7,16 @@
   <div class="starter-template" >
     <h1>Search Results for 
     	<q>{{ $query }}</q>
-    	@if ($system)
-    		in <a href="{{ route("system.index", ['system' => $system])}}">{{ $system }}</a>
-    	@endif
+        @if ($system)
+            in <a href="{{ route("system.index", ['system' => $system])}}">{{ $system }}</a>
+        @endif
 
+        @if (count($systems) == 1 && !$system)
+            @php
+                $system = $systems[0]['key'];
+            @endphp
+            <h2>Only found in <a href="{{ route("system.index", ['system' => $system])}}">{{ $system }}</a></h2>
+        @endif
     </h1>
   
   	@if (count($systems) > 1)
@@ -40,15 +46,14 @@
     <dl>
     @foreach ($hits as $page) 
 
-        <dt><a href="{{ $page['_source']['download'] }}#page={{ $page['_source']['pageNo'] }}">
-        	{{ $page['_source']['title'] }} p{{ $page['_source']['pageNo'] }}
+        <dt>
+            <b>{{ $page['_source']['system'] }}</b> &ndash; 
+            <a href="{{ $page['_source']['download'] }}#page={{ $page['_source']['pageNo'] }}">
+        	{{ $page['_source']['title'] }} &ndash; p{{ $page['_source']['pageNo'] }}
         </a></dt>
-        <dd>
         	@foreach ($page['highlight']['attachment.content'] as $highlight)
-        		<p>{!! $highlight !!}</p>
+        		<dd>{!! $highlight !!}</dd>
         	@endforeach
-
-        </dd>
 	@endforeach
 	</dl>
 

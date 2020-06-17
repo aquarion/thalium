@@ -54,6 +54,20 @@
 
         background: #eee;
       }
+
+      dd {
+        padding-left: 1em;
+        margin-left: 1em;
+        border-left: 2px solid black;
+      }
+
+      dd em {
+        color: black;
+        background: #FDFF84;
+        display: inline-block;
+        border-radius: 0.25rem;
+        padding: 0.2rem;
+      }
     </style>
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
