@@ -4,10 +4,13 @@ FROM php:7.4-fpm
 ARG user
 ARG uid
 
-COPY etc/debian_contrib.list /etc/apt/sources.list.d/debian_contrib.list
+COPY etc/apt/debian_contrib.list /etc/apt/sources.list.d/debian_contrib.list
+
+
+RUN mkdir -p /usr/share/man/man1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get -qq update && apt-get -qqy install \
     git \
     curl \
     libpng-dev \
@@ -15,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    ghostscript
+    default-jre 
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -37,6 +40,7 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+RUN curl -q http://apache.mirror.anlx.net/pdfbox/2.0.20/pdfbox-app-2.0.20.jar > /usr/share/java/pdfbox-app-2.0.20.jar
 # Set working directory
 WORKDIR /var/www
 

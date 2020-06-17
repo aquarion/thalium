@@ -12,6 +12,8 @@ use App\Jobs\ScanDirectory;
 use App\Jobs\ScanPDF;
 use setasign\Fpdi\PdfParser\StreamReader;
 
+use App\Service\PDFBoxService;
+
 class LibrisService implements LibrisInterface
 {
     public $index_name = "libris";
@@ -23,138 +25,80 @@ class LibrisService implements LibrisInterface
             $log = Log::stack(['stack']);
         }
 
+        $last_modified = Storage::disk('libris')->lastModified($file);
 
-        set_time_limit ( 120 );
-        ini_set('memory_limit', '2G');
+        $pdf = new PDFBoxService($file);
 
-        $size = Storage::disk('libris')->size($file);
-        $mimeType = Storage::disk('libris')->mimeType($file);
+        $pdf->analyse_pdf();
 
-        $tags = explode('/', $file);
-
-        $system = array_shift($tags);
-        $system = preg_replace('!\.pdf$!', '', $system);
-        $system = preg_replace('!-|_!', ' ', $system);
-
-        $boom = explode("/", $file);
-        $filename = array_pop($boom);
-        $filename = preg_replace('!\.pdf$!', '', $filename);
-        $title = preg_replace('!-|_!', ' ', $filename);
-
-        $log->info("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb");
-
-        if ($mimeType !== "application/pdf"){
-             $log->info("[AddDoc] $filename is not a pdf");
-             return true;
-        }
         if ($doc = $this->fetchDocument($file)){
-             $log->info("[AddDoc] $filename is already in the index");
-             // return true;
+             if(isset($doc['_source']['last_modified'])){
+                if($doc['_source']['last_modified'] == $last_modified){
+                     $log->info("[AddDoc] $file is already in the index with the same date");
+                     return true;
+                }
+             }
+             
+             $log->info("[AddDoc] $file is already in the index, but this is different?");
         }
 
-        if ($size > 1024 * 1024 * 512) {
-            $log->error("[AddDoc] $filename is a $mimeType of size ".number_format($size/1024)."Mb, too large to index");
-            return true;
-        }
-
-        $log->debug("[AddDoc] Name: $filename, System: $system, Tags: ".implode(",",$tags));
-
-        $log->debug("[AddDoc] Parsing $filename ...");
-        $pdf_content = Storage::disk('libris')->get($file);
+    
+        $log->debug("[AddDoc] Name: {$pdf->title}, System: {$pdf->system}, Tags: ".implode(",",$pdf->tags));
 
 
-        try {   
-            $log->debug("[AddDoc] $filename Loading Parser");
-            $parser = new \Smalot\PdfParser\Parser();   
-            $pdf    = $parser->parseContent($pdf_content);
-            unset($pdf_content);
-
-        } catch ( \Exception $e){
-
-            $log->debug("[AddDoc] $filename isn't readable directly, running though ghostscript...");
-            $tempfile = tempnam(sys_get_temp_dir(),"scanfile-");
-            $tempfile2 = tempnam(sys_get_temp_dir(),"scanfile-");
-            file_put_contents($tempfile, $pdf_content); 
-            exec('gs -q -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o "'.$tempfile2.'" "'.$tempfile.'"', $output, $return);
-            // dump('gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile="'.$tempfile2.'" "'.$tempfile.'"');
-            if ($return > 0) {
-                $log->error($output);
-                throw new \Exception("Ghostscript Failed");
-            }
-            $log->debug("[AddDoc] $filename ... converted. Here we go...");
-            $pdf_content = file_get_contents($tempfile2);
-            unlink($tempfile);
-            unlink($tempfile2);
-
-
-            $parser = new \Smalot\PdfParser\Parser();   
-            $pdf    = $parser->parseContent($pdf_content);
-            unset($pdf_content);
-        }
-
-        $log->debug("[AddDoc] $filename Getting Details");
-        $details  = $pdf->getDetails();
+        $log->debug("[AddDoc] Parsing $file ...");
+        
+        $pages = $pdf->parse();
 
         $params = [
             'index' => $this->index_name,
             'id' => $file,
             'routing' => $file,
             'body' => [
-                'system' => $system,
-                'filename' => $filename,
+                "doc_type" => "document",
                 'path' => $file,
-                'title' => $title,
-                'tags' => $tags,
+                'system' => $pdf->system,
+                'tags' => $pdf->tags,
+                'title' => $pdf->title,
+                'last_modified' => $last_modified,
                 "page_relation" => [
                     "name" => "document",
                 ],
-                'metadata' => $details,
-                "doc_type" => "document"
             ],
         ];
-        $log->debug("[AddDoc] $filename Indexing");
+        $log->debug("[AddDoc] $file Indexing");
         $return = Elasticsearch::index($params);
 
-        $log->info("[AddDoc] $filename Getting Pages");
-        $pages  = $pdf->getPages();
+        $log->info("[AddDoc] $file Getting Pages");
+        
         $pageCount = count($pages);
 
-        foreach($pages as $pageIndex => $page){
+        foreach($pages as $pageIndex => $text){
             $pageNo = $pageIndex + 1;
             set_time_limit ( 30 );
-
-            // $pageNo
-            // $content
-
-                $text = $page->getText();
-            // try {
-            // } catch (\Exception $e) {
-            //     $log->error("Error on $filename $pageNo: ".$e->getMessage());
-            // }
 
             $params = [
                 'index' => $this->index_name,
                 'id' => $file."/".$pageNo,
-                'routing' => $filename,
+                'routing' => $file,
                 'pipeline' => 'attachment_pipeline',
                 'body' => [
-                    'system' => $system,
-                    'tags' => $tags,
-                    'pageNo' => $pageNo,
                     "doc_type" => "page",
-                    'filename' => $filename,
-                    'path' => $file,
-                    'title' => $title,
                     'data' => base64_encode($text),
+                    'pageNo' => $pageNo,
+                    'path' => $file,
+                    'system' => $pdf->system,
+                    'tags' => $pdf->tags,
+                    'title' => $pdf->title,
                     "page_relation" => [
                         "name" => "page",
-                        "parent" => $filename,
+                        "parent" => $file,
                     ]
                 ],
             ];
             Elasticsearch::index($params);
         }
-        $log->debug("[AddDoc] $filename Added $pageCount Pages");
+        $log->debug("[AddDoc] $file Added $pageCount Pages");
 
     }
 
@@ -174,10 +118,12 @@ class LibrisService implements LibrisInterface
     }
 
     public function deleteIndex(){
+        Log::warning("Deleting Index");
         return Elasticsearch::indices()->delete(array('index' => $this->index_name));
     }
 
     public function updateIndex(){
+            Log::info("Update/Create Index");
 
             $params = [
                 'index' => $this->index_name,
@@ -239,6 +185,7 @@ class LibrisService implements LibrisInterface
 
     public function updatePipeline(){
 
+            Log::info("Update Pipeline");
             $params = [
                 'id' => 'attachment_pipeline',
                 'body' => [
@@ -268,6 +215,7 @@ class LibrisService implements LibrisInterface
 
         // If it's missing, create it.
         try {
+            Log::info("Create Pipeline");
             $params = ['id' => 'attachment_pipeline'];
 
             $hasPipeline = Elasticsearch::ingest()->getPipeline($params);
@@ -315,6 +263,7 @@ class LibrisService implements LibrisInterface
 
     public function reindex()
     {
+        Log::info("Kicking off a reindex");
 
         $this->updatePipeline();
         $this->updateIndex();
@@ -326,7 +275,7 @@ class LibrisService implements LibrisInterface
         $files = Storage::disk('libris')->files('.');
 
         foreach ($systems as $system) {
-            ScanDirectory::dispatch($system, array(), $system) && $dirCount++;
+            ScanDirectory::dispatch($system) && $dirCount++;
         }
 
         foreach ($files as $filename) {

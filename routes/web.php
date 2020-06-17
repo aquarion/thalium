@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::get('/reindex', 'LibrisController@reindex');
+Route::get('/everything', 'LibrisController@everything');
 Route::get('/delete', 'LibrisController@deleteIndex');
 Route::get('/update', 'LibrisController@updateIndex');
 Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
