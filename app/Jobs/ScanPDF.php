@@ -58,7 +58,7 @@ class ScanPDF implements ShouldQueue
             return;
         }
 
-        Redis::funnel('ScanPDF')->limit(3)->then(function () {
+        Redis::funnel('ScanPDF')->limit(10)->then(function () {
             Log::debug("[Scanfile] Got lock for ".$this->filename);
             $this->libris->addDocument($this->filename);
             Log::debug("[Scanfile] Finished ".$this->filename);
