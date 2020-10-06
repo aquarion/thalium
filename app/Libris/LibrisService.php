@@ -6,13 +6,13 @@ use Elasticsearch;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-use setasign\Fpdi\Fpdi;
-
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanPDF;
-use setasign\Fpdi\PdfParser\StreamReader;
 
 use App\Service\PDFBoxService;
+use App\Service\ParserService;
+use App\Exceptions;
+
 
 class LibrisService implements LibrisInterface
 {
@@ -20,87 +20,41 @@ class LibrisService implements LibrisInterface
 
     public function addDocument($file, $log = false)
     {
-        // Hackity Hack Hack so I can use this as an artisan command
-        if(!$log){
-            $log = Log::stack(['stack']);
-        }
 
         $last_modified = Storage::disk('libris')->lastModified($file);
-
-        $pdf = new PDFBoxService($file);
-
-        $pdf->analyse_pdf();
 
         if ($doc = $this->fetchDocument($file)){
              if(isset($doc['_source']['last_modified'])){
                 if($doc['_source']['last_modified'] == $last_modified){
-                     $log->info("[AddDoc] $file is already in the index with the same date");
-                     return true;
+                     Log::info("[AddDoc] $file is already in the index with the same date");
+                     //return true;
                 }
              }
              
-             $log->info("[AddDoc] $file is already in the index, but this is different?");
+             Log::info("[AddDoc] $file is already in the index, but this is different?");
         }
 
     
-        $log->debug("[AddDoc] Name: {$pdf->title}, System: {$pdf->system}, Tags: ".implode(",",$pdf->tags));
+        $mimeType = Storage::disk('libris')->mimeType($file);
+        $mimeTypeArray = explode("/", $mimeType);
 
+        $parser = false;
 
-        $log->debug("[AddDoc] Parsing $file ...");
-        
-        $pages = $pdf->parse();
-
-        $params = [
-            'index' => $this->index_name,
-            'id' => $file,
-            'routing' => $file,
-            'body' => [
-                "doc_type" => "document",
-                'path' => $file,
-                'system' => $pdf->system,
-                'tags' => $pdf->tags,
-                'title' => $pdf->title,
-                'last_modified' => $last_modified,
-                "page_relation" => [
-                    "name" => "document",
-                ],
-            ],
-        ];
-        $log->debug("[AddDoc] $file Indexing");
-        $return = Elasticsearch::index($params);
-
-        $log->info("[AddDoc] $file Getting Pages");
-        
-        $pageCount = count($pages);
-
-        foreach($pages as $pageIndex => $text){
-            $pageNo = $pageIndex + 1;
-            set_time_limit ( 30 );
-
-            $params = [
-                'index' => $this->index_name,
-                'id' => $file."/".$pageNo,
-                'routing' => $file,
-                'pipeline' => 'attachment_pipeline',
-                'body' => [
-                    "doc_type" => "page",
-                    'data' => base64_encode($text),
-                    'pageNo' => $pageNo,
-                    'path' => $file,
-                    'system' => $pdf->system,
-                    'tags' => $pdf->tags,
-                    'title' => $pdf->title,
-                    "page_relation" => [
-                        "name" => "page",
-                        "parent" => $file,
-                    ]
-                ],
-            ];
-            Elasticsearch::index($params);
+        if($mimeType == "application/pdf"){
+            Log::debug("[AddDoc] Parsing PDF $file ...");
+            $parser = new PDFBoxService($file, $this->index_name);
+        } elseif($mimeTypeArray[0] == "image") {
+             Log::info("[AddDoc] Ignoring item of type $mimeType");
+        } else {
+            Log::debug("[AddDoc] Parsing $mimeType $file ...");
+            $parser = new ParserService($file, $this->index_name);
         }
-        $log->debug("[AddDoc] $file Added $pageCount Pages");
 
+        if($parser){
+            return $parser->index();
+        }
     }
+
 
     public function fetchDocument($id){
         $params = [
@@ -236,11 +190,6 @@ class LibrisService implements LibrisInterface
         }
 
         $mimeType = Storage::disk('libris')->mimeType($filename);
-
-        if ($mimeType !== "application/pdf"){
-             Log::error("$filename is not a pdf");
-             return false;
-        }
 
         Log::info("[indexFile] New File Scan Job: File: $filename");
         ScanPDF::dispatch($filename);

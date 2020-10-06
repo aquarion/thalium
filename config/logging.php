@@ -37,14 +37,20 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['single', "errors"],
             'ignore_exceptions' => false,
         ],
 
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' => 'debug',
+            'level' => 'warning',
+        ],
+
+        'errors' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.err.log'),
+            'level' => 'warning',
         ],
 
         'daily' => [

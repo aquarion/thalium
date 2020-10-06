@@ -44,21 +44,7 @@ class ScanPDF implements ShouldQueue
 
         Log::debug("[Scanfile] Hello ".$this->filename);
 
-        $mimeType = Storage::disk('libris')->mimeType($this->filename);
-
-        if($mimeType !== "application/pdf"){
-            Log::debug("[Scanfile] Ignoring $mimeType file ".$this->filename);
-            $this->delete();
-            return;
-        }
-        
-        if($doc = $this->libris->fetchDocument($this->filename)){
-            Log::Debug("[Scanfile] Already got ".$this->filename);
-            $this->delete();
-            return;
-        }
-
-        Redis::funnel('ScanPDF')->limit(10)->then(function () {
+        Redis::funnel('ScanPDF')->limit(5)->then(function () {
             Log::debug("[Scanfile] Got lock for ".$this->filename);
             $this->libris->addDocument($this->filename);
             Log::debug("[Scanfile] Finished ".$this->filename);
