@@ -5,11 +5,11 @@ networks:
     driver: bridge
 
 volumes:
-  libris: 
+  libris:
     driver: local
     driver_opts:
       type: cifs
-      device: //192.168.0.2/RPG
+      device: //10.42.0.135/RPG
       o: username=guest
 
 services:
@@ -17,7 +17,7 @@ services:
     build:
       args:
         user: aquarion
-        uid: 502
+        uid: 1000
       context: ./
       dockerfile: etc/Dockerfile/thalium.Dockerfile
     image: thalium
