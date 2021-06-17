@@ -30,11 +30,11 @@ class LibrisService implements LibrisInterface
                      //return true;
                 }
              }
-             
+
              Log::info("[AddDoc] $file is already in the index, but this is different?");
         }
 
-    
+
         $mimeType = Storage::disk('libris')->mimeType($file);
         $mimeTypeArray = explode("/", $mimeType);
 
@@ -103,7 +103,7 @@ class LibrisService implements LibrisInterface
                             'type' => 'keyword'
                         ],
                         'content' => [
-                            'type' => 'text'
+                            'type' => 'keyword'
                         ],
                         'doc_type' => [
                             'type' => 'keyword'
@@ -134,7 +134,7 @@ class LibrisService implements LibrisInterface
 
                 return Elasticsearch::indices()->putMapping($params);
             }
-            
+
     }
 
     public function updatePipeline(){
@@ -201,7 +201,7 @@ class LibrisService implements LibrisInterface
              Log::error("$filename is not a directory");
              return false;
         }
-        
+
         $tags = explode('/', $filename);
         $system = substr(array_unshift($tags), 0, -4);
 
@@ -269,7 +269,7 @@ class LibrisService implements LibrisInterface
 
     public function systems(){
 
-        $filter = [ 
+        $filter = [
             'only_documents' => [
                 'filter' => [
                     'term' => [
@@ -283,7 +283,7 @@ class LibrisService implements LibrisInterface
             'body'  => [
                 'aggs' => [
                     'uniq_systems' => [
-                        'composite' => [ 
+                        'composite' => [
                             'size' => 100,
                             'sources' => [
                                 'systems' => ['terms' => ['field' => 'system'] ]
@@ -300,7 +300,7 @@ class LibrisService implements LibrisInterface
             $results = Elasticsearch::search($params);
             $buckets = array_merge($buckets, $results['aggregations']['uniq_systems']['buckets']);
             if(isset($results['aggregations']['uniq_systems']['after_key'])){
-                $params['body']['aggs']['uniq_systems']['composite']['after'] 
+                $params['body']['aggs']['uniq_systems']['composite']['after']
                     = $results['aggregations']['uniq_systems']['after_key'];
             } else {
                 $continue = false;
@@ -329,9 +329,9 @@ class LibrisService implements LibrisInterface
                     'bool' => [
                         'must' => [
                             'match' => [
-                                'system' => [ 
+                                'system' => [
                                     'query' => $system,
-                                    "operator" => "and"  
+                                    "operator" => "and"
                                 ]
                             ]
                         ],
@@ -361,7 +361,7 @@ class LibrisService implements LibrisInterface
                     'bool' => [
                         'must' => [
                             'match_phrase' => [
-                                'attachment.content' => [ 
+                                'attachment.content' => [
                                     'query' => $terms,
                                     ]
                                 ]
@@ -392,13 +392,13 @@ class LibrisService implements LibrisInterface
         $params['body']["aggs"] = [
             "parents" => [
               "terms"=> [
-                "field"=> "page_relation#document", 
+                "field"=> "page_relation#document",
                 "size"=> 30
               ]
             ],
             "systems" => [
               "terms"=> [
-                "field"=> "system", 
+                "field"=> "system",
                 "size"=> 30
             ]
             ]

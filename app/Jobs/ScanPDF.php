@@ -34,6 +34,16 @@ class ScanPDF implements ShouldQueue
     }
 
     /**
+     * Job as string
+     *
+     * @return void
+     */
+    public function __toString()
+    {
+        return sprintf("ScanPDF <%s>", $this->filename);
+    }
+
+    /**
      * Execute the job.
      *
      * @return void
@@ -42,7 +52,7 @@ class ScanPDF implements ShouldQueue
     {
         $this->libris = $libris;
 
-        Log::debug("[Scanfile] Hello ".$this->filename);
+        Log::info("[Scanfile] Hello ".$this->filename);
 
         Redis::funnel('ScanPDF')->limit(5)->then(function () {
             Log::debug("[Scanfile] Got lock for ".$this->filename);

@@ -14,7 +14,7 @@ class PDFBoxService extends ParserService
 {
 
 	// java -jar pdfbox-app-x.y.z.jar PDFSplit [OPTIONS] <PDF file>
-	private $pdfbox_bin = "/usr/share/java/pdfbox-app-2.0.20.jar";
+	private $pdfbox_bin = "/usr/share/java/pdfbox.jar";
 	// /usr/share/java/pdfbox2-tools-2.0.13.jar
 
 
@@ -25,8 +25,8 @@ class PDFBoxService extends ParserService
 		$tempfile = tempnam(sys_get_temp_dir(),"scanfile-");
 		$pdf_content = Storage::disk('libris')->get($this->filename);
         //$tempfile2 = tempnam(sys_get_temp_dir(),"scanfile-");
-        file_put_contents($tempfile, $pdf_content); 
-		
+        file_put_contents($tempfile, $pdf_content);
+
 		$cmd_tpl = '/usr/bin/java -jar %s ExtractText -html -console "%s"';
 
 		$cmd = sprintf($cmd_tpl, $this->pdfbox_bin, $tempfile);

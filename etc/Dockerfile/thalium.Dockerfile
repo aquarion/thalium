@@ -18,7 +18,7 @@ RUN apt-get -qq update && apt-get -qqy install \
     libxml2-dev \
     zip \
     unzip \
-    default-jre 
+    default-jre
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -40,7 +40,7 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-RUN curl -q http://apache.mirror.anlx.net/pdfbox/2.0.20/pdfbox-app-2.0.20.jar > /usr/share/java/pdfbox-app-2.0.20.jar
+RUN curl --fail -q https://apache.mirrors.nublue.co.uk/pdfbox/2.0.24/pdfbox-app-2.0.24.jar > /usr/share/java/pdfbox.jar
 # Set working directory
 WORKDIR /var/www
 

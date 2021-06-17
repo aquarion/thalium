@@ -9,6 +9,6 @@ FROM thalium
 
 COPY etc/horizon/scheduler.sh /usr/local/bin/scheduler.sh
 
-#RUN chmod u+x /usr/local/bin/scheduler.sh 
+#RUN chmod u+x /usr/local/bin/scheduler.sh
 
 CMD ["/bin/bash", "/usr/local/bin/scheduler.sh"]
