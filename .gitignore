@@ -13,3 +13,4 @@ yarn-error.log
 /storage/redis
 /storage/elasticsearch
 storage/mysql_data
+public/vendor
