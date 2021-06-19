@@ -14,3 +14,4 @@ yarn-error.log
 /storage/elasticsearch
 storage/mysql_data
 public/vendor
+docker-compose.yml

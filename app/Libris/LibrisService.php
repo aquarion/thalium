@@ -11,6 +11,7 @@ use App\Jobs\ScanPDF;
 
 use App\Service\PDFBoxService;
 use App\Service\ParserService;
+use App\Service\ParseTextService;
 use App\Exceptions;
 
 
@@ -23,11 +24,12 @@ class LibrisService implements LibrisInterface
 
         $last_modified = Storage::disk('libris')->lastModified($file);
 
+
         if ($doc = $this->fetchDocument($file)){
              if(isset($doc['_source']['last_modified'])){
                 if($doc['_source']['last_modified'] == $last_modified){
                      Log::info("[AddDoc] $file is already in the index with the same date");
-                     //return true;
+                     return true;
                 }
              }
 
@@ -43,16 +45,56 @@ class LibrisService implements LibrisInterface
         if($mimeType == "application/pdf"){
             Log::debug("[AddDoc] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->index_name);
-        } elseif($mimeTypeArray[0] == "image") {
-             Log::info("[AddDoc] Ignoring item of type $mimeType");
+        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+            Log::debug("[AddDoc] Parsing $mimeType $file as text ...");
+            $parser = new ParseTextService($file, $this->index_name);
         } else {
-            Log::debug("[AddDoc] Parsing $mimeType $file ...");
-            $parser = new ParserService($file, $this->index_name);
+            Log::warning("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
+            return true;
         }
 
         if($parser){
             return $parser->index();
         }
+    }
+
+    public function deleteDocument($id){
+
+        ///// Now delete the pages
+
+        $params = [
+            'index' => $this->index_name,
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => [ 0 => [
+                            'match' => [
+                                'path' => [
+                                    'query' => $id,
+                                    "operator" => "and"
+                                ]
+                            ]
+                        ]
+                        ],
+                        'filter' => [
+                            'match' => [ 'doc_type' => 'page' ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+        Elasticsearch::deleteByQuery($params);
+
+        ///// Now delete the document
+
+        $params = [
+            'index' => $this->index_name,
+            'id'    => $id
+        ];
+            // Get doc at /my_index/_doc/my_id
+        Elasticsearch::delete($params);
+
     }
 
 
@@ -235,12 +277,43 @@ class LibrisService implements LibrisInterface
         return true;
     }
 
-    public function showAll($page = 0)
-    {
+    public function purgeDeletedFiles(){
+        $size = 100;
+        $page = 1;
+        $cursor = 0;
+
+        $results = $this->showAll(1, 0);
+        $pages = ceil($results['hits']['total']['value'] / $size);
+
+        $deletionList = [];
+
+        for ($page=1; $page <= $pages; $page++) {
+            $docs = $this->showAll($page, $size);
+            foreach ($docs['hits']['hits'] as $index => $doc) {
+                $filename = $doc['_source']['path'];
+                if(Storage::disk('libris')->missing($filename)){
+                    $deletionList[] = $doc['_id'];
+                }
+            }
+        }
+
+        foreach($deletionList as $docId){
+            $this->deleteDocument($docId);
+        }
+
+        return $deletionList;
+    }
+
+
+    public function showAll($page=1, $size=60, $tag = false){
+
+        $from = ($page-1) * $size;
 
         $params = [
             'index' => $this->index_name,
             'body' => [
+                'size' => $size,
+                'from' => $from,
                 'query' => [
                     'match' => ['doc_type' => 'document']
                 ]
@@ -281,6 +354,7 @@ class LibrisService implements LibrisInterface
         $params = [
             'index' => $this->index_name,
             'body'  => [
+                "size" => 0,
                 'aggs' => [
                     'uniq_systems' => [
                         'composite' => [
@@ -294,6 +368,7 @@ class LibrisService implements LibrisInterface
                 ]
             ]
         ];
+
         $buckets = array();
         $continue = true;
         while ($continue == true){
@@ -316,7 +391,7 @@ class LibrisService implements LibrisInterface
 
     }
 
-    public function AllBySystem($system, $page=1, $size){
+    public function AllBySystem($system, $page=1, $size, $tag = false){
 
         $from = ($page-1) * $size;
 
@@ -327,13 +402,14 @@ class LibrisService implements LibrisInterface
                 'from' => $from,
                 'query' => [
                     'bool' => [
-                        'must' => [
+                        'must' => [ 0 => [
                             'match' => [
                                 'system' => [
                                     'query' => $system,
                                     "operator" => "and"
                                 ]
                             ]
+                        ]
                         ],
                         'filter' => [
                             'match' => [ 'doc_type' => 'document' ]
@@ -342,7 +418,11 @@ class LibrisService implements LibrisInterface
                     ]
                 ]
             ];
-        //res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
+
+        if($tag){
+            $params['body']['query']['bool']['must'][] = ['match' => [ 'tags' => [ 'query' => $tag, "operator" => "and" ] ] ];
+
+        }
         return Elasticsearch::search($params);
     }
 

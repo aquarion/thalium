@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 
-class ParserService
+abstract class ParserService
 {
 
 	protected $file;
@@ -22,7 +22,16 @@ class ParserService
 	public $title;
 
 
+	abstract public function parse_pages();
+
 	public function __construct($file, $index_name){
+
+        if (Storage::disk('libris')->missing($file)) {
+            Log::error("[AddDoc] ".$this->filename." in 'total existance failure' error");
+            throw new Exceptions\LibrisNotFound();
+        }
+
+
 		$this->filename = $file;
 		$this->index_name = $index_name;
         $this->last_modified = Storage::disk('libris')->lastModified($file);
@@ -41,13 +50,8 @@ class ParserService
         $title = array_pop($boom);
         $title = preg_replace('!\.[^.]+$$!', '', $title);
         $title = preg_replace('!-|_!', ' ', $title);
-        $this->title = $title; 
+        $this->title = $title;
 
-
-        if (Storage::disk('libris')->missing($this->filename)) {
-            Log::error("[AddDoc] ".$this->filename." in 'total existance failure' error");
-            throw new Exceptions\LibrisNotFound();
-        }
 
         $size = Storage::disk('libris')->size($this->filename);
         $sizeMB = number_format($size/1024);
@@ -61,8 +65,13 @@ class ParserService
 	}
 
 	public function index(){
-        $this->pages = $this->parse_pages();
 
+        try {
+            $this->pages = $this->parse_pages();
+        } catch (Exceptions\LibrisParseFailed $e) {
+            Log::error("[AddDoc] FAILED TO PARSE Name: [{$this->filename}], System: [{$this->system}]");
+            return false;
+        }
 
         Log::debug("[AddDoc] Name: {$this->title}, System: {$this->system}, Tags: ".implode(",",$this->tags));
 
@@ -84,7 +93,7 @@ class ParserService
         ];
 
         if(!$this->pages){
-        	$params['body']['data'] = base64_encode(Storage::disk('libris')->get($this->filename));
+        	// $params['body']['data'] = Storage::disk('libris')->get($this->filename);
         }
 
         Log::debug("[AddDoc] {$this->filename} Indexing");
@@ -96,14 +105,10 @@ class ParserService
 
 	}
 
-	public function parse_pages(){
-		return false; // return array of page content if you want them indexed like that
-	}
-
 	public function index_pages(){
 
         Log::info("[AddDoc] {$this->filename} Indexing Pages");
-        
+
         $pageCount = count($this->pages);
 
         foreach($this->pages as $pageIndex => $text){

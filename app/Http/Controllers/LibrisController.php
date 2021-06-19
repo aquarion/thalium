@@ -31,16 +31,25 @@ class LibrisController extends Controller
     public function allBySystem(LibrisInterface $libris, Request $request, $system)
     {
         $page = $request->query('page', 1);
-        $perpage = 30;
+        $perpage = 60;
 
-        $documents = $libris->AllBySystem($system, $page, $perpage);
-        $total = $documents['hits']['total']['value'];
+
+        $tag = $request->query('tag', false);
 
         $docresult = [];
+
+        $documents = $libris->AllBySystem($system, $page, $perpage, $tag);
+        $total = $documents['hits']['total']['value'];
+
         foreach($documents['hits']['hits'] as $doc){
+            $tags = $doc['_source']['tags'];
+            array_pop($tags);
+
+
             $docresult[] = [
-                'name' => $doc['_source']['title'],
+                'name' => urldecode($doc['_source']['title']),
                 'path' => $doc['_source']['path'],
+                'tags' => $tags,
                 'download' => Storage::disk('libris')->url($doc['_source']['path']),
             ];
         }
@@ -56,6 +65,7 @@ class LibrisController extends Controller
 
         return view('system', [
             'system' => $system,
+            'tag'    => $tag,
             'docs'   => $docresult,
             'page'   => $page,
             'pages'  => ceil($total/$perpage),

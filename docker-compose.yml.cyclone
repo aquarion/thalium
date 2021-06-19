@@ -69,8 +69,8 @@ services:
         hard: -1
     volumes:
       - ./storage/elasticsearch:/usr/share/elasticsearch/data
-    # ports:
-    #   - 9200:9200
+    ports:
+      - 9200:9200
     networks:
       - thalium
   db:
