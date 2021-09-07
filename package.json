@@ -11,15 +11,17 @@
     },
     "devDependencies": {
         "axios": "^0.21",
-        "bootstrap": "^4.6.0",
+        "bootstrap": "^5.1.1",
         "cross-env": "^7.0",
         "jquery": "^3.6",
         "laravel-mix": "^6.0.29",
-        "lodash": ">=4.17.19",
+        "lodash": ">=4.17.21",
         "popper.js": "^1.12",
         "resolve-url-loader": "^4.0.0",
         "sass": "^1.39.0",
         "sass-loader": "^12.1.0",
-        "vue-template-compiler": "^2.6.14"
-    }
+        "vue-template-compiler": "^2.6.14",
+        "webpack-dev-server": "^4.1.1"
+    },
+    "dependencies": {}
 }
