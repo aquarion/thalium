@@ -7,25 +7,26 @@ use Illuminate\Console\Command;
 use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Elasticsearch;
 
 
 use App\Jobs\ScanPDF;
 
-class LibrisIndex extends Command
+class LibrisRemove extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'libris:index {filename}';
+    protected $signature = 'libris:remove {filename}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Index a single file';
+    protected $description = 'Remove a single file';
 
     /**
      * Create a new command instance.
@@ -49,17 +50,13 @@ class LibrisIndex extends Command
     public function handle(LibrisInterface $libris)
     {
         $filename = $this->argument('filename');
-        $exists = Storage::disk('libris')->exists($filename);
-        if($exists){
-            if(Storage::disk('libris')->getMetadata($filename)['type'] === 'dir'){
-                $this->info("Scanning directory $filename");
-                $libris->indexDirectory($filename);
-            } else {
-                $this->info("Scanning file $filename");
-                $libris->addDocument($filename, $this);
-            }
-        } else {
-            $this->error($filename.' not found in Libris');
+        try {
+            $result = $libris->fetchDocument($filename);
+            $this->line($result);
+            $result = $libris->deleteDocument($filename);
+        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
+            $this->error("$filename not found in index");
+            return 1;
         }
         return 0;
     }

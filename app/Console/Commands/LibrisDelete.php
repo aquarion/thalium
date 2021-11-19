@@ -13,7 +13,7 @@ class LibrisDelete extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:delete';
+    protected $signature = 'libris:index:delete';
 
     /**
      * The console command description.

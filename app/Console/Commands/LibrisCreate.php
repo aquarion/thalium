@@ -13,7 +13,7 @@ class LibrisCreate extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:create';
+    protected $signature = 'libris:index:create';
 
     /**
      * The console command description.

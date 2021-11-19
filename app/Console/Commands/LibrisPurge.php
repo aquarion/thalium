@@ -14,7 +14,7 @@ class LibrisPurge extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:purge';
+    protected $signature = 'libris:purge_deleted';
 
     /**
      * The console command description.
