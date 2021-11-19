@@ -25,6 +25,15 @@ class LibrisService implements LibrisInterface
         $last_modified = Storage::disk('libris')->lastModified($file);
 
 
+        $boom = explode("/", $file);
+        $title = array_pop($boom);
+        $this->title = $title;
+
+        if (strpos($title, ".") === 0){
+            Log::error("[AddDoc] Ignoring Name: [{$file}], hidden file");
+            return true;
+        }
+
         if ($doc = $this->fetchDocument($file)){
              if(isset($doc['_source']['last_modified'])){
                 if($doc['_source']['last_modified'] == $last_modified){
@@ -49,7 +58,7 @@ class LibrisService implements LibrisInterface
             Log::debug("[AddDoc] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->index_name);
         } else {
-            Log::warning("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
+            Log::debug("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
             return true;
         }
 
