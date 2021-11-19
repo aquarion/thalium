@@ -40,7 +40,7 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-RUN curl --fail -q https://apache.mirrors.nublue.co.uk/pdfbox/2.0.24/pdfbox-app-2.0.24.jar > /usr/share/java/pdfbox.jar
+RUN curl --fail -q -L https://downloads.apache.org/pdfbox/2.0.24/pdfbox-app-2.0.24.jar > /usr/share/java/pdfbox.jar
 # Set working directory
 WORKDIR /var/www
 
