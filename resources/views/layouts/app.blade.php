@@ -11,6 +11,18 @@
 
     <link rel="canonical" href="{{ url()->current() }}">
 
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <link rel="manifest" href="/static/icons/site.webmanifest">
+    <link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#a400ff">
+    <link rel="shortcut icon" href="/static/icons/favicon.ico">
+    <meta name="apple-mobile-web-app-title" content="Thalium">
+    <meta name="application-name" content="Thalium">
+    <meta name="msapplication-TileColor" content="#9f00a7">
+    <meta name="msapplication-config" content="/static/icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
     <!-- Bootstrap core CSS -->
 <link rel="stylesheet" href="/css/app.css">
 
@@ -74,7 +86,7 @@
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-  <a class="navbar-brand" href="/">Thallium</a>
+  <a class="navbar-brand" href="/"><img src="/static/thalium_black_smol.png" >Thalium</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
