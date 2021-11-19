@@ -21,7 +21,7 @@
 
     <ul>
     @foreach ($docs as $doc)
-	    <li><a href="{{ $doc['download'] }}">{{ $doc['name'] }}</a>
+	    <li><a href="{{ $doc['download'] }}">{{ $doc['name'] ? $doc['name'] : '[empty]' }}</a>
         @foreach ($doc['tags'] as $tag)
           <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
         @endforeach

@@ -33,6 +33,7 @@ class LibrisController extends Controller
         $page = $request->query('page', 1);
         $perpage = 60;
 
+        $system = $system == "null" ? "" : $system;
 
         $tag = $request->query('tag', false);
 
