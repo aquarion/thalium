@@ -7,7 +7,7 @@ FROM thalium
 # RUN supervisorctl start horizon
 
 
-COPY etc/horizon/scheduler.sh /usr/local/bin/scheduler.sh
+COPY docker/horizon/scheduler.sh /usr/local/bin/scheduler.sh
 
 #RUN chmod u+x /usr/local/bin/scheduler.sh
 
