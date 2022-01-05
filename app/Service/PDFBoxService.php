@@ -18,8 +18,9 @@ class PDFBoxService extends ParserService
 	private $tempfile = "";
 	// /usr/share/java/pdfbox2-tools-2.0.13.jar
 
+	public function __construct($file, $index_name){
+		parent::__construct($file, $index_name);
 
-	public function parse_pages(){
 		set_time_limit ( 120 );
         ini_set('memory_limit', '2G');
 
@@ -28,10 +29,13 @@ class PDFBoxService extends ParserService
         //$tempfile2 = tempnam(sys_get_temp_dir(),"scanfile-");
         file_put_contents($this->tempfile, $pdf_content);
 
-		$cmd_tpl = '/usr/bin/java -jar %s ExtractText -html -console "%s" 2>&1';
+	}
 
+	public function run_pdfbox($command){
 
-		$cmd = sprintf($cmd_tpl, $this->pdfbox_bin, $this->tempfile);
+		$cmd_tpl = '/usr/bin/java -jar %s %s "%s" 2>&1';
+
+		$cmd = sprintf($cmd_tpl, $this->pdfbox_bin, $command, $this->tempfile);
 		exec($cmd, $outputRef, $return);
 
 		$output = new \ArrayObject($outputRef) ;
@@ -43,6 +47,14 @@ class PDFBoxService extends ParserService
 			Log::Error($error);
 			throw new Exceptions\LibrisParseFailed($error);
 		}
+
+		return $output;
+	}
+
+	public function parse_pages(){
+
+
+		$output = $this->run_pdfbox("ExtractText -html -console");
 
 		$page = "";
 		$pages = array();
@@ -62,9 +74,42 @@ class PDFBoxService extends ParserService
 
 	}
 
+	public function generateThumbnail(){
+        Log::info("[AddDoc] {$this->filename} Generating PDF Thumbnail");
+
+		$tempdir = $this->tempfile.".dir";
+
+		mkdir($tempdir);
+
+		$command = sprintf('PDFToImage -imageType png -outputPrefix "%s/" -page 1', $tempdir);
+		$output = $this->run_pdfbox($command);
+
+		$image = new \Imagick($tempdir.'/1.png');
+
+		// If 0 is provided as a width or height parameter,
+		// aspect ratio is maintained
+		$image->thumbnailImage(200, 300, true);
+
+        $imageData = base64_encode($image);
+        return 'data: image/png;base64,'.$imageData;
+
+
+	}
+
+	public static function delTree($dir) {
+		$files = array_diff(scandir($dir), array('.','..'));
+		 foreach ($files as $file) {
+		   (is_dir("$dir/$file")) ? $this->delTree("$dir/$file") : unlink("$dir/$file");
+		 }
+		 return rmdir($dir);
+	}
+
 	public function __destruct(){
 		if($this->tempfile){
 			unlink($this->tempfile);
+		}
+		if(file_exists($this->tempfile.'.dir')){
+			$this->delTree($this->tempfile.'.dir');
 		}
 	}
 

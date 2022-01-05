@@ -27,6 +27,7 @@ RUN apt-get -qq update && apt-get -qqy install \
     zip \
     unzip \
     jq \
+    libmagickwand-dev \
     default-jre
 
 # Clear cache
@@ -40,6 +41,9 @@ RUN pecl install xdebug-2.9.5 \
 
 RUN pecl install redis \
     && docker-php-ext-enable redis
+
+RUN pecl install imagick \
+    && docker-php-ext-enable imagick
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

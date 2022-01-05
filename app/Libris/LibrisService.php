@@ -22,9 +22,6 @@ class LibrisService implements LibrisInterface
     public function addDocument($file, $log = false)
     {
 
-        $last_modified = Storage::disk('libris')->lastModified($file);
-
-
         $boom = explode("/", $file);
         $title = array_pop($boom);
         $this->title = $title;
@@ -33,6 +30,8 @@ class LibrisService implements LibrisInterface
             Log::error("[AddDoc] Ignoring Name: [{$file}], hidden file");
             return true;
         }
+
+        $last_modified = Storage::disk('libris')->lastModified($file);
 
         if ($doc = $this->fetchDocument($file)){
              if(isset($doc['_source']['last_modified'])){
@@ -44,7 +43,6 @@ class LibrisService implements LibrisInterface
 
              Log::info("[AddDoc] $file is already in the index, but this is different?");
         }
-
 
         $mimeType = Storage::disk('libris')->mimeType($file);
         $mimeTypeArray = explode("/", $mimeType);
@@ -161,6 +159,9 @@ class LibrisService implements LibrisInterface
                         ],
                         'pageNo' => [
                             'type' => 'integer'
+                        ],
+                        'thumbnail' => [
+                            'type' => 'text'
                         ],
 
                         'page_relation' => [
@@ -351,6 +352,7 @@ class LibrisService implements LibrisInterface
 
     public function systems(){
 
+
         $filter = [
             'only_documents' => [
                 'filter' => [
@@ -380,6 +382,8 @@ class LibrisService implements LibrisInterface
 
         $buckets = array();
         $continue = true;
+        Log::info($params);
+
         while ($continue == true){
             $results = Elasticsearch::search($params);
             $buckets = array_merge($buckets, $results['aggregations']['uniq_systems']['buckets']);
@@ -394,8 +398,11 @@ class LibrisService implements LibrisInterface
         foreach($buckets as $bucket){
             $system = $bucket['key']['systems'];
             $count = $bucket['only_documents']['doc_count'];
-            $return[$system] = $count;
+            if($count){
+                $return[$system] = $count;
+            }
         }
+        Log::info($return);
         return $return;
 
     }
@@ -409,6 +416,9 @@ class LibrisService implements LibrisInterface
             'body' => [
                 'size' => $size,
                 'from' => $from,
+                'sort' => [
+                   [ "tags" => ["missing" => "_first", "order" => "asc" ], "path" => [ "order" => "asc"], "title" => [ "order" => "asc"] ]
+                ],
                 'query' => [
                     'bool' => [
                         'must' => [ 0 => [
@@ -498,5 +508,54 @@ class LibrisService implements LibrisInterface
 
 
         return Elasticsearch::search($params);
+    }
+
+    function getThumbnail($doc){
+
+        if(isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail']){
+            return $doc['_source']['thumbnail'];
+        }
+
+        Log::debug($doc);
+
+        $file = $doc['_source']['path'];
+
+        if(Storage::disk('libris')->missing($file)){
+             Log::error("[indexFile] No Such File $file");
+             return false;
+        }
+
+        $mimeType = Storage::disk('libris')->mimeType($file);
+        $mimeTypeArray = explode("/", $mimeType);
+
+        $parser = false;
+
+        if($mimeType == "application/pdf"){
+            Log::debug("[AddDoc] Parsing PDF $file ...");
+            $parser = new PDFBoxService($file, $this->index_name);
+            $dataURI = $parser->generateThumbnail($file);
+        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+            Log::debug("[AddDoc] Parsing $mimeType $file as text ...");
+            $parser = new ParseTextService($file, $this->index_name);
+            $dataURI = $parser->generateThumbnail($file);
+        } else {
+            Log::debug("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
+            return false;
+        }
+
+        $params = [
+            'index' => $doc['_index'],
+            'id'    => $doc['_id'],
+            'body'  => [
+                'doc' => [
+                    'thumbnail' => $dataURI
+                ]
+            ]
+        ];
+
+        // Update doc at /my_index/_doc/my_id
+        $response = Elasticsearch::update($params);
+
+        return $dataURI;
     }
 }
