@@ -22,6 +22,7 @@ Route::get('/everything', 'LibrisController@everything');
 Route::get('/delete', 'LibrisController@deleteIndex');
 Route::get('/update', 'LibrisController@updateIndex');
 Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
+Route::get('/systemGrid/{system}', 'LibrisController@allBySystemGrid')->name("system.index");
 
 Route::get('/', 'LibrisController@home')->name("home");
 

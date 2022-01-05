@@ -28,7 +28,11 @@ class LibrisController extends Controller
 
     }
 
-    public function allBySystem(LibrisInterface $libris, Request $request, $system)
+    public function allBySystemList(LibrisInterface $libris, Request $request, $system, $view = "systemGrid")
+    {
+        return $this->allBySystem($libris, $request, $system, 'systemList');
+    }
+    public function allBySystem(LibrisInterface $libris, Request $request, $system, $view = "systemGrid")
     {
         $page = $request->query('page', 1);
         $perpage = 60;
@@ -65,13 +69,13 @@ class LibrisController extends Controller
 
         $paginate->setPath(url()->current());
 
-        return view('system', [
+        return view($view, [
             'system' => $system,
             'tag'    => $tag,
             'docs'   => $docresult,
             'page'   => $page,
             'pages'  => ceil($total/$perpage),
-            'pagination' => $paginate,
+            'pagination' => $paginate
         ]);
         // dd($libris->showAll());
 
@@ -129,4 +133,5 @@ class LibrisController extends Controller
         return view('search', $values);
 
     }
+
 }
