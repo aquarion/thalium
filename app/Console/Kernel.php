@@ -5,6 +5,9 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
+use App\Console\Commands\LibrisPurge;
+use App\Console\Commands\LibrisRebuild;
+
 class Kernel extends ConsoleKernel
 {
     /**
@@ -25,6 +28,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+
+        $schedule->command('libris:rebuild')->daily();
+        $schedule->command('libris:purge_deleted')->daily();
     }
 
     /**

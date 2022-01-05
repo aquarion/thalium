@@ -24,6 +24,14 @@ class ScanPDF implements ShouldQueue
     protected $libris;
 
     /**
+     * The number of seconds after which the job's unique lock will be released.
+     *
+     * @var int
+     */
+    public $uniqueFor = 3600;
+
+
+    /**
      * Create a new job instance.
      *
      * @return void
@@ -55,7 +63,7 @@ class ScanPDF implements ShouldQueue
         Log::info("[Scanfile] Hello ".$this->filename);
 
         Redis::funnel('ScanPDF')->limit(5)->then(function () {
-            Log::debug("[Scanfile] Got lock for ".$this->filename);
+            Log::debug("[Scanfile] Got lock for ".$this->filename." = ".md5($this->filename));
             try {
                 $returnValue = $this->libris->addDocument($this->filename);
                 Log::info("[Scanfile] Finished ".$this->filename);
@@ -65,6 +73,7 @@ class ScanPDF implements ShouldQueue
                 return;
             }
             if(!$returnValue){
+                Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
                 $this->fail();
             }
             return $returnValue;
@@ -87,5 +96,10 @@ class ScanPDF implements ShouldQueue
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60*60*24);
+    }
+
+    public function uniqueId()
+    {
+        return md5($this->filename);
     }
 }

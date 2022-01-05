@@ -103,6 +103,7 @@ abstract class ParserService
         	$this->index_pages();
         }
 
+        return true;
 	}
 
 	public function index_pages(){
