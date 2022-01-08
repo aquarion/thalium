@@ -21,13 +21,6 @@ class LibrisController extends Controller
 
     }
 
-    public function everything(LibrisInterface $libris)
-    {
-
-        dump($libris->Everything());
-
-    }
-
     public function allBySystemList(LibrisInterface $libris, Request $request, $system, $view = "systemGrid")
     {
         return $this->allBySystem($libris, $request, $system, 'systemList');

@@ -17,18 +17,15 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::get('/reindex', 'LibrisController@reindex');
-Route::get('/everything', 'LibrisController@everything');
-Route::get('/delete', 'LibrisController@deleteIndex');
-Route::get('/update', 'LibrisController@updateIndex');
-Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
-Route::get('/systemGrid/{system}', 'LibrisController@allBySystemGrid')->name("system.index");
-
 Route::get('/', 'LibrisController@home')->name("home");
+
+Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
+Route::get('/systemList/{system}', 'LibrisController@allBySystemList')->name("system.list");
 
 Route::get('/search', 'LibrisController@search')->name("search");
 
 
 if (App::environment(['local', 'staging'])) {
     Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail");
+    Route::get('/everything', 'DebugController@everything');
 }
