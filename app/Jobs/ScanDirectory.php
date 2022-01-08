@@ -19,6 +19,7 @@ class ScanDirectory implements ShouldQueue
 
     protected $filename;
 
+
     /**
      * Create a new job instance.
      *
@@ -27,7 +28,9 @@ class ScanDirectory implements ShouldQueue
     public function __construct($filename)
     {
         $this->filename = $filename;
-    }
+
+    }//end __construct()
+
 
     /**
      * Job as string
@@ -37,7 +40,9 @@ class ScanDirectory implements ShouldQueue
     public function __toString()
     {
         return sprintf("ScanDir <%s>", $this->filename);
-    }
+
+    }//end __toString()
+
 
     /**
      * Execute the job.
@@ -49,7 +54,7 @@ class ScanDirectory implements ShouldQueue
         $filename = $this->filename;
         Log::debug("[ScanDir] $filename");
 
-        $files = Storage::disk('libris')->files($filename);
+        $files   = Storage::disk('libris')->files($filename);
         $subdirs = Storage::disk('libris')->directories($filename);
 
         foreach ($files as $file) {
@@ -57,11 +62,12 @@ class ScanDirectory implements ShouldQueue
             $libris->indexFile($file);
         }
 
-
         foreach ($subdirs as $directory) {
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
             $libris->indexDirectory($directory);
         }
-    }
 
-}
+    }//end handle()
+
+
+}//end class

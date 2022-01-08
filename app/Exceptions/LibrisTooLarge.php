@@ -6,5 +6,4 @@ use Exception;
 
 class LibrisTooLarge extends Exception
 {
-    //
-}
+}//end class

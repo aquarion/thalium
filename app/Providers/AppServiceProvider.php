@@ -7,6 +7,8 @@ use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
+
+
     /**
      * Register any application services.
      *
@@ -14,8 +16,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
-    }
+
+    }//end register()
+
 
     /**
      * Bootstrap any application services.
@@ -24,7 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
-        Paginator::useBootstrap();
-    }
-}
+                Paginator::useBootstrap();
+
+    }//end boot()
+
+
+}//end class

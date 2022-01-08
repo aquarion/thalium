@@ -6,5 +6,4 @@ use Exception;
 
 class LibrisNotFound extends Exception
 {
-    //
-}
+}//end class

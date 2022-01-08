@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 
 class PDFBoxServiceProvider extends ServiceProvider
 {
+
+
     /**
      * Register services.
      *
@@ -13,8 +15,9 @@ class PDFBoxServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
-    }
+
+    }//end register()
+
 
     /**
      * Bootstrap services.
@@ -23,6 +26,8 @@ class PDFBoxServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
-    }
-}
+
+    }//end boot()
+
+
+}//end class

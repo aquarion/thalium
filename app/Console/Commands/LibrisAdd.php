@@ -13,6 +13,7 @@ use App\Jobs\ScanPDF;
 
 class LibrisAdd extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -27,6 +28,7 @@ class LibrisAdd extends Command
      */
     protected $description = 'Index a single file';
 
+
     /**
      * Create a new command instance.
      *
@@ -35,11 +37,9 @@ class LibrisAdd extends Command
     public function __construct()
     {
         parent::__construct();
-    }
 
-    public function debug($out){
-        $this->line($out);
-    }
+    }//end __construct()
+
 
     /**
      * Execute the console command.
@@ -49,9 +49,9 @@ class LibrisAdd extends Command
     public function handle(LibrisInterface $libris)
     {
         $filename = $this->argument('filename');
-        $exists = Storage::disk('libris')->exists($filename);
-        if($exists){
-            if(Storage::disk('libris')->getMetadata($filename)['type'] === 'dir'){
+        $exists   = Storage::disk('libris')->exists($filename);
+        if ($exists) {
+            if (Storage::disk('libris')->getMetadata($filename)['type'] === 'dir') {
                 $this->info("Scanning directory $filename");
                 $libris->indexDirectory($filename);
             } else {
@@ -61,7 +61,10 @@ class LibrisAdd extends Command
         } else {
             $this->error($filename.' not found in Libris');
         }
-        return 0;
-    }
-}
 
+        return 0;
+
+    }//end handle()
+
+
+}//end class

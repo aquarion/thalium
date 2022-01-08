@@ -8,6 +8,7 @@ use App\Libris\LibrisInterface;
 
 class LibrisRebuild extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -22,6 +23,7 @@ class LibrisRebuild extends Command
      */
     protected $description = 'Rebuild Libris index and all document data';
 
+
     /**
      * Create a new command instance.
      *
@@ -30,7 +32,9 @@ class LibrisRebuild extends Command
     public function __construct()
     {
         parent::__construct();
-    }
+
+    }//end __construct()
+
 
     /**
      * Execute the console command.
@@ -38,8 +42,11 @@ class LibrisRebuild extends Command
      * @return mixed
      */
     public function handle(LibrisInterface $libris)
-    { 
+    {
         $libris->reindex();
         $this->info("Rebuilding Index, Please stand by...");
-    }
-}
+
+    }//end handle()
+
+
+}//end class

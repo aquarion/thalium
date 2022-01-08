@@ -8,6 +8,7 @@ use App\Libris\LibrisInterface;
 
 class LibrisDelete extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -22,6 +23,7 @@ class LibrisDelete extends Command
      */
     protected $description = 'Delete Libris index and all document data';
 
+
     /**
      * Create a new command instance.
      *
@@ -30,7 +32,9 @@ class LibrisDelete extends Command
     public function __construct()
     {
         parent::__construct();
-    }
+
+    }//end __construct()
+
 
     /**
      * Execute the console command.
@@ -40,6 +44,8 @@ class LibrisDelete extends Command
     public function handle(LibrisInterface $libris)
     {
         var_dump($libris->deleteIndex());
-    }
-}
 
+    }//end handle()
+
+
+}//end class

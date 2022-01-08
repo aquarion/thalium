@@ -6,5 +6,4 @@ use Exception;
 
 class LibrisNotPDF extends Exception
 {
-    //
-}
+}//end class

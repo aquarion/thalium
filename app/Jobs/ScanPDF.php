@@ -18,7 +18,9 @@ class ScanPDF implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $system;
+
     protected $tags;
+
     protected $filename;
 
     protected $libris;
@@ -26,7 +28,7 @@ class ScanPDF implements ShouldQueue
     /**
      * The number of seconds after which the job's unique lock will be released.
      *
-     * @var int
+     * @var integer
      */
     public $uniqueFor = 3600;
 
@@ -39,7 +41,9 @@ class ScanPDF implements ShouldQueue
     public function __construct($filename)
     {
         $this->filename = $filename;
-    }
+
+    }//end __construct()
+
 
     /**
      * Job as string
@@ -49,7 +53,9 @@ class ScanPDF implements ShouldQueue
     public function __toString()
     {
         return sprintf("ScanPDF <%s>", $this->filename);
-    }
+
+    }//end __toString()
+
 
     /**
      * Execute the job.
@@ -62,30 +68,37 @@ class ScanPDF implements ShouldQueue
 
         Log::info("[Scanfile] Hello ".$this->filename);
 
-        Redis::funnel('ScanPDF')->limit(5)->then(function () {
-            Log::debug("[Scanfile] Got lock for ".$this->filename." = ".md5($this->filename));
-            try {
-                $returnValue = $this->libris->addDocument($this->filename);
-                Log::info("[Scanfile] Finished ".$this->filename);
-            } catch (Exception $e){
-                Log::info("[Scanfile] Caught Exception");
-                $this->fail($e);
-                return;
+        Redis::funnel('ScanPDF')->limit(5)->then(
+            function () {
+                Log::debug("[Scanfile] Got lock for ".$this->filename." = ".md5($this->filename));
+                try {
+                    $returnValue = $this->libris->addDocument($this->filename);
+                    Log::info("[Scanfile] Finished ".$this->filename);
+                } catch (Exception $e) {
+                    Log::info("[Scanfile] Caught Exception");
+                    $this->fail($e);
+                    return;
+                }
+
+                if (!$returnValue) {
+                    // Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
+                    $this->fail();
+                }
+
+                return $returnValue;
+            },
+            function () {
+                $release = (60 + rand(0, 20));
+                // Could not obtain lock...
+                Log::debug("[Scanfile] ".$this->filename." bounced ".$release);
+                return $this->release($release);
             }
-            if(!$returnValue){
-                // Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
-                $this->fail();
-            }
-            return $returnValue;
-        }, function () {
-            $release = 60+rand(0,20);
-            // Could not obtain lock...
-            Log::debug("[Scanfile] ".$this->filename." bounced ".$release);
-            return $this->release($release);
-        });
+        );
 
         // Log::debug("[ScanFile] Bye ".$this->filename);
-    }
+
+    }//end handle()
+
 
     /**
      * Determine the time at which the job should timeout.
@@ -95,11 +108,16 @@ class ScanPDF implements ShouldQueue
     public function retryUntil()
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
-        return now()->addSeconds(60*60*24);
-    }
+        return now()->addSeconds(60 * 60 * 24);
+
+    }//end retryUntil()
+
 
     public function uniqueId()
     {
         return md5($this->filename);
-    }
-}
+
+    }//end uniqueId()
+
+
+}//end class

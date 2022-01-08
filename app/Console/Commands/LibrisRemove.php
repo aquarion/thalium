@@ -14,6 +14,7 @@ use App\Jobs\ScanPDF;
 
 class LibrisRemove extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -28,6 +29,7 @@ class LibrisRemove extends Command
      */
     protected $description = 'Remove a single file';
 
+
     /**
      * Create a new command instance.
      *
@@ -36,11 +38,16 @@ class LibrisRemove extends Command
     public function __construct()
     {
         parent::__construct();
-    }
 
-    public function debug($out){
+    }//end __construct()
+
+
+    public function debug($out)
+    {
         $this->line($out);
-    }
+
+    }//end debug()
+
 
     /**
      * Execute the console command.
@@ -58,7 +65,10 @@ class LibrisRemove extends Command
             $this->error("$filename not found in index");
             return 1;
         }
-        return 0;
-    }
-}
 
+        return 0;
+
+    }//end handle()
+
+
+}//end class

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
+
     /**
      * The event listener mappings for the application.
      *
@@ -20,6 +21,7 @@ class EventServiceProvider extends ServiceProvider
         ],
     ];
 
+
     /**
      * Register any events for your application.
      *
@@ -29,6 +31,7 @@ class EventServiceProvider extends ServiceProvider
     {
         parent::boot();
 
-        //
-    }
-}
+    }//end boot()
+
+
+}//end class

@@ -10,28 +10,29 @@ use App\Console\Commands\LibrisRebuild;
 
 class Kernel extends ConsoleKernel
 {
+
     /**
      * The Artisan commands provided by your application.
      *
      * @var array
      */
-    protected $commands = [
-        //
-    ];
+    protected $commands = [];
+
 
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @param  \Illuminate\Console\Scheduling\Schedule $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-
         $schedule->command('libris:rebuild')->daily();
         $schedule->command('libris:purge_deleted')->daily();
-    }
+
+    }//end schedule()
+
 
     /**
      * Register the commands for the application.
@@ -42,6 +43,9 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__.'/Commands');
 
-        require base_path('routes/console.php');
-    }
-}
+        include base_path('routes/console.php');
+
+    }//end commands()
+
+
+}//end class

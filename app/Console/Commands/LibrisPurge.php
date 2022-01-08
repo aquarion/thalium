@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class LibrisPurge extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -23,6 +24,7 @@ class LibrisPurge extends Command
      */
     protected $description = 'Purge deleted files from index';
 
+
     /**
      * Create a new command instance.
      *
@@ -31,7 +33,9 @@ class LibrisPurge extends Command
     public function __construct()
     {
         parent::__construct();
-    }
+
+    }//end __construct()
+
 
     /**
      * Execute the console command.
@@ -44,13 +48,16 @@ class LibrisPurge extends Command
 
         $files = $libris->purgeDeletedFiles();
 
-        if($files){
+        if ($files) {
             $this->line("Deleted Files:");
-            foreach ($files as $line){
+            foreach ($files as $line) {
                 $this->line(" * ".$line);
             }
         } else {
             $this->line("Nothing to delete");
         }
-    }
-}
+
+    }//end handle()
+
+
+}//end class
