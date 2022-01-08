@@ -36,6 +36,7 @@ class PDFBoxService extends ParserService
 		$cmd_tpl = '/usr/bin/java -jar %s %s "%s" 2>&1';
 
 		$cmd = sprintf($cmd_tpl, $this->pdfbox_bin, $command, $this->tempfile);
+		Log::Info($cmd);
 		exec($cmd, $outputRef, $return);
 
 		$output = new \ArrayObject($outputRef) ;
@@ -75,23 +76,19 @@ class PDFBoxService extends ParserService
 	}
 
 	public function generateThumbnail(){
-        Log::info("[AddDoc] {$this->filename} Generating PDF Thumbnail");
+        Log::info("[GenThumbnail] {$this->filename} Generating PDF Thumbnail");
 
-		$tempdir = $this->tempfile.".dir";
-
-		mkdir($tempdir);
-
-		$command = sprintf('PDFToImage -imageType png -outputPrefix "%s/" -page 1', $tempdir);
-		$output = $this->run_pdfbox($command);
-
-		$image = new \Imagick($tempdir.'/1.png');
+		$image = new \Imagick($this->tempfile.'[0]');
+		Log::Info('[PDFBox] Hello '.$this->tempfile);
+		$image->setFormat("png");
+		Log::Info('[PDFBox] Format: '.$image->getFormat());
 
 		// If 0 is provided as a width or height parameter,
 		// aspect ratio is maintained
 		$image->thumbnailImage(200, 300, true);
 
         $imageData = base64_encode($image);
-        return 'data: image/png;base64,'.$imageData;
+        return 'data:image/png;base64,'.$imageData;
 
 
 	}

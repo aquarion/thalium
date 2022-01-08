@@ -27,6 +27,9 @@
             @foreach ($doc['tags'] as $tag)
             <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
             @endforeach
+            @if (App::environment(['local', 'staging']))
+              <a href="/debug/thumbnail?id={{ urlencode($doc['id'])}}" title="Thumbnail debug">🖼</a>
+            @endif
       </div>
 	@endforeach
 	</ul>

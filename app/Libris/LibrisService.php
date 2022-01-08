@@ -44,25 +44,32 @@ class LibrisService implements LibrisInterface
              Log::info("[AddDoc] $file is already in the index, but this is different?");
         }
 
+        $parser = $this->getParser($file);
+
+        if($parser){
+            return $parser->index();
+        }
+    }
+
+    function getParser($file){
+
         $mimeType = Storage::disk('libris')->mimeType($file);
         $mimeTypeArray = explode("/", $mimeType);
 
         $parser = false;
 
         if($mimeType == "application/pdf"){
-            Log::debug("[AddDoc] Parsing PDF $file ...");
+            Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->index_name);
         } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
-            Log::debug("[AddDoc] Parsing $mimeType $file as text ...");
+            Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->index_name);
         } else {
-            Log::debug("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
-            return true;
+            Log::debug("[Parser] Ignoring $mimeType $file, cannot parse ...");
+            return false;
         }
 
-        if($parser){
-            return $parser->index();
-        }
+        return $parser;
     }
 
     public function deleteDocument($id){
@@ -407,7 +414,7 @@ class LibrisService implements LibrisInterface
 
     }
 
-    public function AllBySystem($system, $page=1, $size, $tag = false){
+    public function AllBySystem($system, $page=1, $size=60, $tag = false){
 
         $from = ($page-1) * $size;
 
@@ -510,9 +517,10 @@ class LibrisService implements LibrisInterface
         return Elasticsearch::search($params);
     }
 
-    function getThumbnail($doc){
+    function getThumbnail($doc, $regen = false){
 
-        if(isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail']){
+        if(isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'] && !$regen){
+            // Log::debug("[getThumbnail] Found Thumbnail");
             return $doc['_source']['thumbnail'];
         }
 
@@ -521,27 +529,11 @@ class LibrisService implements LibrisInterface
         $file = $doc['_source']['path'];
 
         if(Storage::disk('libris')->missing($file)){
-             Log::error("[indexFile] No Such File $file");
+             Log::error("[getThumbnail] No Such File $file");
              return false;
         }
 
-        $mimeType = Storage::disk('libris')->mimeType($file);
-        $mimeTypeArray = explode("/", $mimeType);
-
-        $parser = false;
-
-        if($mimeType == "application/pdf"){
-            Log::debug("[AddDoc] Parsing PDF $file ...");
-            $parser = new PDFBoxService($file, $this->index_name);
-            $dataURI = $parser->generateThumbnail($file);
-        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
-            Log::debug("[AddDoc] Parsing $mimeType $file as text ...");
-            $parser = new ParseTextService($file, $this->index_name);
-            $dataURI = $parser->generateThumbnail($file);
-        } else {
-            Log::debug("[AddDoc] Ignoring $mimeType $file, cannot parse ...");
-            return false;
-        }
+        $dataURI = $this->genThumbnail($file);
 
         $params = [
             'index' => $doc['_index'],
@@ -557,5 +549,17 @@ class LibrisService implements LibrisInterface
         $response = Elasticsearch::update($params);
 
         return $dataURI;
+    }
+
+    function genThumbnail($file){
+        Log::debug("[genThumbnail] ".$file);
+
+        $parser = $this->getParser($file);
+
+        if($parser){
+            return $parser->generateThumbnail($file);
+        }
+
+        return false;
     }
 }

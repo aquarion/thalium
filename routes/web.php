@@ -27,3 +27,8 @@ Route::get('/systemGrid/{system}', 'LibrisController@allBySystemGrid')->name("sy
 Route::get('/', 'LibrisController@home')->name("home");
 
 Route::get('/search', 'LibrisController@search')->name("search");
+
+
+if (App::environment(['local', 'staging'])) {
+    Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail");
+}

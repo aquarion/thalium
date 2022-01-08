@@ -73,7 +73,7 @@ class ScanPDF implements ShouldQueue
                 return;
             }
             if(!$returnValue){
-                Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
+                // Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
                 $this->fail();
             }
             return $returnValue;

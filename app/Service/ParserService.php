@@ -130,6 +130,7 @@ abstract class ParserService
                     'system' => $this->system,
                     'tags' => $this->tags,
                     'title' => $this->title,
+                    'thumbnail' => $this->generateThumbnail(),
                     "page_relation" => [
                         "name" => "page",
                         "parent" => $this->filename,
@@ -223,7 +224,7 @@ abstract class ParserService
         $canvas->setImageFormat('png');
 
         $imageData = base64_encode($canvas);
-        return 'data: image/png;base64,'.$imageData;
+        return 'data:image/png;base64,'.$imageData;
 
     }
 

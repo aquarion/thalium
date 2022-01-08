@@ -28,7 +28,8 @@ RUN apt-get -qq update && apt-get -qqy install \
     unzip \
     jq \
     libmagickwand-dev \
-    default-jre
+    default-jre \
+    imagemagick
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

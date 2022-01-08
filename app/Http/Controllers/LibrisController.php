@@ -52,6 +52,7 @@ class LibrisController extends Controller
 
 
             $docresult[] = [
+                'id' => $doc['_id'],
                 'name' => urldecode($doc['_source']['title']),
                 'path' => $doc['_source']['path'],
                 'thumbnail' => $libris->getThumbnail($doc),
