@@ -63,8 +63,13 @@ RUN mkdir -p /home/$user/.composer && \
 
 # RUN chown -R $user:$user /var/run/thalium
 
-COPY docker/bin/install_pdfbox.sh /usr/local/bin/install_pdfbox.sh
-RUN bash /usr/local/bin/install_pdfbox.sh
+COPY docker/imagemagic_policy.xml /etc/ImageMagick-6/policy.xml
+
+
+run mkdir -p /usr/src/pdfbox
+COPY docker/pdfbox/pom.xml /usr/src/pdfbox
+COPY docker/pdfbox/install_pdfbox.sh /usr/src/pdfbox/install_pdfbox.sh
+RUN bash /usr/src/pdfbox/install_pdfbox.sh
 # Set working directory
 WORKDIR /var/www
 

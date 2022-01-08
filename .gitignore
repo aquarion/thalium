@@ -15,3 +15,5 @@ yarn-error.log
 storage/mysql_data
 public/vendor
 docker-compose.yml
+docker/target
+docker/pdfbox/target
