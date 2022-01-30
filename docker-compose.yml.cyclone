@@ -20,6 +20,8 @@ services:
         uid: 1000
       context: ./
       dockerfile: etc/Dockerfile/thalium.Dockerfile
+    environment:
+      - LOG_PREFIX=webapp
     image: thalium
     container_name: thalium-app
     restart: unless-stopped
@@ -38,6 +40,8 @@ services:
     build:
       context: ./
       dockerfile: etc/Dockerfile/scheduler.Dockerfile
+    environment:
+      - LOG_PREFIX=scheduler
     container_name: scheduler-app
     restart: unless-stopped
     working_dir: /var/www/

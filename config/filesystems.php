@@ -67,7 +67,7 @@ return [
 
         'libris' => [
             'driver' => 'local',
-            'root' => '/mnt/rpg/Systems',
+            'root' => env("DOCKER_PDF_LIBRARY"),
             'url' => env('APP_URL').'/_libris',
             'visibility' => 'public',
         ],

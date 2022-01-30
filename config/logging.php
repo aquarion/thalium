@@ -4,6 +4,13 @@ use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 
+if (env("LOG_PREFIX")) {
+	$logname = env("LOG_PREFIX")."-";
+} else {
+	$logname = "";
+}
+
+
 return [
 
     /*
@@ -43,19 +50,19 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/'.$logname.'laravel.log'),
             'level' => 'debug',
         ],
 
         'errors' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.err.log'),
+            'path' => storage_path('logs/'.$logname.'laravel.err.log'),
             'level' => 'warning',
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/'.$logname.'laravel.log'),
             'level' => 'debug',
             'days' => 14,
         ],

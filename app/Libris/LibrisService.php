@@ -262,7 +262,7 @@ class LibrisService implements LibrisInterface
 
     public function reindex()
     {
-        Log::info("Kicking off a reindex");
+        Log::info("Kicking off a reindex for ".Storage::disk('libris')->path("."));
 
         $this->updatePipeline();
         $this->updateIndex();

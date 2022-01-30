@@ -4,28 +4,36 @@ services:
   app:
     build:
       args:
-        user: root
-        uid: 0
+        user: ${USER}
+        uid: ${UID}
       context: ./
       dockerfile: docker/Dockerfile/thalium.Dockerfile
+    environment:
+      - LOG_PREFIX=thalium
     image: thalium
     container_name: thalium-app
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
       - .:/var/www
-      - ${PDF_LIBRARY}:/mnt/rpg
-      - "phpsocket:/var/run/thalium"
+      - ${HOST_PDF_LIBRARY}:/mnt/rpg
+      #- "/var/run/user/${UID}:/var/run/thalium"
+      - "/var/run/thalium:/var/run/thalium"
   scheduler:
     build:
+      args:
+        user: ${USER}
+        uid: ${UID}
       context: ./
       dockerfile: docker/Dockerfile/scheduler.Dockerfile
+    environment:
+      - LOG_PREFIX=scheduler
     container_name: scheduler-app
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
       - .:/var/www
-      - ${PDF_LIBRARY}:/mnt/rpg
+      - ${HOST_PDF_LIBRARY}:/mnt/rpg
   # nginx:
   #   image: nginx:1.17-alpine
   #   container_name: thalium-nginx
@@ -36,6 +44,3 @@ services:
   #     - ./:/var/www
   #     - ./etc/nginx:/etc/nginx/conf.d
   #     - /mnt/storagebox:/mnt/rpg
-
-volumes:
-  phpsocket:
