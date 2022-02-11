@@ -11,17 +11,23 @@
 
     <link rel="canonical" href="{{ url()->current() }}">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
     <link rel="manifest" href="/static/icons/site.webmanifest">
     <link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#a400ff">
     <link rel="shortcut icon" href="/static/icons/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="Thalium">
-    <meta name="application-name" content="Thalium">
     <meta name="msapplication-TileColor" content="#9f00a7">
     <meta name="msapplication-config" content="/static/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
+
+
+<meta name="apple-mobile-web-app-title" content="Thalium">
+<meta name="application-name" content="Thalium">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-startup-image" href="/static/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
 
     <!-- Bootstrap core CSS -->
 <link rel="stylesheet" href="/css/app.css">
