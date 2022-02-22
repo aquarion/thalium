@@ -29,6 +29,7 @@ RUN apt-get -qq update && apt-get -qqy install \
     jq \
     libmagickwand-dev \
     default-jre \
+    npm \
     imagemagick
 
 # Clear cache
