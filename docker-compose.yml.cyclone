@@ -9,19 +9,21 @@ volumes:
     driver: local
     driver_opts:
       type: cifs
-      device: //10.42.0.135/RPG
+      device: ${HOST_PDF_LIBRARY}
       o: username=guest
+  phpsocket:
 
 services:
   app:
     build:
       args:
-        user: aquarion
+        USER: ${USER}
         uid: 1000
       context: ./
-      dockerfile: etc/Dockerfile/thalium.Dockerfile
+      dockerfile: docker/Dockerfile/thalium.Dockerfile
     environment:
       - LOG_PREFIX=webapp
+      - USER=${USER}
     image: thalium
     container_name: thalium-app
     restart: unless-stopped
@@ -29,6 +31,7 @@ services:
     volumes:
       - .:/var/www
       - libris:/mnt/rpg
+      - phpsocket:/home/${USER}/lockfiles
     networks:
       - thalium
     depends_on:
@@ -39,7 +42,7 @@ services:
   scheduler:
     build:
       context: ./
-      dockerfile: etc/Dockerfile/scheduler.Dockerfile
+      dockerfile: docker/Dockerfile/scheduler.Dockerfile
     environment:
       - LOG_PREFIX=scheduler
     container_name: scheduler-app
@@ -57,7 +60,7 @@ services:
   elasticsearch:
     build:
       context: ./
-      dockerfile: etc/Dockerfile/elasticsearch.Dockerfile
+      dockerfile: docker/Dockerfile/elasticsearch.Dockerfile
     container_name: elasticsearch
     environment:
       - node.name=es01
@@ -89,7 +92,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - ./etc/mysql:/docker-entrypoint-initdb.d
+      - ./docker/mysql:/docker-entrypoint-initdb.d
       - ./storage/mysql_data:/var/lib/mysql
     networks:
       - thalium
@@ -105,11 +108,14 @@ services:
     image: nginx:1.17-alpine
     container_name: thalium-nginx
     restart: unless-stopped
+    environment:
+      - USER=${USER}
     ports:
       - 8000:80
     volumes:
       - ./:/var/www
-      - ./etc/nginx:/etc/nginx/conf.d
+      - ./docker/nginx:/etc/nginx/conf.d
       - libris:/mnt/rpg
+      - phpsocket:/var/run/thalium
     networks:
       - thalium

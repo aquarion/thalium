@@ -51,19 +51,19 @@ RUN pecl install imagick \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Create system user to run Composer and Artisan Commands
-RUN getent passwd $user || useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+RUN getent passwd $USER || useradd -G www-data,root -u $uid -d /home/$USER $USER
+RUN mkdir -p /home/$USER/.composer && \
+    chown -R $USER:$USER /home/$USER
 
 
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+RUN mkdir -p /home/$USER/.composer && \
+    chown -R $USER:$USER /home/$USER
 
-# RUN mkdir -p /home/$user/lockfiles && \
-#     chown -R $user:$user /home/$user/lockfiles
+RUN mkdir -p /home/$USER/lockfiles && \
+    chown -R $USER:$USER /home/$USER/lockfiles
 
 
-# RUN chown -R $user:$user /var/run/thalium
+# RUN chown -R $USER:$USER /var/run/thalium
 
 COPY docker/imagemagic_policy.xml /etc/ImageMagick-6/policy.xml
 
@@ -75,4 +75,4 @@ RUN bash /usr/src/pdfbox/install_pdfbox.sh
 # Set working directory
 WORKDIR /var/www
 
-USER $user
+USER $USER
