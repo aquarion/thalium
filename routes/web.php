@@ -29,3 +29,10 @@ if (App::environment(['local', 'staging'])) {
     Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail");
     Route::get('/everything', 'DebugController@everything');
 }
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
