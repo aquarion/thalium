@@ -1,14 +1,14 @@
 FROM thalium
 
-# RUN apt-get install supervisor
-# COPY etc/horizon/supervisord.conf /etc/supervisor/conf.d/horizon.conf
-# RUN supervisorctl reread
-# RUN supervisorctl update
-# RUN supervisorctl start horizon
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    supervisor \
+  && rm -rf /var/lib/apt/lists/*
 
+COPY docker/horizon/horizon.conf /etc/supervisor/conf.d/horizon.conf
+COPY docker/horizon/supervisord.conf /etc/supervisor/supervisord.conf
 
-COPY docker/horizon/scheduler.sh /usr/local/bin/scheduler.sh
+RUN rm -rf /var/lib/apt/lists/*
 
-#RUN chmod u+x /usr/local/bin/scheduler.sh
-
-CMD ["/bin/bash", "/usr/local/bin/scheduler.sh"]
+ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisor/supervisord.conf"]
+WORKDIR /etc/supervisor/conf.d/
