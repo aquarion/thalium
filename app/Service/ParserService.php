@@ -27,6 +27,13 @@ abstract class ParserService
 
     abstract public function parsePages();
 
+    public function generateTags()
+    {
+        $tags = explode('/', $this->filename);
+        array_pop($tags); // remove the filename from the tags list
+        return $tags;
+    }
+
 
     public function __construct($file, $elasticSearchIndex)
     {
@@ -39,7 +46,7 @@ abstract class ParserService
         $this->elasticSearchIndex = $elasticSearchIndex;
         $this->lastModified       = Storage::disk('libris')->lastModified($file);
 
-        $this->tags = explode('/', $this->filename);
+        $this->tags = $this->generateTags();
 
         $system = array_shift($this->tags);
         $system = preg_replace('!\.[^.]+$!', '', $system);

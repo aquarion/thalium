@@ -52,6 +52,16 @@ class LibrisService implements LibrisInterface
 
     }//end addDocument()
 
+    public function updateDocument($id, $body)
+    {
+        $params = [
+            'index' =>  $this->elasticSearchIndex,
+            'id'    => $id,
+            'body'  => $body
+        ];
+        $response = Elasticsearch::update($params);
+    }
+
 
     public function getParser($file)
     {
@@ -314,8 +324,36 @@ class LibrisService implements LibrisInterface
         }
 
         return $deletionList;
-
     }//end purgeDeletedFiles()
+
+    public function updateTags()
+    {
+        $size   = 100;
+        $page   = 1;
+        $cursor = 0;
+
+        $results = $this->showAll(1, 0);
+        $pages   = ceil(($results['hits']['total']['value'] / $size));
+
+        for ($page = 1; $page <= $pages; $page++) {
+            dump($page.' of '.$pages);
+            $docs = $this->showAll($page, $size);
+            foreach ($docs['hits']['hits'] as $index => $doc) {
+                // dd($doc);
+                $parser = $this->getParser($doc['_source']['path']);
+
+                if ($parser->tags == $doc['_source']['tags']) {
+                    // dump('From '. implode(',', $doc['_source']['tags']).' ('.count($parser->tags).') to '.implode(',', $parser->tags).' ('.count($parser->tags).') - No change!');
+                } else {
+                    dump('     '.$parser->filename.' - from '. implode(',', $doc['_source']['tags']).' ('.count($doc['_source']['tags']).') to '.implode(',', $parser->tags).' ('.count($parser->tags).') - Update!');
+                    $body = [
+                        'doc' => ['tags'          => $parser->tags],
+                    ];
+                    $result = $this->updateDocument($doc['_id'], $body);
+                }
+            }
+        }
+    }//end updateTags()
 
 
     public function showAll($page=1, $size=60, $tag=false)
