@@ -1,13 +1,25 @@
 version: "3.7"
 
+
 services:
-  app:
+  base:
     build:
       args:
         user: ${USER}
         uid: ${UID}
       context: ./
       dockerfile: docker/Dockerfile/thalium.Dockerfile
+    profiles:
+      - parent_image
+      # Parent_image is a profile to stop it being launched, generally
+
+  app:
+    build:
+      args:
+        user: ${USER}
+        uid: ${UID}
+      context: ./
+      dockerfile: docker/Dockerfile/app.Dockerfile
     environment:
       - LOG_PREFIX=thalium
     image: thalium
@@ -17,8 +29,9 @@ services:
     volumes:
       - .:/var/www
       - ${HOST_PDF_LIBRARY}:/mnt/rpg
-      #- "/var/run/user/${UID}:/var/run/thalium"
-      - "/var/run/thalium:/var/run/thalium"
+      - "/var/run/thalium:/home/${USER}/lockfiles"
+      #- "/var/run/thalium:/var/run/thalium"
+
   scheduler:
     build:
       args:
@@ -34,13 +47,68 @@ services:
     volumes:
       - .:/var/www
       - ${HOST_PDF_LIBRARY}:/mnt/rpg
-  # nginx:
-  #   image: nginx:1.17-alpine
-  #   container_name: thalium-nginx
-  #   restart: unless-stopped
-  #   ports:
-  #     - 2871:80
-  #   volumes:
-  #     - ./:/var/www
-  #     - ./etc/nginx:/etc/nginx/conf.d
-  #     - /mnt/storagebox:/mnt/rpg
+
+  ## Localdev Support Images
+  db:
+    image: mysql:5.7.16
+    container_name: thalium-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker/mysql:/docker-entrypoint-initdb.d
+      - ./storage/mysql_data:/var/lib/mysql
+    profiles:
+      - dev
+  redis:
+    image: redis:6
+    container_name: thalium-redis
+    restart: unless-stopped
+    volumes:
+      - ./storage/redis:/data
+    profiles:
+      - dev
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: thalium-nginx
+    restart: unless-stopped
+    environment:
+      - USER=${USER}
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+      # - libris:/mnt/rpg
+      - /var/run/thalium:/var/run/thalium
+    profiles:
+      - dev
+
+  elasticsearch:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile/elasticsearch.Dockerfile
+    container_name: elasticsearch
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      # - discovery.seed_hosts=es02,es03
+      # - cluster.initial_master_nodes=es01,es02,es03
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./storage/elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    profiles:
+      - dev
