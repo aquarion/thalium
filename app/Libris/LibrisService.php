@@ -16,7 +16,6 @@ use App\Exceptions;
 
 class LibrisService implements LibrisInterface
 {
-
     public $elasticSearchIndex = "libris";
 
 
@@ -49,7 +48,6 @@ class LibrisService implements LibrisInterface
         if ($parser) {
             return $parser->index();
         }
-
     }//end addDocument()
 
     public function updateDocument($id, $body)
@@ -73,7 +71,7 @@ class LibrisService implements LibrisInterface
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->elasticSearchIndex);
-        } else if ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->elasticSearchIndex);
         } else {
@@ -82,7 +80,6 @@ class LibrisService implements LibrisInterface
         }
 
         return $parser;
-
     }//end getParser()
 
 
@@ -122,7 +119,6 @@ class LibrisService implements LibrisInterface
         ];
         // Get doc at /my_index/_doc/my_id
         Elasticsearch::delete($params);
-
     }//end deleteDocument()
 
 
@@ -139,7 +135,6 @@ class LibrisService implements LibrisInterface
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             return false;
         }
-
     }//end fetchDocument()
 
 
@@ -147,7 +142,6 @@ class LibrisService implements LibrisInterface
     {
         Log::warning("Deleting Index");
         return Elasticsearch::indices()->delete(['index' => $this->elasticSearchIndex]);
-
     }//end deleteIndex()
 
 
@@ -192,7 +186,6 @@ class LibrisService implements LibrisInterface
 
             return Elasticsearch::indices()->putMapping($params);
         }
-
     }//end updateIndex()
 
 
@@ -215,7 +208,6 @@ class LibrisService implements LibrisInterface
         ];
 
         $result = Elasticsearch::ingest()->putPipeline($params);
-
     }//end updatePipeline()
 
 
@@ -233,7 +225,6 @@ class LibrisService implements LibrisInterface
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             $this->updatePipeline();
         }
-
     }//end createPipeline()
 
 
@@ -249,7 +240,6 @@ class LibrisService implements LibrisInterface
         Log::info("[indexFile] New File Scan Job: File: $filename");
         ScanPDF::dispatch($filename);
         return true;
-
     }//end indexFile()
 
 
@@ -266,7 +256,6 @@ class LibrisService implements LibrisInterface
         Log::info("[indexDir] New Dir Scan Job: Sys: $system, Tags: ".implode(',', $tags).", File: $filename");
         ScanDirectory::dispatch($filename);
         return true;
-
     }//end indexDirectory()
 
 
@@ -294,7 +283,6 @@ class LibrisService implements LibrisInterface
 
         Log::info("Scanning $dirCount directories & $fileCount files");
         return true;
-
     }//end reindex()
 
 
@@ -372,7 +360,6 @@ class LibrisService implements LibrisInterface
         ];
         // res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
         return Elasticsearch::search($params);
-
     }//end showAll()
 
 
@@ -388,7 +375,6 @@ class LibrisService implements LibrisInterface
         ];
         // res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
         return Elasticsearch::search($params);
-
     }//end Everything()
 
 
@@ -445,7 +431,6 @@ class LibrisService implements LibrisInterface
 
         Log::info($return);
         return $return;
-
     }//end systems()
 
 
@@ -484,8 +469,8 @@ class LibrisService implements LibrisInterface
                             ['match' => [ 'doc_type' => 'document' ]],
                         ],
 
-                        ],
                     ],
+                ],
             ],
         ];
 
@@ -648,7 +633,6 @@ class LibrisService implements LibrisInterface
         Log::debug($params);
 
         return Elasticsearch::search($params);
-
     }//end pageSearch()
 
 
@@ -682,7 +666,6 @@ class LibrisService implements LibrisInterface
         $response = Elasticsearch::update($params);
 
         return $dataURI;
-
     }//end getThumbnail()
 
 
@@ -697,8 +680,5 @@ class LibrisService implements LibrisInterface
         }
 
         return false;
-
     }//end genThumbnail()
-
-
 }//end class

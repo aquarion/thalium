@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 
 class DebugController extends Controller
 {
-
-
     public function thumbnail(LibrisInterface $libris, Request $request)
     {
         $id = $request->query('id');
@@ -26,15 +24,11 @@ class DebugController extends Controller
         echo '<img src="'.$doc['_source']['thumbnail'].'" style="border: 1px solid red;">'."\n";
 
         echo '<img src="'.$libris->genThumbnail($doc['_source']['path']).'" style="border: 1px solid blue;">';
-
     }//end thumbnail()
 
 
     public function everything(LibrisInterface $libris)
     {
         dump($libris->Everything());
-
     }//end everything()
-
-
 }//end class

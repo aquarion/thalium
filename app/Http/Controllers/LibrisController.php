@@ -13,19 +13,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class LibrisController extends Controller
 {
-
-
     public function home(LibrisInterface $libris)
     {
         return view('sysindex', ['systems' => $libris->systems()]);
-
     }//end home()
 
 
     public function allBySystemList(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
     {
         return $this->allBySystem($libris, $request, $system, 'systemList');
-
     }//end allBySystemList()
 
 
@@ -77,14 +73,13 @@ class LibrisController extends Controller
             [
                 'system'     => $system,
                 'tag'        => $tag,
+                'tag_list'   => $tag_list,
                 'docs'       => $docresult,
                 'page'       => $page,
                 'pages'      => ceil($total / $perpage),
                 'pagination' => $paginate,
             ]
         );
-        // dd($libris->showAll());
-
     }//end allBySystem()
 
 
@@ -139,8 +134,5 @@ class LibrisController extends Controller
         }
 
         return view('search', $values);
-
     }//end search()
-
-
 }//end class

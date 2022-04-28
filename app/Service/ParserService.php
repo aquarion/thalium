@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 abstract class ParserService
 {
-
     protected $file;
 
     protected $elasticSearchIndex;
@@ -70,7 +69,6 @@ abstract class ParserService
         } else {
             Log::info("[AddDoc] {$this->title} is a ".$sizeMB."Mb");
         }
-
     }//end __construct()
 
 
@@ -113,7 +111,6 @@ abstract class ParserService
         }
 
         return true;
-
     }//end index()
 
 
@@ -151,7 +148,6 @@ abstract class ParserService
         }//end foreach
 
         Log::debug("[AddDoc] {$this->filename} Added $pageCount Pages");
-
     }//end indexPages()
 
 
@@ -185,7 +181,6 @@ abstract class ParserService
             $lines,
             $lineHeight,
         ];
-
     }//end wordWrapAnnotation()
 
 
@@ -241,8 +236,5 @@ abstract class ParserService
 
         $imageData = base64_encode($canvas);
         return 'data:image/png;base64,'.$imageData;
-
     }//end generateThumbnail()
-
-
 }//end class
