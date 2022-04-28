@@ -61,6 +61,8 @@ class LibrisController extends Controller
             ];
         }
 
+        $tag_list = $libris->SystemTags($system, $page, $perpage, $tag);
+
         $paginate = new LengthAwarePaginator(
             [],
             $total,

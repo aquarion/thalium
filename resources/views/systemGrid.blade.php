@@ -19,6 +19,22 @@
   </ol>
 </nav>
 
+
+@if (count($tag_list) > 1)
+	  	<div class="systems">
+	    @foreach ($tag_list as $tag)
+		    <a class="tag" href="{{
+		    	route('system.index', [
+		    		'tag' => $tag['key'],
+		    		'system' => $system
+		    	])
+		    }}">
+		    {{ $tag['key'] }}
+			 <span class="tag-count">({{ $tag['doc_count'] }})</span></a>
+		@endforeach
+		</div>
+	@endif
+
 <div class="row">
     @foreach ($docs as $doc)
       <div class="col-sm-6 col-md-4 mb-3 text-center">

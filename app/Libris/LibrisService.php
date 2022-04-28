@@ -481,9 +481,19 @@ class LibrisService implements LibrisInterface
                             ],
                         ],
                         'filter' => [
-                            'match' => [ 'doc_type' => 'document' ],
+                            ['match' => [ 'doc_type' => 'document' ]],
+                        ],
+
                         ],
                     ],
+            ],
+        ];
+
+        $params['body']["aggs"] = [
+            "tags" => [
+                "terms" => [
+                    "field" => "tags",
+                    "size"  => 30,
                 ],
             ],
         ];
@@ -497,10 +507,86 @@ class LibrisService implements LibrisInterface
                     ],
                 ],
             ];
+        } else {
+            $params['body']['query']['bool']['filter'][] = [
+                'script' => [
+                    "script" => "doc['tags'].length == 0"
+                ]
+            ];
         }
 
-        return Elasticsearch::search($params);
+        $result =  Elasticsearch::search($params);
 
+        return($result);
+    }//end AllBySystem()
+
+    public static function tagSort($a, $b)
+    {
+        if ($a['key'] == $b['key']) {
+            return 0;
+        }
+        if ($a['key'] > $b['key']) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+
+
+    public function SystemTags($system)
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'body'  => [
+                'size'  => 0,
+                'sort'  => [
+                    [
+                        "tags"  => [
+                            "missing" => "_first",
+                            "order"   => "asc",
+                        ],
+                        "path"  => [ "order" => "asc"],
+                        "title" => [ "order" => "asc"],
+                    ],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must'   => [
+                            0 => [
+                                'match' => [
+                                    'system' => [
+                                        'query'    => $system,
+                                        "operator" => "and",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'filter' => [
+                            ['match' => [ 'doc_type' => 'document' ]],
+                        ],
+
+                    ],
+                ],
+            ],
+        ];
+
+        $params['body']["aggs"] = [
+            "tags" => [
+                "terms" => [
+                    "field" => "tags",
+                    "size"  => 30,
+                ],
+            ],
+        ];
+
+
+        $result =  Elasticsearch::search($params);
+
+        $tag_list = $result['aggregations']['tags']['buckets'];
+
+        usort($tag_list, [LibrisService::class, "tagSort"]);
+
+        return($tag_list);
     }//end AllBySystem()
 
 
