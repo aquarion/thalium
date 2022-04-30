@@ -2,11 +2,7 @@
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PHP_CodeSniffer" xsi:noNamespaceSchemaLocation="phpcs.xsd">
     <description>Coding format for Thalium</description>
 
-    <file>autoload.php</file>
-    <file>bin</file>
-    <file>scripts</file>
-    <file>src</file>
-    <file>tests</file>
+    <file>app</file>
 
     <exclude-pattern>*/src/Standards/*/Tests/*\.(inc|css|js)$</exclude-pattern>
     <exclude-pattern>*/tests/Core/*/*\.(inc|css|js)$</exclude-pattern>
