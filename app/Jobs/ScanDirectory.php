@@ -59,12 +59,12 @@ class ScanDirectory implements ShouldQueue
 
         foreach ($files as $file) {
             Log::debug("[ScanDir] New File Scan Job: $file");
-            $libris->indexFile($file);
+            $libris->dispatchIndexFile($file);
         }
 
         foreach ($subdirs as $directory) {
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
-            $libris->indexDirectory($directory);
+            $libris->dispatchIndexDir($directory);
         }
 
     }//end handle()

@@ -15,7 +15,7 @@ abstract class ParserService
 
     protected $elasticSearchIndex;
 
-    protected $lastModified;
+    public $lastModified;
 
     public $system;
 
@@ -71,84 +71,6 @@ abstract class ParserService
         }
     }//end __construct()
 
-
-    public function index()
-    {
-        try {
-            $this->pages = $this->parsePages();
-        } catch (Exceptions\LibrisParseFailed $e) {
-            Log::error("[AddDoc] FAILED TO PARSE Name: [{$this->filename}], System: [{$this->system}]");
-            return false;
-        }
-
-        Log::debug("[AddDoc] Name: {$this->title}, System: {$this->system}, Tags: ".implode(",", $this->tags));
-
-        $params = [
-            'index'   => $this->elasticSearchIndex,
-            'id'      => $this->filename,
-            'routing' => $this->filename,
-            'body'    => [
-                "doc_type"      => "document",
-                'path'          => $this->filename,
-                'system'        => $this->system,
-                'tags'          => $this->tags,
-                'thumbnail'     => $this->generateThumbnail(),
-                'title'         => $this->title,
-                'last_modified' => $this->lastModified,
-                "page_relation" => ["name" => "document"],
-            ],
-        ];
-
-        if (!$this->pages) {
-            // $params['body']['data'] = Storage::disk('libris')->get($this->filename);
-        }
-
-        Log::debug("[AddDoc] {$this->filename} Indexing");
-        Elasticsearch::index($params);
-
-        if ($this->pages) {
-            $this->indexPages();
-        }
-
-        return true;
-    }//end index()
-
-
-    public function indexPages()
-    {
-        Log::info("[AddDoc] {$this->filename} Indexing Pages");
-
-        $pageCount = count($this->pages);
-
-        foreach ($this->pages as $pageIndex => $text) {
-            $pageNo = ($pageIndex + 1);
-            set_time_limit(30);
-
-            $params = [
-                'index'    => $this->elasticSearchIndex,
-                'id'       => $this->filename."/".$pageNo,
-                'routing'  => $this->filename,
-                'pipeline' => 'attachment_pipeline',
-                'body'     => [
-                    "doc_type"      => "page",
-                    'data'          => base64_encode($text),
-                    'pageNo'        => $pageNo,
-                    'path'          => $this->filename,
-                    'system'        => $this->system,
-                    'tags'          => $this->tags,
-                    'title'         => $this->title,
-                    'thumbnail'     => $this->generateThumbnail(),
-                    "page_relation" => [
-                        "name"   => "page",
-                        "parent" => $this->filename,
-                    ],
-                ],
-            ];
-            Elasticsearch::index($params);
-        }//end foreach
-
-        Log::debug("[AddDoc] {$this->filename} Added $pageCount Pages");
-    }//end indexPages()
 
 
     public function wordWrapAnnotation($image, $draw, $text, $maxWidth)

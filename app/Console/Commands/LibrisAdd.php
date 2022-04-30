@@ -53,7 +53,7 @@ class LibrisAdd extends Command
         if ($exists) {
             if (Storage::disk('libris')->getMetadata($filename)['type'] === 'dir') {
                 $this->info("Scanning directory $filename");
-                $libris->indexDirectory($filename);
+                $libris->dispatchIndexDir($filename);
             } else {
                 $this->info("Scanning file $filename");
                 $libris->addDocument($filename, $this);
