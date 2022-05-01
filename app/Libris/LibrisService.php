@@ -607,7 +607,7 @@ class LibrisService implements LibrisInterface
     }//end AllBySystem()
 
 
-    public function pageSearch($terms, $system, $document, $page=1, $size=60)
+    public function pageSearch($terms, $system, $document, $tag, $page=1, $size=60)
     {
 
         // $system = "Goblin Quest";
@@ -647,6 +647,12 @@ class LibrisService implements LibrisInterface
             ];
         }
 
+        if ($tag) {
+            $params['body']['query']['bool']['filter'][] = [
+                'match' => [ 'tags' => $tag ],
+            ];
+        }
+
         $params['body']["aggs"] = [
             "parents" => [
                 "terms" => [
@@ -659,12 +665,23 @@ class LibrisService implements LibrisInterface
                     "field" => "system",
                     "size"  => 30,
                 ],
+                "aggs" => [
+                    "tags" => [
+                        "terms" => [
+                            "field" => "tags",
+                            "size"  => 30,
+                        ],
+                    ],
+                ],
             ],
         ];
 
-        Log::debug($params);
 
-        return Elasticsearch::search($params);
+        Log::debug($params);
+        $result =  Elasticsearch::search($params);
+        Log::debug($result);
+
+        return $result;
     }//end pageSearch()
 
 

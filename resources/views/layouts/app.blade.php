@@ -129,8 +129,17 @@
     <ul class="navbar-nav ms-auto">
         <li>
             <form class="form-inline my-2 my-lg-0" method="GET" action="{{ route('search') }}">
-            <input class="form-control mr-sm-2" type="text" name="q" placeholder="Search" aria-label="Search">
-            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+
+              <div class="input-group ">
+                @isset ($system)
+                <div class="input-group-prepend">
+                  <div class="input-group-text">{{ $system }}</div>
+                  <input type="hidden" name="s" value="{{ $system }}">
+                </div>
+                @endisset
+              <input class="form-control mr-sm-2" type="text" name="q" placeholder="Search" aria-label="Search">
+              </div>
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
             </form>
         </li>
         <!-- Authentication Links -->

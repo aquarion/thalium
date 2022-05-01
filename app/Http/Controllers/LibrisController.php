@@ -90,9 +90,10 @@ class LibrisController extends Controller
         $query    = $request->query('q');
         $system   = $request->query('s', false);
         $document = $request->query('d', false);
+        $tag      = $request->query('t', false);
         $page     = $request->query('page', 1);
 
-        $result = $libris->pageSearch($query, $system, $document, $page, $perpage);
+        $result = $libris->pageSearch($query, $system, $document, $tag, $page, $perpage);
 
         $total = $result['hits']['total']['value'];
 
@@ -104,6 +105,10 @@ class LibrisController extends Controller
 
         if ($document) {
             $appends['d'] = $documents;
+        }
+
+        if ($tag) {
+            $appends['t'] = $tag;
         }
 
         $paginate = new LengthAwarePaginator(
@@ -122,9 +127,11 @@ class LibrisController extends Controller
         $values = [
             'systems'    => $result['aggregations']['systems']['buckets'],
             'top_docs'   => $result['aggregations']['parents']['buckets'],
+            'tag_list'   => &$result['aggregations']['systems']['buckets'][0]['tags']['buckets'],
             'hits'       => $result['hits']['hits'],
             'query'      => $query,
             'system'     => $system,
+            'active_tag' => $tag,
             'document'   => $document,
             'pagination' => $paginate,
         ];
