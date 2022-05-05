@@ -17,3 +17,5 @@ public/vendor
 docker-compose.yml
 docker/target
 docker/pdfbox/target
+public/css/
+public/js/
