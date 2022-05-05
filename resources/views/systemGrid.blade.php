@@ -38,7 +38,9 @@
 <div class="row">
     @foreach ($docs as $doc)
       <div class="col-sm-6 col-md-4 mb-3 text-center">
-        <a href="{{ $doc['download'] }}"><img src="{{ $doc['thumbnail'] }}"><br/>
+            <a href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}">
+              <img src="{{ $doc['thumbnail'] }}">
+            <br/>
             {{ $doc['name'] ? $doc['name'] : '[empty]' }}</a>
             @foreach ($doc['tags'] as $tag)
             <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>

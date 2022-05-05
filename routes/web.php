@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', 'LibrisController@home')->name("home");
 
 Route::get('/system/{system}', 'LibrisController@allBySystem')->name("system.index");
+Route::get('/document', 'LibrisController@showDocument')->name("document.iframe");
 Route::get('/systemList/{system}', 'LibrisController@allBySystemList')->name("system.list");
 
 Route::get('/search', 'LibrisController@search')->name("search");
@@ -27,7 +28,6 @@ Route::get('/search', 'LibrisController@search')->name("search");
 
 if (App::environment(['local', 'staging'])) {
     Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail");
-    Route::get('/everything', 'DebugController@everything');
 }
 Auth::routes();
 

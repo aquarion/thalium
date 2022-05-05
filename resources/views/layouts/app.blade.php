@@ -109,6 +109,11 @@
       <li class="nav-item active">
         <a class="nav-link" href="/horizon">Horizon</span></a>
       </li>
+      @if (isset($document_download))
+      <li class="nav-item">
+        <a class="nav-link" href="{{ $document_download }}">Just PDF</span></a>
+      </li>
+      @endif
 <!--       <li class="nav-item">
         <a class="nav-link" href="#">Link</a>
       </li>
@@ -178,11 +183,16 @@
   </div>
 </nav>
 
+@hasSection('full_page')
+        @yield('full_page')
+@endif
+@sectionMissing('full_page')
 <main role="main" class="container">
 
         <div class="container">
             @yield('content')
         </div>
+@endif
 
 
 </main><!-- /.container -->
