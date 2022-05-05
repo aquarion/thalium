@@ -336,62 +336,6 @@ class LibrisService implements LibrisInterface
         return true;
     }//end dispatchIndexDir()
 
-
-    public function reindex()
-    {
-        Log::info("Kicking off a reindex for ".Storage::disk('libris')->path("."));
-
-        $this->updatePipeline();
-        $this->updateIndex();
-
-        $dirCount  = 0;
-        $fileCount = 0;
-
-        $systems = Storage::disk('libris')->directories('.');
-        $files   = Storage::disk('libris')->files('.');
-
-        foreach ($systems as $system) {
-            ScanDirectory::dispatch($system) && $dirCount++;
-        }
-
-        foreach ($files as $filename) {
-            $this->dispatchIndexFile($filename) && $fileCount++;
-        }
-
-        Log::info("Scanning $dirCount directories & $fileCount files");
-        return true;
-    }//end reindex()
-
-
-    public function purgeDeletedFiles()
-    {
-        $size   = 100;
-        $page   = 1;
-        $cursor = 0;
-
-        $results = $this->showAll(1, 0);
-        $pages   = ceil(($results['hits']['total']['value'] / $size));
-
-        $deletionList = [];
-
-        for ($page = 1; $page <= $pages; $page++) {
-            $docs = $this->showAll($page, $size);
-            foreach ($docs['hits']['hits'] as $index => $doc) {
-                $filename = $doc['_source']['path'];
-                if (Storage::disk('libris')->missing($filename)) {
-                    $deletionList[] = $doc['_id'];
-                }
-            }
-        }
-
-        foreach ($deletionList as $docId) {
-            $this->deleteDocument($docId);
-        }
-
-        return $deletionList;
-    }//end purgeDeletedFiles()
-
-
     public function showAll($page=1, $size=60, $tag=false)
     {
         $from = (($page - 1) * $size);

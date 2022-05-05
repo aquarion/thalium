@@ -7,7 +7,5 @@ interface LibrisInterface
 {
 
 
-    public function reindex();
-
 
 }//end interface

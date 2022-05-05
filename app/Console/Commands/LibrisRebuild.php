@@ -6,6 +6,12 @@ use Illuminate\Console\Command;
 
 use App\Libris\LibrisInterface;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
+use App\Jobs\ScanDirectory;
+use App\Jobs\ScanPDF;
+
 class LibrisRebuild extends Command
 {
 
@@ -43,8 +49,33 @@ class LibrisRebuild extends Command
      */
     public function handle(LibrisInterface $libris)
     {
-        $libris->reindex();
-        $this->info("Rebuilding Index, Please stand by...");
+
+        $this->line("Kicking off a reindex for ".Storage::disk('libris')->path("."));
+
+        $libris->updatePipeline();
+        $libris->updateIndex();
+
+        $dirCount  = 0;
+        $fileCount = 0;
+
+        $systems = Storage::disk('libris')->directories('.');
+        $files   = Storage::disk('libris')->files('.');
+
+        $this->line("Directories:");
+        foreach ($systems as $system) {
+            ScanDirectory::dispatch($system) && $dirCount++;
+            $this->line(" * ".$system);
+        }
+
+        if($files){
+            $this->line("Files:");
+            foreach ($files as $filename) {
+                $libris->dispatchIndexFile($filename) && $fileCount++;
+                $this->line(" * ".$system);
+            }
+        }
+
+        $this->line("Scanning $dirCount directories & $fileCount files");
 
     }//end handle()
 

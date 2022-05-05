@@ -79,5 +79,6 @@ class LibrisUpdateTags extends Command
             }
         }
         $bar->finish();
+        $this->line("Have a great day.");
     }//end handle()
 }//end class
