@@ -1,3 +1,23 @@
 {
-    "phpcs.executablePath": "vendor/bin/phpcs"
+    "phpcs.executablePath": "vendor/bin/phpcs",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#9e9e46",
+        "activityBar.activeBorder": "#bde2e2",
+        "activityBar.background": "#9e9e46",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#bde2e2",
+        "activityBarBadge.foreground": "#15202b",
+        "sash.hoverBorder": "#9e9e46",
+        "statusBar.background": "#7b7b36",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#9e9e46",
+        "statusBarItem.remoteBackground": "#7b7b36",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#7b7b36",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#7b7b3699",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.remoteColor": "#7b7b36"
 }
