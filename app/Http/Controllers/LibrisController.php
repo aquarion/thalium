@@ -155,17 +155,26 @@ class LibrisController extends Controller
     {
         $file = $request->query('file', false);
         $page = $request->query('page', false);
-        $file ? true : abort(400);
+        if (!$file) {
+            abort(400);
+        }
 
         $file = urldecode($file);
 
         $document = $libris->fetchDocument($file);
-        $document ? true : abort(404);
+        if (!$document) {
+            abort(404);
+        }
+
+        $fragment = '';
+        if ($page) {
+            $fragment = '#page='.$page;
+        }
 
         $values = [
             'system'            => $document['_source']['system'],
             'display_document'  => $document,
-            'document_download' => Storage::disk('libris')->url($document['_source']['path']).($page ? '#page='.$page : ''),
+            'document_download' => Storage::disk('libris')->url($document['_source']['path']).$fragment,
             'title'             => $document['_source']['title'],
             'document_page'     => $page,
         ];
