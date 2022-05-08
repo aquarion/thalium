@@ -62,7 +62,7 @@ class LibrisController extends Controller
             ];
         }
 
-        $tag_list = $libris->SystemTags($system, $page, $perpage, $tag);
+        $tagList = $libris->SystemTags($system, $page, $perpage, $tag);
 
         $paginate = new LengthAwarePaginator(
             [],
@@ -78,7 +78,7 @@ class LibrisController extends Controller
             [
                 'system'     => $system,
                 'tag'        => $tag,
-                'tag_list'   => $tag_list,
+                'tagList'    => $tagList,
                 'docs'       => $docresult,
                 'page'       => $page,
                 'pages'      => ceil($total / $perpage),
@@ -133,7 +133,7 @@ class LibrisController extends Controller
         $values = [
             'systems'    => $result['aggregations']['systems']['buckets'],
             'top_docs'   => $result['aggregations']['parents']['buckets'],
-            'tag_list'   => &$result['aggregations']['systems']['buckets'][0]['tags']['buckets'],
+            'tagList'    => &$result['aggregations']['systems']['buckets'][0]['tags']['buckets'],
             'hits'       => $result['hits']['hits'],
             'query'      => $query,
             'system'     => $system,

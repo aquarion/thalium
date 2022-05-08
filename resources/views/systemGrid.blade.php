@@ -20,9 +20,9 @@
 </nav>
 
 
-@if (count($tag_list) > 0)
+@if (count($tagList) > 0)
 	  	<div class="systems">
-	    @foreach ($tag_list as $tag)
+	    @foreach ($tagList as $tag)
 		    <a class="tag" href="{{
 		    	route('system.index', [
 		    		'tag' => $tag['key'],

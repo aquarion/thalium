@@ -45,10 +45,10 @@
 		</div>
 	@endif
 
-	@if (($system) and ($tag_list) and count($tag_list) > 1)
+	@if (($system) and ($tagList) and count($tagList) > 1)
 	  	<div class="tags">
 	  	Tags:
-	    @foreach ($tag_list as $i_tag)
+	    @foreach ($tagList as $i_tag)
 		    <a class="btn btn-light @if($active_tag == $i_tag['key']) active @endif" href="{{
 		    	route('search', [
 		    		'q' => $query,

@@ -553,11 +553,11 @@ class LibrisService implements LibrisInterface
 
         $result = Elasticsearch::search($params);
 
-        $tag_list = $result['aggregations']['tags']['buckets'];
+        $tagList = $result['aggregations']['tags']['buckets'];
 
-        usort($tag_list, [LibrisService::class, "tagSort"]);
+        usort($tagList, [LibrisService::class, "tagSort"]);
 
-        return($tag_list);
+        return($tagList);
 
     }//end SystemTags()
 
