@@ -521,16 +521,6 @@ class LibrisService implements LibrisInterface
             'index' => $this->elasticSearchIndex,
             'body'  => [
                 'size'  => 0,
-                'sort'  => [
-                    [
-                        "tags"  => [
-                            "missing" => "_first",
-                            "order"   => "asc",
-                        ],
-                        "path"  => [ "order" => "asc"],
-                        "title" => [ "order" => "asc"],
-                    ],
-                ],
                 'query' => [
                     'bool' => [
                         'must'   => [
