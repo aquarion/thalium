@@ -492,14 +492,13 @@ class LibrisService implements LibrisInterface
                     ],
                 ],
             ];
-        } else {
+        } else if ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
                 'script' => ["script" => "doc['tags'].length == 0"],
             ];
         }
 
         $result = Elasticsearch::search($params);
-        Log::debug($result);
 
         return($result);
 
@@ -651,38 +650,60 @@ class LibrisService implements LibrisInterface
         if (isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'] && !$regen) {
             // Log::debug("[getThumbnail] Found Thumbnail");
             return $doc['_source']['thumbnail'];
+        } else {
+            return $this->updateThumbnail($doc);
         }
 
-        Log::debug($doc);
+    }//end getThumbnail()
 
+
+    public function updateThumbnail($doc)
+    {
         $file = $doc['_source']['path'];
+        Log::debug("[updateThumbnail] Update Thumbnail - ".$file);
+        $thumbnailFileName = md5($file).".png";
+        $thumbnailURL      = Storage::disk('thumbnails')->url($thumbnailFileName);
 
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[getThumbnail] No Such File $file");
+            Log::error("[updateThumbnail] No Such File $file");
             return false;
         }
 
-        $dataURI = $this->genThumbnail($file);
+        if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
+            Log::info("[updateThumbnail] Already exists $thumbnailFileName");
+        } else {
+            $image = $this->generateThumbnail($file);
+
+            Storage::disk('thumbnails')->put($thumbnailFileName, $image);
+
+            Log::debug("[updateThumbnail] saved to ".$thumbnailURL);
+        }
+
+        if ($thumbnailURL == $doc['_source']['thumbnail']) {
+            Log::info("[updateThumbnail] Filename already set");
+            return $thumbnailURL;
+        }
 
         $params = [
             'index' => $doc['_index'],
             'id'    => $doc['_id'],
             'body'  => [
-                'doc' => ['thumbnail' => $dataURI],
+                'doc' => ['thumbnail' => $thumbnailURL],
             ],
         ];
 
         // Update doc at /my_index/_doc/my_id
         $response = Elasticsearch::update($params);
+        Log::info("[updateThumbnail] Saved");
 
-        return $dataURI;
+        return $thumbnailURL;
 
-    }//end getThumbnail()
+    }//end updateThumbnail()
 
 
-    public function genThumbnail($file)
+    public function generateThumbnail($file)
     {
-        Log::debug("[genThumbnail] ".$file);
+        Log::debug("[generateThumbnail] ".$file);
 
         $parser = $this->getParser($file);
 
@@ -692,7 +713,14 @@ class LibrisService implements LibrisInterface
 
         return false;
 
-    }//end genThumbnail()
+    }//end generateThumbnail()
+
+
+    public function thumbnailDataURI($file)
+    {
+        return 'data:image/png;base64,'.base64_encode($this->generateThumbnail($file));
+
+    }//end thumbnailDataURI()
 
 
 }//end class

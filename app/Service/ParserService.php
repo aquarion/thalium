@@ -161,8 +161,7 @@ abstract class ParserService
         // Set the format to PNG
         $canvas->setImageFormat('png');
 
-        $imageData = base64_encode($canvas);
-        return 'data:image/png;base64,'.$imageData;
+        return $canvas;
 
     }//end generateThumbnail()
 

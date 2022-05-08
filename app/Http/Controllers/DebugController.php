@@ -23,18 +23,11 @@ class DebugController extends Controller
         echo '[<a href="'.Storage::disk('libris')->url($doc['_source']['path'])."\">DL</a>]\n";
         echo "<h2>Images</h2>\n";
 
-        echo '<img src="'.$doc['_source']['thumbnail'].'" style="border: 1px solid red;">'."\n";
+        echo '<img src="'.$libris->getThumbnail($doc).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
 
-        echo '<img src="'.$libris->genThumbnail($doc['_source']['path']).'" style="border: 1px solid blue;">';
+        echo '<img src="'.$libris->thumbnailDataURI($doc['_source']['path']).'" style="border: 1px solid blue;" title="Regenerated Thumbnail">';
 
     }//end thumbnail()
-
-
-    public function everything(LibrisInterface $libris)
-    {
-        dump($libris->Everything());
-
-    }//end everything()
 
 
 }//end class

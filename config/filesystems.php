@@ -72,6 +72,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'thumbnails' => [
+            'driver' => 'local',
+            'root' => storage_path('app/thumbnails'),
+            'url' => env('APP_URL').'/_thumbnails',
+            'visibility' => 'public',
+        ],
+
 
     ],
 
@@ -87,7 +94,7 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        public_path('storage') => storage_path('app/public')
     ],
 
 ];

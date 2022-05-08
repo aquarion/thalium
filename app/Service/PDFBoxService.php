@@ -82,19 +82,18 @@ class PDFBoxService extends ParserService
 
     public function generateThumbnail()
     {
-        Log::info("[GenThumbnail] {$this->filename} Generating PDF Thumbnail");
+        Log::info("[generateThumbnail] {$this->filename} Generating PDF Thumbnail");
 
         $image = new \Imagick($this->tempFile.'[0]');
-        Log::Info('[PDFBox] Hello '.$this->tempFile);
+        Log::Info('[Imagick] Hello '.$this->tempFile);
         $image->setFormat("png");
-        Log::Info('[PDFBox] Format: '.$image->getFormat());
+        Log::Info('[Imagick] Format: '.$image->getFormat());
 
         // If 0 is provided as a width or height parameter,
         // aspect ratio is maintained
         $image->thumbnailImage(200, 300, true);
 
-        $imageData = base64_encode($image);
-        return 'data:image/png;base64,'.$imageData;
+        return $image;
 
     }//end generateThumbnail()
 

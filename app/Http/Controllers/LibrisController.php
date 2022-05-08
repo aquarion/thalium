@@ -41,7 +41,7 @@ class LibrisController extends Controller
             $system = $system;
         }
 
-        $tag = $request->query('tag', false);
+        $tag = $request->query('tag', 0);
 
         $docresult = [];
 
