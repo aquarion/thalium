@@ -36,61 +36,6 @@
     <!-- Bootstrap core CSS -->
 <link rel="stylesheet" href="/css/app.css">
 
-
-    <style>
-      body { padding-top: 70px; }
-
-      .bd-placeholder-img {
-        font-size: 1.125rem;
-        text-anchor: middle;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-
-      @media (min-width: 768px) {
-        .bd-placeholder-img-lg {
-          font-size: 3.5rem;
-        }
-      }
-
-      .tag {
-        display: inline-block;
-        font-weight: 400;
-        color: #212529;
-        text-align: center;
-        vertical-align: middle;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        background-color: transparent;
-        border: 1px solid transparent;
-        padding: 0.375rem 0.75rem;
-        font-size: 0.9rem;
-        line-height: 1.6;
-        border-radius: 0.25rem;
-        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        margin-bottom: 0.375rem;
-
-        background: #eee;
-      }
-
-      dd {
-        padding-left: 1em;
-        margin-left: 1em;
-        border-left: 2px solid black;
-      }
-
-      dd em {
-        color: black;
-        background: #FDFF84;
-        display: inline-block;
-        border-radius: 0.25rem;
-        padding: 0.2rem;
-      }
-    </style>
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
   </head>
@@ -102,16 +47,16 @@
   </button>
 
   <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-    <ul class="navbar-nav mr-auto">
+    <ul class="navbar-nav mr-auto d-flex">
       <li class="nav-item active">
-        <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+        <a class="nav-link" href="/">Home <span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item active">
         <a class="nav-link" href="/horizon">Horizon</span></a>
       </li>
       @if (isset($document_download))
       <li class="nav-item">
-        <a class="nav-link" href="{{ $document_download }}">Just PDF</span></a>
+        <a class="nav-link" href="{{ $document_download }}"><i class="bi bi-file-earmark-pdf" title="Open PDF Directly"></i></a>
       </li>
       @endif
 <!--       <li class="nav-item">
@@ -130,23 +75,24 @@
       </li> -->
     </ul>
 
+    <form class="form-inline d-flex ms-3" method="GET" action="{{ route('search') }}">
+
+      <div class="input-group ">
+        <div class="input-group-prepend">
+        @isset ($system)
+          <div class="input-group-text">{{ $system }}</div>
+          <input type="hidden" name="s" value="{{ $system }}">
+        @else
+          <div class="input-group-text"><i class="bi bi-search"></i></div>
+        @endisset
+        </div>
+      <input class="form-control" type="text" name="q" placeholder="Search" aria-label="Search">
+      </div>
+        <button class="btn btn-secondary" type="submit">Search</button>
+    </form>
+
     <!-- Right Side Of Navbar -->
     <ul class="navbar-nav ms-auto">
-        <li>
-            <form class="form-inline my-2 my-lg-0" method="GET" action="{{ route('search') }}">
-
-              <div class="input-group ">
-                @isset ($system)
-                <div class="input-group-prepend">
-                  <div class="input-group-text">{{ $system }}</div>
-                  <input type="hidden" name="s" value="{{ $system }}">
-                </div>
-                @endisset
-              <input class="form-control mr-sm-2" type="text" name="q" placeholder="Search" aria-label="Search">
-              </div>
-                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-            </form>
-        </li>
         <!-- Authentication Links -->
         @guest
             @if (Route::has('login'))
