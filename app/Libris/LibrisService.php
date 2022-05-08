@@ -351,21 +351,27 @@ class LibrisService implements LibrisInterface
     }//end dispatchIndexDir()
 
 
-    public function showAll($page=1, $size=60, $tag=false)
+    public function showAll($tag=false, $size=100, $searchAfter=false)
     {
-        $from = (($page - 1) * $size);
-
         $params = [
             'index' => $this->elasticSearchIndex,
             'body'  => [
                 'size'  => $size,
-                'from'  => $from,
                 'query' => [
                     'match' => ['doc_type' => 'document'],
                 ],
+                "sort"  => [
+                    [
+                        "path" => ["order" => "asc"],
+                    ],
+                ],
             ],
         ];
-        // res = es.search(index='indexname', doc_type='typename', body=doc,scroll='1m')
+
+        if ($searchAfter) {
+            $params['body']['search_after'] = $searchAfter;
+        }
+
         return Elasticsearch::search($params);
 
     }//end showAll()

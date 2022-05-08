@@ -24,6 +24,27 @@ class LibrisPurge extends Command
      */
     protected $description = 'Purge deleted files from index';
 
+    protected $searchAfter = false;
+
+    /**
+     * Get the next page of results
+     *
+     * @return int
+     */
+
+
+    private function nextPage($size=100)
+    {
+        // if ($this->option('system')) {
+        //     $docs = $this->libris->AllBySystem($this->option('system'), $page);
+        // } else {
+        $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+        // }
+
+        return $docs;
+
+    }//end nextPage()
+
 
     /**
      * Create a new command instance.
@@ -44,12 +65,10 @@ class LibrisPurge extends Command
      */
     public function handle(LibrisInterface $libris)
     {
+        $this->libris = $libris;
 
-        $size   = 100;
-        $page   = 1;
-        $cursor = 0;
-
-        $results = $libris->showAll(1, 0);
+        $results = $this->libris->showAll(false, 0);
+        $size    = 100;
         $total   = $results['hits']['total']['value'];
 
         $pages = ceil(($total / $size));
@@ -62,8 +81,12 @@ class LibrisPurge extends Command
         $bar->setMessage('Start');
         $bar->start();
 
-        for ($page = 1; $page <= $pages; $page++) {
-            $docs = $libris->showAll($page, $size);
+        while (true) {
+            $docs = $this->nextPage($size, $this->searchAfter);
+            if (count($docs['hits']['hits']) == 0) {
+                break;
+            }
+
             foreach ($docs['hits']['hits'] as $index => $doc) {
                 $filename = $doc['_source']['path'];
                 $bar->setMessage($filename);
@@ -71,11 +94,14 @@ class LibrisPurge extends Command
                     $deletionList[] = $doc['_id'];
                 }
 
+                $this->searchAfter = $doc['sort'];
+
                 $bar->advance();
             }
         }
 
         $bar->finish();
+        $this->line(" ... done");
 
         if (count($deletionList)) {
             $this->line("Deleting Records:");

@@ -23,6 +23,13 @@ class LibrisThumbnails extends Command
      */
     protected $description = 'Regenerate all thumbnails';
 
+    /**
+     * Pagination data.
+     *
+     * @var array
+     */
+    protected $searchAfter = false;
+
 
     /**
      * Create a new command instance.
@@ -37,10 +44,23 @@ class LibrisThumbnails extends Command
 
 
     /**
-     * Execute the console command.
+     * Get the next page of results
      *
      * @return int
      */
+
+
+    private function nextPage($size=100)
+    {
+        if ($this->option('system')) {
+            $docs = $this->libris->AllBySystem($this->option('system'), $page);
+        } else {
+            $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+        }
+
+        return $docs;
+
+    }//end nextPage()
 
 
     /**
@@ -50,9 +70,20 @@ class LibrisThumbnails extends Command
      */
     public function handle(LibrisInterface $libris)
     {
-        $page = 1;
-        $i    = 0;
-        $this->info("Generating thumbnails");
+        $this->libris = $libris;
+
+        $size   = 100;
+        $cursor = 0;
+
+        $results = $this->libris->showAll(false, 0);
+
+        $total = $results['hits']['total']['value'];
+
+        $this->line("Generating thumbnails");
+        $bar = $this->output->createProgressBar($total);
+        $bar->setFormat(' %current%/%max% [%bar%] - %message%');
+        $bar->setMessage('Start');
+        $bar->start();
 
         if ($this->option("regen")) {
             $regen = true;
@@ -60,28 +91,30 @@ class LibrisThumbnails extends Command
             $regen = false;
         }
 
-        while ($page) {
-            if ($this->option('system')) {
-                $docs = $libris->AllBySystem($this->option('system'), $page);
-            } else {
-                $docs = $libris->showAll($page);
-            }
+        while (true) {
+            $docs = $this->nextPage();
 
             $total = $docs['hits']['total']['value'];
 
             if (count($docs['hits']['hits']) == 0) {
-                return;
+                break;
             }
 
             foreach ($docs['hits']['hits'] as $doc) {
-                $i++;
-                $this->info($doc['_source']['path']." $i/$total");
+                $bar->setMessage($doc['_source']['path']);
                 $libris->getThumbnail($doc, $regen);
                 // true means force regen
+                $bar->advance();
             }
 
-            $page++;
+            $this->searchAfter = $doc['sort'];
+            // dd($this->searchAfter);
         }//end while
+
+        $bar->finish();
+
+        $this->line(".");
+        $this->line("Have a great day.");
 
     }//end handle()
 

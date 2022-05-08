@@ -24,6 +24,27 @@ class LibrisUpdateTags extends Command
      */
     protected $description = 'Update tags on documents';
 
+    protected $searchAfter = false;
+
+    /**
+     * Get the next page of results
+     *
+     * @return int
+     */
+
+
+    private function nextPage($size=100)
+    {
+        // if ($this->option('system')) {
+        //     $docs = $this->libris->AllBySystem($this->option('system'), $page);
+        // } else {
+        $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+        // }
+
+        return $docs;
+
+    }//end nextPage()
+
 
     /**
      * Create a new command instance.
@@ -46,21 +67,27 @@ class LibrisUpdateTags extends Command
     {
         $this->line("Updating tags, one sec...");
 
+        $this->libris = $libris;
+
         $size   = 100;
-        $page   = 1;
         $cursor = 0;
 
-        $results = $libris->showAll(1, 0);
-        $total   = $results['hits']['total']['value'];
-        $pages   = ceil(($results['hits']['total']['value'] / $size));
+        $results = $this->libris->showAll(false, 0);
+
+        $total = $results['hits']['total']['value'];
 
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
         $bar->setMessage('Start');
 
         $bar->start();
-        for ($page = 1; $page <= $pages; $page++) {
-            $docs = $libris->showAll($page, $size);
+        while (true) {
+            $docs = $this->nextPage();
+
+            if (count($docs['hits']['hits']) == 0) {
+                break;
+            }
+
             foreach ($docs['hits']['hits'] as $index => $doc) {
                 // dd($doc);
                 $parser = $libris->getParser($doc['_source']['path']);
@@ -76,9 +103,11 @@ class LibrisUpdateTags extends Command
                     $result = $libris->updateDocument($doc['_id'], $body);
                 }
 
+                $this->searchAfter = $doc['sort'];
+
                 $bar->advance();
             }
-        }
+        }//end while
 
         $bar->finish();
         $this->line("Have a great day.");
