@@ -20,7 +20,7 @@
 </nav>
 
 
-@if (count($tag_list) > 1)
+@if (count($tag_list) > 0)
 	  	<div class="systems">
 	    @foreach ($tag_list as $tag)
 		    <a class="tag" href="{{
