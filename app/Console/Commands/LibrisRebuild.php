@@ -67,7 +67,7 @@ class LibrisRebuild extends Command
             $this->line(" * ".$system);
         }
 
-        if($files){
+        if ($files) {
             $this->line("Files:");
             foreach ($files as $filename) {
                 $libris->dispatchIndexFile($filename) && $fileCount++;

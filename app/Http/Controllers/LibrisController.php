@@ -14,15 +14,19 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class LibrisController extends Controller
 {
+
+
     public function home(LibrisInterface $libris)
     {
         return view('sysindex', ['systems' => $libris->systems()]);
+
     }//end home()
 
 
     public function allBySystemList(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
     {
         return $this->allBySystem($libris, $request, $system, 'systemList');
+
     }//end allBySystemList()
 
 
@@ -59,7 +63,7 @@ class LibrisController extends Controller
         }
 
         $tag_list = $libris->SystemTags($system, $page, $perpage, $tag);
-        
+
         $paginate = new LengthAwarePaginator(
             [],
             $total,
@@ -81,6 +85,7 @@ class LibrisController extends Controller
                 'pagination' => $paginate,
             ]
         );
+
     }//end allBySystem()
 
 
@@ -142,12 +147,14 @@ class LibrisController extends Controller
         }
 
         return view('search', $values);
+
     }//end search()
+
 
     public function showDocument(LibrisInterface $libris, Request $request)
     {
-        $file      = $request->query('file', false);
-        $page      = $request->query('page', false);
+        $file = $request->query('file', false);
+        $page = $request->query('page', false);
         $file ? true : abort(400);
 
         $file = urldecode($file);
@@ -156,15 +163,18 @@ class LibrisController extends Controller
         $document ? true : abort(404);
 
         $values = [
-            'system'     => $document['_source']['system'],
-            'display_document'   => $document,
-            'document_download'  => Storage::disk('libris')->url($document['_source']['path']).($page? '#page='.$page : ''),
-            'title' => $document['_source']['title'],
-            'document_page' => $page,
+            'system'            => $document['_source']['system'],
+            'display_document'  => $document,
+            'document_download' => Storage::disk('libris')->url($document['_source']['path']).($page ? '#page='.$page : ''),
+            'title'             => $document['_source']['title'],
+            'document_page'     => $page,
         ];
 
         Log::debug($document);
 
         return view('document', $values);
-    }
+
+    }//end showDocument()
+
+
 }//end class

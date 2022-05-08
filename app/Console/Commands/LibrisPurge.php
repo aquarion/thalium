@@ -45,15 +45,14 @@ class LibrisPurge extends Command
     public function handle(LibrisInterface $libris)
     {
 
-
         $size   = 100;
         $page   = 1;
         $cursor = 0;
 
         $results = $libris->showAll(1, 0);
-        $total = $results['hits']['total']['value'];
+        $total   = $results['hits']['total']['value'];
 
-        $pages   = ceil(($total / $size));
+        $pages = ceil(($total / $size));
 
         $deletionList = [];
 
@@ -71,9 +70,11 @@ class LibrisPurge extends Command
                 if (Storage::disk('libris')->missing($filename)) {
                     $deletionList[] = $doc['_id'];
                 }
+
                 $bar->advance();
             }
         }
+
         $bar->finish();
 
         if (count($deletionList)) {

@@ -9,14 +9,14 @@ use Illuminate\Foundation\Auth\ConfirmsPasswords;
 class ConfirmPasswordController extends Controller
 {
     /*
-    |--------------------------------------------------------------------------
-    | Confirm Password Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller is responsible for handling password confirmations and
-    | uses a simple trait to include the behavior. You're free to explore
-    | this trait and override any functions that require customization.
-    |
+        |--------------------------------------------------------------------------
+        | Confirm Password Controller
+        |--------------------------------------------------------------------------
+        |
+        | This controller is responsible for handling password confirmations and
+        | uses a simple trait to include the behavior. You're free to explore
+        | this trait and override any functions that require customization.
+        |
     */
 
     use ConfirmsPasswords;
@@ -28,6 +28,7 @@ class ConfirmPasswordController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+
     /**
      * Create a new controller instance.
      *
@@ -36,5 +37,8 @@ class ConfirmPasswordController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-    }
-}
+
+    }//end __construct()
+
+
+}//end class

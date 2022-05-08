@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class PDFBoxService extends ParserService
 {
+
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
@@ -26,6 +27,7 @@ class PDFBoxService extends ParserService
         $this->tempFile = tempnam(sys_get_temp_dir(), "scanfile-");
         $PDFContent     = Storage::disk('libris')->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
+
     }//end __construct()
 
 
@@ -48,6 +50,7 @@ class PDFBoxService extends ParserService
         }
 
         return $output;
+
     }//end run_pdfbox()
 
 
@@ -73,6 +76,7 @@ class PDFBoxService extends ParserService
         }
 
         return $pages;
+
     }//end parsePages()
 
 
@@ -91,6 +95,7 @@ class PDFBoxService extends ParserService
 
         $imageData = base64_encode($image);
         return 'data:image/png;base64,'.$imageData;
+
     }//end generateThumbnail()
 
 
@@ -106,6 +111,7 @@ class PDFBoxService extends ParserService
         }
 
         return rmdir($dir);
+
     }//end delTree()
 
 
@@ -118,5 +124,8 @@ class PDFBoxService extends ParserService
         if (file_exists($this->tempFile.'.dir')) {
             $this->delTree($this->tempFile.'.dir');
         }
+
     }//end __destruct()
+
+
 }//end class
