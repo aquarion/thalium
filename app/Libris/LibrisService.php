@@ -423,8 +423,14 @@ class LibrisService implements LibrisInterface
         foreach ($buckets as $bucket) {
             $system = $bucket['key']['systems'];
             $count  = $bucket['only_documents']['doc_count'];
+            $thumbnail = $this->getSystemThumbnail($system);
+    
             if ($count) {
-                $return[$system] = $count;
+                $return[] = [
+                    'system' => $system,
+                    'count'  => $count,
+                    'thumbnail' => $thumbnail,
+                ];
             }
         }
 
@@ -718,9 +724,22 @@ class LibrisService implements LibrisInterface
 
     public function thumbnailDataURI($file)
     {
-        return 'data:image/png;base64,'.base64_encode($this->generateThumbnail($file));
-
+        return $this->dataURI($this->generateThumbnail($file));
     }//end thumbnailDataURI()
 
+    public function dataURI($image)
+    {
+        return 'data:image/png;base64,'.base64_encode($image);
+    }//end thumbnailDataURI()
 
+    public function getSystemThumbnail($system)
+    {
+        $file = ".thalium/".strtolower($system).".png";
+        if (Storage::disk('libris')->missing($file)) {
+            Log::error("[updateThumbnail] No Such a File ".Storage::disk('libris')->path($file));
+            return $this->dataURI(genericThumbnail($system));
+        } else {
+            return Storage::disk('libris')->url($file);
+        }
+    }
 }//end class
