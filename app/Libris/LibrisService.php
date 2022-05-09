@@ -421,14 +421,14 @@ class LibrisService implements LibrisInterface
 
         $return = [];
         foreach ($buckets as $bucket) {
-            $system = $bucket['key']['systems'];
-            $count  = $bucket['only_documents']['doc_count'];
+            $system    = $bucket['key']['systems'];
+            $count     = $bucket['only_documents']['doc_count'];
             $thumbnail = $this->getSystemThumbnail($system);
-    
+
             if ($count) {
                 $return[] = [
-                    'system' => $system,
-                    'count'  => $count,
+                    'system'    => $system,
+                    'count'     => $count,
                     'thumbnail' => $thumbnail,
                 ];
             }
@@ -725,12 +725,16 @@ class LibrisService implements LibrisInterface
     public function thumbnailDataURI($file)
     {
         return $this->dataURI($this->generateThumbnail($file));
+
     }//end thumbnailDataURI()
+
 
     public function dataURI($image)
     {
         return 'data:image/png;base64,'.base64_encode($image);
-    }//end thumbnailDataURI()
+
+    }//end dataURI()
+
 
     public function getSystemThumbnail($system)
     {
@@ -741,5 +745,8 @@ class LibrisService implements LibrisInterface
         } else {
             return Storage::disk('libris')->url($file);
         }
-    }
+
+    }//end getSystemThumbnail()
+
+
 }//end class

@@ -1,85 +1,89 @@
 <?php
-    function wordWrapAnnotation($image, $draw, $text, $maxWidth)
-    {
-        $text = trim($text);
 
-        $words      = preg_split('%\s%', $text, -1, PREG_SPLIT_NO_EMPTY);
-        $lines      = [];
-        $i          = 0;
-        $lineHeight = 0;
 
-        while (count($words) > 0) {
-            $metrics    = $image->queryFontMetrics($draw, implode(' ', array_slice($words, 0, ++$i)));
-            $lineHeight = max($metrics['textHeight'], $lineHeight);
+function wordWrapAnnotation($image, $draw, $text, $maxWidth)
+{
+    $text = trim($text);
 
-            // check if we have found the word that exceeds the line width
-            if ($metrics['textWidth'] > $maxWidth or count($words) < $i) {
-                // handle case where a single word is longer than the allowed line width (just add this as a word on its own line?)
-                if ($i == 1) {
-                    $i++;
-                }
+    $words      = preg_split('%\s%', $text, -1, PREG_SPLIT_NO_EMPTY);
+    $lines      = [];
+    $i          = 0;
+    $lineHeight = 0;
 
-                $lines[] = implode(' ', array_slice($words, 0, --$i));
-                $words   = array_slice($words, $i);
-                $i       = 0;
+    while (count($words) > 0) {
+        $metrics    = $image->queryFontMetrics($draw, implode(' ', array_slice($words, 0, ++$i)));
+        $lineHeight = max($metrics['textHeight'], $lineHeight);
+
+        // check if we have found the word that exceeds the line width
+        if ($metrics['textWidth'] > $maxWidth or count($words) < $i) {
+            // handle case where a single word is longer than the allowed line width (just add this as a word on its own line?)
+            if ($i == 1) {
+                $i++;
             }
+
+            $lines[] = implode(' ', array_slice($words, 0, --$i));
+            $words   = array_slice($words, $i);
+            $i       = 0;
         }
+    }
 
-        return [
-            $lines,
-            $lineHeight,
-        ];
-    }//end wordWrapAnnotation()
+    return [
+        $lines,
+        $lineHeight,
+    ];
 
-    
-    function genericThumbnail($text)
-    {
+}//end wordWrapAnnotation()
 
-        // Create a new imagick object
-        $im = new \Imagick();
 
-        // Create new image. This will be used as fill pattern
-        $im->newPseudoImage(50, 50, "gradient:red-black");
+function genericThumbnail($text)
+{
 
-        // Create imagickdraw object
-        $draw = new \ImagickDraw();
+    // Create a new imagick object
+    $im = new \Imagick();
 
-        // Start a new pattern called "gradient"
-        $draw->pushPattern('gradient', 0, 0, 50, 50);
+    // Create new image. This will be used as fill pattern
+    $im->newPseudoImage(50, 50, "gradient:red-black");
 
-        // Composite the gradient on the pattern
-        $draw->composite(\Imagick::COMPOSITE_OVER, 0, 0, 50, 50, $im);
+    // Create imagickdraw object
+    $draw = new \ImagickDraw();
 
-        // Close the pattern
-        $draw->popPattern();
+    // Start a new pattern called "gradient"
+    $draw->pushPattern('gradient', 0, 0, 50, 50);
 
-        // Use the pattern called "gradient" as the fill
-        $draw->setFillPatternURL('#gradient');
+    // Composite the gradient on the pattern
+    $draw->composite(\Imagick::COMPOSITE_OVER, 0, 0, 50, 50, $im);
 
-        $draw->setGravity(\Imagick::GRAVITY_CENTER);
+    // Close the pattern
+    $draw->popPattern();
 
-        // Set font size to 52
-        $draw->setFontSize(32);
+    // Use the pattern called "gradient" as the fill
+    $draw->setFillPatternURL('#gradient');
 
-        list($lines, $lineHeight) = wordWrapAnnotation($im, $draw, $text, 200);
-        for ($i = 0; $i < count($lines); $i++) {
-            // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
-            $draw->annotation(0, (0 + $i * $lineHeight), $lines[$i]);
-        }
+    $draw->setGravity(\Imagick::GRAVITY_CENTER);
 
-        // Annotate some text
-        // Create a new canvas object and a white image
-        $canvas = new \Imagick();
-        $canvas->newImage(200, 300, "white");
+    // Set font size to 52
+    $draw->setFontSize(32);
 
-        // Draw the ImagickDraw on to the canvas
-        $canvas->drawImage($draw);
+    list($lines, $lineHeight) = wordWrapAnnotation($im, $draw, $text, 200);
+    for ($i = 0; $i < count($lines); $i++) {
+        // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
+        $draw->annotation(0, (0 + $i * $lineHeight), $lines[$i]);
+    }
 
-        // 1px black border around the image
-        $canvas->borderImage('black', 1, 1);
+    // Annotate some text
+    // Create a new canvas object and a white image
+    $canvas = new \Imagick();
+    $canvas->newImage(200, 300, "white");
 
-        // Set the format to PNG
-        $canvas->setImageFormat('png');
+    // Draw the ImagickDraw on to the canvas
+    $canvas->drawImage($draw);
 
-        return $canvas;
-    }//end generateThumbnail()
+    // 1px black border around the image
+    $canvas->borderImage('black', 1, 1);
+
+    // Set the format to PNG
+    $canvas->setImageFormat('png');
+
+    return $canvas;
+
+}//end genericThumbnail()

@@ -77,11 +77,12 @@ abstract class ParserService
     }//end __construct()
 
 
-
-
     public function generateThumbnail()
     {
         Log::info("[AddDoc] {$this->filename} Generating Thumbnail");
         return genericThumbnail($this->title);
+
     }//end generateThumbnail()
+
+
 }//end class
