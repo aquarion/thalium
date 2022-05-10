@@ -6,30 +6,35 @@ use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
 use Psr\Http\Message\ServerRequestInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DebugController extends Controller
 {
-
-
     public function thumbnail(LibrisInterface $libris, Request $request)
     {
         $id = $request->query('id');
-        dump($id);
+        // dump($id);
         // return view('sysindex', ['systems' => $libris->systems()]);
         $doc = $libris->fetchDocument($id);
-        dump($doc);
-        echo "<h2>Stuff</h2>\n";
 
-        echo '[<a href="'.Storage::disk('libris')->url($doc['_source']['path'])."\">DL</a>]\n";
-        echo "<h2>Images</h2>\n";
+        Log::Info($doc);
+        $output = "<h2>Stuff</h2>\n";
 
-        echo '<img src="'.$libris->getThumbnail($doc).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
+        $output .= '[<a href="'.Storage::disk('libris')->url($doc['_source']['path'])."\">DL</a>]\n";
+        $output .= "<h2>Images</h2>\n";
 
-        echo '<img src="'.$libris->thumbnailDataURI($doc['_source']['path']).'" style="border: 1px solid blue;" title="Regenerated Thumbnail">'."\n";
+        $output .= '<img src="'.$libris->getThumbnail($doc).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
 
-        echo '<img src="data:image/png;base64,'.base64_encode(genericThumbnail($doc['_source']['title'])).'" style="border: 1px solid green;" title="Regenerated Thumbnail">';
+        $output .= '<img src="'.$libris->thumbnailDataURI($doc['_source']['path']).'" style="border: 1px solid blue;" title="Regenerated Thumbnail">'."\n";
 
+        $output .= '<img src="data:image/png;base64,'.base64_encode(genericThumbnail($doc['_source']['title'])).'" style="border: 1px solid green;" title="Regenerated Thumbnail">';
+
+        return view(
+            "debug",
+            [
+                'content' => $output,
+                'doc' => $doc
+            ]
+        );
     }//end thumbnail()
-
-
 }//end class
