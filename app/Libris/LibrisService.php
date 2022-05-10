@@ -653,13 +653,22 @@ class LibrisService implements LibrisInterface
 
     public function getThumbnail($doc, $regen=false)
     {
-        if (isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'] && !$regen) {
-            // Log::debug("[getThumbnail] Found Thumbnail");
+        $thumbnailSet = isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'];
+
+        if ($regen == "generic" && $thumbnailSet) {
+            $mimeType      = Storage::disk('libris')->mimeType($doc['_source']['path']);
+            if ($mimeType !== "application/pdf") {
+                return $this->updateThumbnail($doc);
+            }
+        }
+        
+        if ($regen == "all") {
+            return $this->updateThumbnail($doc);
+        } elseif ($thumbnailSet) {
             return $doc['_source']['thumbnail'];
         } else {
             return $this->updateThumbnail($doc);
         }
-
     }//end getThumbnail()
 
 
@@ -675,15 +684,15 @@ class LibrisService implements LibrisInterface
             return false;
         }
 
-        if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
-            Log::info("[updateThumbnail] Already exists $thumbnailFileName");
-        } else {
+        // if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
+        //     Log::info("[updateThumbnail] Already exists $thumbnailFileName");
+        // } else {
             $image = $this->generateThumbnail($file);
 
             Storage::disk('thumbnails')->put($thumbnailFileName, $image);
 
             Log::debug("[updateThumbnail] saved to ".$thumbnailURL);
-        }
+        // }
 
         if ($thumbnailURL == $doc['_source']['thumbnail']) {
             Log::info("[updateThumbnail] Filename already set");
@@ -703,7 +712,6 @@ class LibrisService implements LibrisInterface
         Log::info("[updateThumbnail] Saved");
 
         return $thumbnailURL;
-
     }//end updateThumbnail()
 
 

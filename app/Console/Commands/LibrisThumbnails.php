@@ -14,7 +14,7 @@ class LibrisThumbnails extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:thumbnails {--system=} {--regen}}';
+    protected $signature = 'libris:thumbnails {--system=} {--regen-all} {--regen-generic}}';
 
     /**
      * The console command description.
@@ -39,7 +39,6 @@ class LibrisThumbnails extends Command
     public function __construct()
     {
         parent::__construct();
-
     }//end __construct()
 
 
@@ -59,7 +58,6 @@ class LibrisThumbnails extends Command
         }
 
         return $docs;
-
     }//end nextPage()
 
 
@@ -85,8 +83,10 @@ class LibrisThumbnails extends Command
         $bar->setMessage('Start');
         $bar->start();
 
-        if ($this->option("regen")) {
-            $regen = true;
+        if ($this->option("regen-all")) {
+            $regen = "all";
+        } elseif ($this->option("regen-generic")) {
+            $regen = "generic";
         } else {
             $regen = false;
         }
@@ -115,8 +115,5 @@ class LibrisThumbnails extends Command
 
         $this->line(".");
         $this->line("Have a great day.");
-
     }//end handle()
-
-
 }//end class
