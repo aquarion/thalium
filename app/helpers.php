@@ -31,13 +31,14 @@ function wordWrapAnnotation($image, $draw, $text, $maxWidth)
         $lines,
         $lineHeight,
     ];
+
 }//end wordWrapAnnotation()
 
 
 function genericThumbnail($text)
 {
     $height = 265;
-    $width = 200;
+    $width  = 200;
 
     // Create a new imagick object
     $im = new \Imagick();
@@ -71,22 +72,22 @@ function genericThumbnail($text)
 
     list($lines, $lineHeight) = wordWrapAnnotation($im, $draw, $text, 200);
     for ($i = 0; $i < count($lines); $i++) {
-        $y = $i - (count($lines)/2) + .5;
+        $y = ($i - (count($lines) / 2) + .5);
         // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
         $draw->annotation(0, (0 + $y * $lineHeight), $lines[$i]);
     }
-    
+
     // Let's read the images.
     $icon = new \Imagick();
-    if (false === $icon->readImage(resource_path('genericThumbnail/noun-book-of-spells.png'))) {
+    if ($icon->readImage(resource_path('genericThumbnail/noun-book-of-spells.png')) === false) {
         throw new Exception();
     }
+
     $iconBorder = 20;
     $icon->trimImage(1);
-    $icon->adaptiveResizeImage($width-$iconBorder, $height, true);
-    $iconY = ($height - $icon->getImageHeight())/2;
-    $iconX = ($iconBorder)/2 - 2;
-
+    $icon->adaptiveResizeImage(($width - $iconBorder), $height, true);
+    $iconY = (($height - $icon->getImageHeight()) / 2);
+    $iconX = (($iconBorder) / 2 - 2);
 
     // Annotate some text
     // Create a new canvas object and a white image
@@ -106,4 +107,5 @@ function genericThumbnail($text)
     $canvas->setImageFormat('png');
 
     return $canvas;
+
 }//end genericThumbnail()

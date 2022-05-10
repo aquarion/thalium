@@ -39,6 +39,7 @@ class LibrisThumbnails extends Command
     public function __construct()
     {
         parent::__construct();
+
     }//end __construct()
 
 
@@ -58,6 +59,7 @@ class LibrisThumbnails extends Command
         }
 
         return $docs;
+
     }//end nextPage()
 
 
@@ -85,7 +87,7 @@ class LibrisThumbnails extends Command
 
         if ($this->option("regen-all")) {
             $regen = "all";
-        } elseif ($this->option("regen-generic")) {
+        } else if ($this->option("regen-generic")) {
             $regen = "generic";
         } else {
             $regen = false;
@@ -115,5 +117,8 @@ class LibrisThumbnails extends Command
 
         $this->line(".");
         $this->line("Have a great day.");
+
     }//end handle()
+
+
 }//end class
