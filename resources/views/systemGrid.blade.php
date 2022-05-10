@@ -37,7 +37,7 @@
 
 <div class="row">
     @foreach ($docs as $doc)
-      <div class="col-sm-6 col-md-4 mb-3 text-center ">
+      <div class="col-sm-6 col-md-4 mb-3 text-center libris-item">
             <a href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}">
               <img src="{{ $doc['thumbnail'] }}" class="book-cover">
             <br/>
@@ -46,7 +46,7 @@
             <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
             @endforeach
             @if (App::environment(['local', 'staging']))
-              <a href="/debug/thumbnail?id={{ urlencode($doc['id'])}}" title="Thumbnail debug">🖼</a>
+              <a href="/debug/thumbnail?id={{ urlencode($doc['id'])}}" title="Thumbnail debug"><i class="bi bi-image"></i></a>
             @endif
       </div>
 	@endforeach

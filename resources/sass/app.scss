@@ -9,6 +9,27 @@
 
 @import '~bootstrap-icons/font/bootstrap-icons.css';
 
+.libris-item  {
+  padding-top: 1em;
+  margin-right: .5em;
+  background-color: #ebe2ff;
+  border-radius: 3px;
+}
+  .libris-item a {
+    
+  text-decoration: none;
+  font-weight: bold;
+  color: $purple;
+}
+
+.libris-item:hover {
+  background-color: $dark;
+  color: white;
+}
+.libris-item:hover a {
+  background-color: $dark;
+  color: white;
+}
 
 .navbar-brand img {
     max-height: 32px;
