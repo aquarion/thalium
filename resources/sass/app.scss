@@ -1,5 +1,5 @@
 // Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
+@import url('https://fonts.googleapis.com/css?family=Macondo');
 
 // Variables
 @import 'variables';
@@ -13,6 +13,10 @@
 .navbar-brand img {
     max-height: 32px;
     vertical-align: middle;
+  }
+
+  .navbar-brand {
+    font-family: $font-family-sans-serif;
   }
 
   body { padding-top: 70px; }
