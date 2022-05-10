@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 class PDFBoxService extends ParserService
 {
-
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
@@ -27,7 +26,6 @@ class PDFBoxService extends ParserService
         $this->tempFile = tempnam(sys_get_temp_dir(), "scanfile-");
         $PDFContent     = Storage::disk('libris')->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
-
     }//end __construct()
 
 
@@ -50,7 +48,6 @@ class PDFBoxService extends ParserService
         }
 
         return $output;
-
     }//end run_pdfbox()
 
 
@@ -76,7 +73,6 @@ class PDFBoxService extends ParserService
         }
 
         return $pages;
-
     }//end parsePages()
 
 
@@ -89,12 +85,20 @@ class PDFBoxService extends ParserService
         $image->setFormat("png");
         Log::Info('[Imagick] Format: '.$image->getFormat());
 
+        $w = $image->getImageWidth();
+        $h = $image->getImageHeight();
+        $image->trimImage(1);
+
+        if (($w > $h) > 1.1) {
+            // dd($w."/".$h." ".($w/$h));
+            $image->cropImage($w/2, $h, $w/2, 0);
+        }
+
         // If 0 is provided as a width or height parameter,
         // aspect ratio is maintained
         $image->thumbnailImage(200, 300, true);
 
         return $image;
-
     }//end generateThumbnail()
 
 
@@ -110,7 +114,6 @@ class PDFBoxService extends ParserService
         }
 
         return rmdir($dir);
-
     }//end delTree()
 
 
@@ -123,8 +126,5 @@ class PDFBoxService extends ParserService
         if (file_exists($this->tempFile.'.dir')) {
             $this->delTree($this->tempFile.'.dir');
         }
-
     }//end __destruct()
-
-
 }//end class

@@ -31,7 +31,6 @@ function wordWrapAnnotation($image, $draw, $text, $maxWidth)
         $lines,
         $lineHeight,
     ];
-
 }//end wordWrapAnnotation()
 
 
@@ -40,11 +39,10 @@ function genericThumbnail($text)
     $height = 265;
     $width  = 200;
 
-    // Create a new imagick object
-    $im = new \Imagick();
-
-    // Create new image. This will be used as fill pattern
-    $im->newPseudoImage($width, $height, "gradient:white-black");
+    // Create a new canvas object and a white image
+    $canvas = new \Imagick();
+    $canvas->setGravity(\Imagick::GRAVITY_CENTER);
+    $canvas->newImage($width, $height, "#380744");
 
     // // Create imagickdraw object
     $draw = new \ImagickDraw();
@@ -62,18 +60,26 @@ function genericThumbnail($text)
     // $draw->setFillPatternURL('#gradient');
 
     $draw->setGravity(\Imagick::GRAVITY_CENTER);
+    $fontSize = 42;
 
     // // Set font size to 52
     $draw->setFontSize(32);
     $draw->setFillColor("white");
-    $draw->setFontSize(42);
+    $draw->setFontSize($fontSize);
     $draw->setFontWeight(800);
     $draw->setFont(resource_path("genericThumbnail/Macondo-Regular.ttf"));
 
-    list($lines, $lineHeight) = wordWrapAnnotation($im, $draw, $text, 200);
+    list($lines, $lineHeight) = wordWrapAnnotation($canvas, $draw, $text, 200);
     for ($i = 0; $i < count($lines); $i++) {
         $y = ($i - (count($lines) / 2) + .5);
         // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
+        $size = $fontSize;
+        $textwidth = $canvas->queryFontMetrics($draw, $lines[$i])['textWidth'];
+        while ($textwidth > ($width-10) && $size > 2) {
+            $size--;
+            $draw->setFontSize($size);
+            $textwidth = $canvas->queryFontMetrics($draw, $lines[$i])['textWidth'];
+        }
         $draw->annotation(0, (0 + $y * $lineHeight), $lines[$i]);
     }
 
@@ -90,10 +96,6 @@ function genericThumbnail($text)
     $iconX = (($iconBorder) / 2 - 2);
 
     // Annotate some text
-    // Create a new canvas object and a white image
-    $canvas = new \Imagick();
-    $canvas->setGravity(\Imagick::GRAVITY_CENTER);
-    $canvas->newImage($width, $height, "#380744");
 
     $canvas->compositeImage($icon, Imagick::COMPOSITE_DEFAULT, $iconX, $iconY);
 
@@ -107,5 +109,4 @@ function genericThumbnail($text)
     $canvas->setImageFormat('png');
 
     return $canvas;
-
 }//end genericThumbnail()
