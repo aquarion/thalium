@@ -29,7 +29,7 @@ services:
     volumes:
       - .:/var/www
       - ${HOST_PDF_LIBRARY}:/mnt/rpg
-      - "/var/run/thalium:/home/${USER}/lockfiles"
+      - "${LOCK_DIR}:/home/${USER}/lockfiles"
       #- "/var/run/thalium:/var/run/thalium"
 
   scheduler:
@@ -50,7 +50,7 @@ services:
 
   ## Localdev Support Images
   db:
-    image: mysql:5.7.16
+    image: mariadb:latest
     container_name: thalium-db
     restart: unless-stopped
     environment:
@@ -84,8 +84,8 @@ services:
     volumes:
       - ./:/var/www
       - ./docker/nginx:/etc/nginx/conf.d
-      # - libris:/mnt/rpg
-      - /var/run/thalium:/var/run/thalium
+      - ${HOST_PDF_LIBRARY}:/mnt/rpg
+      - "${LOCK_DIR}:/var/run/thalium"
     profiles:
       - dev
 
@@ -97,9 +97,10 @@ services:
     environment:
       - node.name=es01
       - cluster.name=es-docker-cluster
-      # - discovery.seed_hosts=es02,es03
+      - discovery.seed_hosts=127.0.0.1
       # - cluster.initial_master_nodes=es01,es02,es03
       - cluster.initial_master_nodes=es01
+      - bootstrap.system_call_filter=false
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
     ulimits:
@@ -109,6 +110,7 @@ services:
     volumes:
       - ./storage/elasticsearch:/usr/share/elasticsearch/data
     ports:
-      - 9200:9200
+      - 9200
+      - 9300
     profiles:
       - dev

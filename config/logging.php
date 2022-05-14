@@ -5,9 +5,9 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 
 if (env("LOG_PREFIX")) {
-	$logname = env("LOG_PREFIX")."-";
+    $logname = env("LOG_PREFIX")."-";
 } else {
-	$logname = "";
+    $logname = "";
 }
 
 
@@ -44,7 +44,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single', "errors"],
+            'channels' => ['single', "errors", "stderr"],
             'ignore_exceptions' => false,
         ],
 

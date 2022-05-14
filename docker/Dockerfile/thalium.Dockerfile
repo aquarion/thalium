@@ -1,4 +1,4 @@
-FROM php:7.4-fpm
+FROM php:8-fpm
 
 LABEL maintainer="Nicholas Avenell <nicholas@istic.net>"
 
@@ -39,7 +39,7 @@ RUN apt-get -qq update && apt-get -qqy install \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd dom sockets
 
-RUN pecl install xdebug-2.9.5 \
+RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
 RUN pecl install redis \
