@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
 
 @section('title', 'Systems Index')
 
@@ -75,7 +76,11 @@
 
         <dt>
             <b>{{ $page['_source']['system'] }}</b> &ndash;
-            <a href="{{ route('document.iframe', [ 'file' => urlencode($page['_source']['path']), 'page' => $page['_source']['pageNo'] ] ) }}">
+			@if ($agent->is("iOS"))
+            	<a href="{{ $page['_source']['download'] }}#page={{ $page['_source']['pageNo'] }}">
+			@else
+            	<a href="{{ route('document.iframe', [ 'file' => urlencode($page['_source']['path']), 'page' => $page['_source']['pageNo'] ] ) }}">
+			@endif
         	{{ $page['_source']['title'] }} &ndash; p{{ $page['_source']['pageNo'] }}
         </a></dt>
         	@foreach ($page['highlight']['attachment.content'] as $highlight)

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
 
 @section('title', 'Systems - '.$system)
 
@@ -38,7 +39,12 @@
 <div class="row">
     @foreach ($docs as $doc)
       <div class="col-sm-6 col-md-4 mb-3 text-center libris-item">
-            <a href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}">
+            @if ($agent->is("iOS"))
+                    <a href="{{ $doc['download'] }}">
+            @else
+                    <a href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}">
+            @endif
+           
               <img src="{{ $doc['thumbnail'] }}" class="book-cover">
             <br/>
             {{ $doc['name'] ? $doc['name'] : '[empty]' }}</a>

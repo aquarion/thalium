@@ -1,3 +1,4 @@
+@inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
 
 <!doctype html>
 <html lang="en">
@@ -28,7 +29,7 @@
 <meta name="apple-mobile-web-app-title" content="Thalium">
 <meta name="application-name" content="Thalium">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 <link rel="apple-touch-startup-image" href="/static/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
@@ -36,8 +37,6 @@
     <!-- Bootstrap core CSS -->
 <link rel="stylesheet" href="/css/app.css">
 
-    <!-- Custom styles for this template -->
-    <link href="starter-template.css" rel="stylesheet">
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
