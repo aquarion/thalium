@@ -36,7 +36,7 @@ class LibrisPurge extends Command
     private function nextPage($size=100)
     {
         // if ($this->option('system')) {
-        //     $docs = $this->libris->AllBySystem($this->option('system'), $page);
+        //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
         // } else {
         $docs = $this->libris->showAll(false, $size, $this->searchAfter);
         // }

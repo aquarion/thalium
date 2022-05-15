@@ -23,14 +23,14 @@ class LibrisController extends Controller
     }//end home()
 
 
-    public function allBySystemList(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
+    public function docsBySystemList(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
     {
-        return $this->allBySystem($libris, $request, $system, 'systemList');
+        return $this->docsBySystem($libris, $request, $system, 'systemList');
 
-    }//end allBySystemList()
+    }//end docsBySystemList()
 
 
-    public function allBySystem(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
+    public function docsBySystem(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
     {
         $page    = $request->query('page', 1);
         $perpage = 60;
@@ -45,7 +45,7 @@ class LibrisController extends Controller
 
         $docresult = [];
 
-        $documents = $libris->AllBySystem($system, $page, $perpage, $tag);
+        $documents = $libris->docsBySystem($system, $page, $perpage, $tag);
         $total     = $documents['hits']['total']['value'];
 
         foreach ($documents['hits']['hits'] as $doc) {
@@ -62,7 +62,7 @@ class LibrisController extends Controller
             ];
         }
 
-        $tagList = $libris->SystemTags($system, $page, $perpage, $tag);
+        $tagList = $libris->tagsForSystem($system, $page, $perpage, $tag);
 
         $paginate = new LengthAwarePaginator(
             [],
@@ -86,7 +86,7 @@ class LibrisController extends Controller
             ]
         );
 
-    }//end allBySystem()
+    }//end docsBySystem()
 
 
     public function search(LibrisInterface $libris, Request $request)
@@ -99,7 +99,7 @@ class LibrisController extends Controller
         $tag      = $request->query('t', false);
         $page     = $request->query('page', 1);
 
-        $result = $libris->pageSearch($query, $system, $document, $tag, $page, $perpage);
+        $result = $libris->searchPages($query, $system, $document, $tag, $page, $perpage);
 
         $total = $result['hits']['total']['value'];
 

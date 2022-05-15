@@ -53,7 +53,7 @@ class LibrisThumbnails extends Command
     private function nextPage($size=100)
     {
         if ($this->option('system')) {
-            $docs = $this->libris->AllBySystem($this->option('system'), $this->page);
+            $docs = $this->libris->docsBySystem($this->option('system'), $this->page);
             $this->page++;
         } else {
             $docs = $this->libris->showAll(false, $size, $this->searchAfter);

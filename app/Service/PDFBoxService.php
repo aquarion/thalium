@@ -102,9 +102,9 @@ class PDFBoxService extends ParserService
     }//end parsePages()
 
 
-    public function generateThumbnail()
+    public function generateDocThumbnail()
     {
-        Log::info("[generateThumbnail] {$this->filename} Generating PDF Thumbnail");
+        Log::info("[generateDocThumbnail] {$this->filename} Generating PDF Thumbnail");
 
         $image = new \Imagick($this->tempFile.'[0]');
         Log::Info('[Imagick] Hello '.$this->tempFile);
@@ -125,7 +125,7 @@ class PDFBoxService extends ParserService
         $image->thumbnailImage(200, 300, true);
 
         return $image;
-    }//end generateThumbnail()
+    }//end generateDocThumbnail()
 
 
     public function delTree($dir)

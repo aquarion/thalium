@@ -66,7 +66,7 @@ class LibrisService implements LibrisInterface
         Log::debug("[AddDoc] Name: {$parser->title}, System: {$parser->system}, Tags: ".implode(",", $parser->tags));
 
         
-        $image = $this->generateThumbnail($parser->filename);
+        $image = $this->generateDocThumbnail($parser->filename);
         $thumbnailURL = $this->saveDocThumbnail($image, $parser->filename);
 
         $params = [
@@ -412,9 +412,9 @@ class LibrisService implements LibrisInterface
         foreach ($buckets as $bucket) {
             $system    = $bucket['key']['systems'];
             $count     = $bucket['only_documents']['doc_count'];
-            $thumbnail = $this->getSystemThumbnail($system);
 
             if ($count) {
+                $thumbnail = $this->getSystemThumbnail($system);
                 $return[] = [
                     'system'    => $system,
                     'count'     => $count,
@@ -428,7 +428,7 @@ class LibrisService implements LibrisInterface
     }//end systems()
 
 
-    public function AllBySystem($system, $page=1, $size=60, $tag=false)
+    public function docsBySystem($system, $page=1, $size=60, $tag=false)
     {
         $from = (($page - 1) * $size);
 
@@ -495,7 +495,7 @@ class LibrisService implements LibrisInterface
         $result = Elasticsearch::search($params);
 
         return($result);
-    }//end AllBySystem()
+    }//end docsBySystem()
 
 
     public static function tagSort($a, $b)
@@ -512,7 +512,7 @@ class LibrisService implements LibrisInterface
     }//end tagSort()
 
 
-    public function SystemTags($system)
+    public function tagsForSystem($system)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -555,10 +555,10 @@ class LibrisService implements LibrisInterface
         usort($tagList, [LibrisService::class, "tagSort"]);
 
         return($tagList);
-    }//end SystemTags()
+    }//end tagsForSystem()
 
 
-    public function pageSearch($terms, $system, $document, $tag, $page=1, $size=60)
+    public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
     {
 
         // $system = "Goblin Quest";
@@ -632,7 +632,7 @@ class LibrisService implements LibrisInterface
         Log::debug($result);
 
         return $result;
-    }//end pageSearch()
+    }//end searchPages()
 
 
     public function getDocThumbnail($doc, $regen=false)
@@ -665,7 +665,7 @@ class LibrisService implements LibrisInterface
         // if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
         //     Log::info("[updateDocThumbnail] Already exists $thumbnailFileName");
         // } else {
-        $image = $this->generateThumbnail($file);
+        $image = $this->generateDocThumbnail($file);
 
         $thumbnailURL = $this->saveDocThumbnail($image, $file);
 
@@ -705,23 +705,23 @@ class LibrisService implements LibrisInterface
     }
 
 
-    public function generateThumbnail($file)
+    public function generateDocThumbnail($file)
     {
-        Log::debug("[generateThumbnail] ".$file);
+        Log::debug("[generateDocThumbnail] ".$file);
 
         $parser = $this->getParser($file);
 
         if ($parser) {
-            return $parser->generateThumbnail($file);
+            return $parser->generateDocThumbnail($file);
         }
 
         return false;
-    }//end generateThumbnail()
+    }//end generateDocThumbnail()
 
 
     public function thumbnailDataURI($file)
     {
-        return $this->dataURI($this->generateThumbnail($file));
+        return $this->dataURI($this->generateDocThumbnail($file));
     }//end thumbnailDataURI()
 
 
@@ -735,7 +735,7 @@ class LibrisService implements LibrisInterface
     {
         $file = ".thalium/".strtolower($system).".png";
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[updateDocThumbnail] No Such a File ".Storage::disk('libris')->path($file));
+            Log::error("[updateDocThumbnail] No Such thumbnail at ".Storage::disk('libris')->path($file));
             return $this->dataURI(genericThumbnail($system));
         } else {
             return Storage::disk('libris')->url($file);
