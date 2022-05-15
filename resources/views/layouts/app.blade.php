@@ -78,7 +78,7 @@
 
       <div class="input-group ">
         <div class="input-group-prepend">
-        @isset ($system)
+        @if (isset ($system) && $system)
           <div class="input-group-text">{{ $system }}</div>
           <input type="hidden" name="s" value="{{ $system }}">
         @else

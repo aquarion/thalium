@@ -37,4 +37,27 @@ class DebugController extends Controller
             ]
         );
     }//end thumbnail()
+
+    public function system(LibrisInterface $libris, Request $request)
+    {
+        $system = $request->query('system');
+        
+        $output = "<h2>System</h2>\n";
+
+
+        $output .= '<img src="'.$libris->getSystemThumbnail($system).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
+        $output .= '<img src="'.$libris->dataURI(genericThumbnail($system)).'" style="border: 1px solid red;" title="Generic Thumbnail">'."\n";
+
+        // $output .= '<img src="'.$libris->thumbnailDataURI($doc['_source']['path']).'" style="border: 1px solid blue;" title="Regenerated Thumbnail">'."\n";
+
+        // $output .= '<img src="data:image/png;base64,'.base64_encode(genericThumbnail($doc['_source']['title'])).'" style="border: 1px solid green;" title="Regenerated Thumbnail">';
+
+        return view(
+            "debug",
+            [
+                'content' => $output,
+                'doc' => false
+            ]
+        );
+    }//end thumbnail()
 }//end class

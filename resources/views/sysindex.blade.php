@@ -15,7 +15,10 @@
         <img src="{{ $sys['thumbnail'] }}" class="book-cover">
         <br/>
         {{ $sys['system']  }} ({{ $sys['count'] }})
-        </a>
+        </a> 
+        @if (App::environment(['local', 'staging']))
+        <a href="{{ route("debug.system", [ 'system' => $sys['system'] ]) }}"><i class="bi-image" title="Image"></i></a>
+        @endif
       </div>
 	@endforeach
 </div>
