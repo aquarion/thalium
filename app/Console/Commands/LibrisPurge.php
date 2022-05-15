@@ -38,11 +38,10 @@ class LibrisPurge extends Command
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
         // } else {
-        $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+        $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
         // }
 
         return $docs;
-
     }//end nextPage()
 
 
@@ -54,7 +53,6 @@ class LibrisPurge extends Command
     public function __construct()
     {
         parent::__construct();
-
     }//end __construct()
 
 
@@ -67,7 +65,12 @@ class LibrisPurge extends Command
     {
         $this->libris = $libris;
 
-        $results = $this->libris->showAll(false, 0);
+        $this->purgeDeletedDocuments();
+    }//end handle()
+
+    private function purgeDeletedDocuments()
+    {
+        $results = $this->libris->fetchAllDocuments(false, 0);
         $size    = 100;
         $total   = $results['hits']['total']['value'];
 
@@ -125,9 +128,6 @@ class LibrisPurge extends Command
 
         $bar->finish();
 
-        $this->line("Have a great day.");
-
-    }//end handle()
-
-
+        $this->line(" - Complete");
+    }
 }//end class

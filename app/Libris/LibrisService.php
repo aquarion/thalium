@@ -341,7 +341,7 @@ class LibrisService implements LibrisInterface
     }//end dispatchIndexDir()
 
 
-    public function showAll($tag=false, $size=100, $searchAfter=false)
+    public function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -363,7 +363,7 @@ class LibrisService implements LibrisInterface
         }
 
         return Elasticsearch::search($params);
-    }//end showAll()
+    }//end fetchAllDocuments()
 
 
     public function systems()

@@ -38,7 +38,7 @@ class LibrisUpdateTags extends Command
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
         // } else {
-        $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+        $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
         // }
 
         return $docs;
@@ -72,7 +72,7 @@ class LibrisUpdateTags extends Command
         $size   = 100;
         $cursor = 0;
 
-        $results = $this->libris->showAll(false, 0);
+        $results = $this->libris->fetchAllDocuments(false, 0);
 
         $total = $results['hits']['total']['value'];
 

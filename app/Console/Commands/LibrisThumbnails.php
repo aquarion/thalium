@@ -56,7 +56,7 @@ class LibrisThumbnails extends Command
             $docs = $this->libris->docsBySystem($this->option('system'), $this->page);
             $this->page++;
         } else {
-            $docs = $this->libris->showAll(false, $size, $this->searchAfter);
+            $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
         }
 
         return $docs;

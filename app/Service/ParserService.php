@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 abstract class ParserService
 {
-
     protected $file;
 
     protected $elasticSearchIndex;
@@ -34,7 +33,6 @@ abstract class ParserService
         array_pop($tags);
         // remove the filename from the tags list
         return $tags;
-
     }//end generateTags()
 
 
@@ -73,16 +71,12 @@ abstract class ParserService
         } else {
             Log::info("[AddDoc] {$this->title} is a ".$sizeMB."Mb");
         }
-
     }//end __construct()
 
 
-    public function generateThumbnail()
+    public function generateDocThumbnail()
     {
         Log::info("[AddDoc] {$this->filename} Generating Thumbnail");
         return genericThumbnail($this->title);
-
-    }//end generateThumbnail()
-
-
+    }//end generateDocThumbnail()
 }//end class
