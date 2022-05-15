@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
 
-@section('title', 'Systems Index')
+@section('title', 'Search: '.$query)
 
 
 @section('content')
