@@ -49,6 +49,7 @@ class LibrisService implements LibrisInterface
             return $this->indexDocument($parser);
         } else {
             Log::warning("[AddDoc] No parser for $file");
+            throw new Exceptions\LibrisFileNotSupported("No parser for $file");
         }
     }//end addDocument()
 

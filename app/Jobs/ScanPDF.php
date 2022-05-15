@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Redis;
 
 use App\Libris\LibrisInterface;
 
+use App\Exceptions;
+
 class ScanPDF implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -41,7 +43,6 @@ class ScanPDF implements ShouldQueue
     public function __construct($filename)
     {
         $this->filename = $filename;
-
     }//end __construct()
 
 
@@ -53,7 +54,6 @@ class ScanPDF implements ShouldQueue
     public function __toString()
     {
         return sprintf("ScanPDF <%s>", $this->filename);
-
     }//end __toString()
 
 
@@ -74,6 +74,12 @@ class ScanPDF implements ShouldQueue
                 try {
                     $returnValue = $this->libris->addDocument($this->filename);
                     Log::info("[Scanfile] Finished ".$this->filename);
+                } catch (Exceptions\LibrisFileNotSupported $e) {
+                    Log::warning("[Scanfile] Unsupported File Type ".$this->filename);
+                    return 0;
+                } catch (Exceptions\LibrisTooLarge $e) {
+                    Log::warning("[Scanfile] File too big ".$this->filename);
+                    return 0;
                 } catch (Exception $e) {
                     Log::info("[Scanfile] Caught Exception");
                     $this->fail($e);
@@ -81,7 +87,7 @@ class ScanPDF implements ShouldQueue
                 }
 
                 if (!$returnValue) {
-                    // Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
+                    Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
                     $this->fail();
                 }
 
@@ -96,7 +102,6 @@ class ScanPDF implements ShouldQueue
         );
 
         // Log::debug("[ScanFile] Bye ".$this->filename);
-
     }//end handle()
 
 
@@ -109,15 +114,11 @@ class ScanPDF implements ShouldQueue
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60 * 60 * 24);
-
     }//end retryUntil()
 
 
     public function uniqueId()
     {
         return md5($this->filename);
-
     }//end uniqueId()
-
-
 }//end class
