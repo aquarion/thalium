@@ -67,7 +67,7 @@ abstract class ParserService
         $size   = Storage::disk('libris')->size($this->filename);
         $sizeMB = number_format($size / 1024);
 
-        if ($size > (1024 * 1024 * 512)) {
+        if ($size > (1024 * 1024 * 1024)) {
             Log::error("[AddDoc] {$this->title} is ".$sizeMB."Mb, too large to index");
             throw new Exceptions\LibrisTooLarge();
         } else {
