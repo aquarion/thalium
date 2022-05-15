@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 use App\Jobs\ScanDirectory;
-use App\Jobs\ScanPDF;
+use App\Jobs\ScanFile;
 
 class LibrisRebuild extends Command
 {

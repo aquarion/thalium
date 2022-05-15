@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 use App\Jobs\ScanDirectory;
-use App\Jobs\ScanPDF;
+use App\Jobs\ScanFile;
 
 use App\Service\PDFBoxService;
 use App\Service\ParserService;
@@ -320,7 +320,7 @@ class LibrisService implements LibrisInterface
         $mimeType = Storage::disk('libris')->mimeType($filename);
 
         Log::info("[dispatchIndexFile] New File Scan Job: File: $filename");
-        ScanPDF::dispatch($filename);
+        ScanFile::dispatch($filename);
         return true;
     }//end dispatchIndexFile()
 

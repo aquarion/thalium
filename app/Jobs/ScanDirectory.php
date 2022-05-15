@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-use App\Jobs\ScanPDF;
+use App\Jobs\ScanFile;
 use App\Libris\LibrisInterface;
 
 class ScanDirectory implements ShouldQueue

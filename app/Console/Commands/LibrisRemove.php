@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Elasticsearch;
 
 
-use App\Jobs\ScanPDF;
+use App\Jobs\ScanFile;
 
 class LibrisRemove extends Command
 {

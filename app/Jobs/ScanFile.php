@@ -15,7 +15,7 @@ use App\Libris\LibrisInterface;
 
 use App\Exceptions;
 
-class ScanPDF implements ShouldQueue
+class ScanFile implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -53,7 +53,7 @@ class ScanPDF implements ShouldQueue
      */
     public function __toString()
     {
-        return sprintf("ScanPDF <%s>", $this->filename);
+        return sprintf("ScanFile <%s>", $this->filename);
     }//end __toString()
 
 
@@ -68,7 +68,7 @@ class ScanPDF implements ShouldQueue
 
         Log::info("[Scanfile] Hello ".$this->filename);
 
-        Redis::funnel('ScanPDF')->limit(5)->then(
+        Redis::funnel('ScanFile')->limit(5)->then(
             function () {
                 Log::debug("[Scanfile] Got lock for ".$this->filename." = ".md5($this->filename));
                 try {
