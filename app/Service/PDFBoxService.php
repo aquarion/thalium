@@ -14,6 +14,7 @@ class PDFBoxService extends ParserService
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
+    private $pdkTemp = "";
 
 
     public function __construct($file, $elasticSearchIndex)
@@ -23,7 +24,7 @@ class PDFBoxService extends ParserService
         set_time_limit(120);
         ini_set('memory_limit', '2G');
 
-        $this->tempFile = tempnam(sys_get_temp_dir(), "scanfile-");
+        $this->tempFile = tempnam(sys_get_temp_dir(), "pdfbox-");
         $PDFContent     = Storage::disk('libris')->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
     }//end __construct()
@@ -44,6 +45,31 @@ class PDFBoxService extends ParserService
             $error = array_shift($output);
             Log::Error($this->filename);
             Log::Error($error);
+            if (\Str::contains($error, 'You do not have permission')) {
+                Log::Info("Trying pdftk...");
+                $this->pdkTemp = tempnam(sys_get_temp_dir(), "pdftk-");
+
+                $pdftkCmdTemplate = "pdftk %s input_pw output %s";
+                $pdftkCmd = sprintf($pdftkCmdTemplate, $this->tempFile, $this->pdkTemp);
+                
+                exec($pdftkCmd, $pdftkOutputRef, $pdftkReturn);
+                
+                $pdftkOutput = new \ArrayObject($pdftkOutputRef);
+                $pdftkOutput = $pdftkOutput->getArrayCopy();
+
+                $cmd = sprintf($commandTemplate, $this->pdfboxBin, $command, $this->pdkTemp);
+                Log::Info($cmd);
+                exec($cmd, $outputRef, $return);
+        
+                $output = new \ArrayObject($outputRef);
+                $output = $output->getArrayCopy();
+                if ($return > 0) {
+                    $error = array_shift($output);
+                    Log::Error($error);
+                    throw new Exceptions\LibrisParseFailed($error);
+                }
+                return $output;
+            }
             throw new Exceptions\LibrisParseFailed($error);
         }
 

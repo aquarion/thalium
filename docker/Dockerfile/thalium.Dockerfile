@@ -31,7 +31,8 @@ RUN apt-get -qq update && apt-get -qqy install \
     libmagickwand-dev \
     default-jre \
     npm \
-    imagemagick
+    imagemagick \
+    pdftk
 
 # Clear cache
 # RUN apt-get clean && rm -rf /var/lib/apt/lists/*
