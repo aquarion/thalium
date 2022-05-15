@@ -38,14 +38,12 @@ class LibrisRemove extends Command
     public function __construct()
     {
         parent::__construct();
-
     }//end __construct()
 
 
     public function debug($out)
     {
         $this->line($out);
-
     }//end debug()
 
 
@@ -59,16 +57,15 @@ class LibrisRemove extends Command
         $filename = $this->argument('filename');
         try {
             $result = $libris->fetchDocument($filename);
-            $this->line($result);
+            //dump($result);
+            $this->line("Found $filename");
             $result = $libris->deleteDocument($filename);
+            $this->line("Removed $filename");
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             $this->error("$filename not found in index");
             return 1;
         }
 
         return 0;
-
     }//end handle()
-
-
 }//end class
