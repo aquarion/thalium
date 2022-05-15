@@ -23,7 +23,7 @@ class DebugController extends Controller
         $output .= '[<a href="'.Storage::disk('libris')->url($doc['_source']['path'])."\">DL</a>]\n";
         $output .= "<h2>Images</h2>\n";
 
-        $output .= '<img src="'.$libris->getThumbnail($doc).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
+        $output .= '<img src="'.$libris->getDocThumbnail($doc).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
 
         $output .= '<img src="'.$libris->thumbnailDataURI($doc['_source']['path']).'" style="border: 1px solid blue;" title="Regenerated Thumbnail">'."\n";
 

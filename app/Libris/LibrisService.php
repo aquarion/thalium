@@ -16,7 +16,6 @@ use App\Exceptions;
 
 class LibrisService implements LibrisInterface
 {
-
     public $elasticSearchIndex = "libris";
 
 
@@ -51,7 +50,6 @@ class LibrisService implements LibrisInterface
         } else {
             Log::warning("[AddDoc] No parser for $file");
         }
-
     }//end addDocument()
 
 
@@ -66,6 +64,10 @@ class LibrisService implements LibrisInterface
 
         Log::debug("[AddDoc] Name: {$parser->title}, System: {$parser->system}, Tags: ".implode(",", $parser->tags));
 
+        
+        $image = $this->generateThumbnail($parser->filename);
+        $thumbnailURL = $this->saveDocThumbnail($image, $parser->filename);
+
         $params = [
             'index'   => $this->elasticSearchIndex,
             'id'      => $parser->filename,
@@ -75,7 +77,7 @@ class LibrisService implements LibrisInterface
                 'path'          => $parser->filename,
                 'system'        => $parser->system,
                 'tags'          => $parser->tags,
-                'thumbnail'     => $parser->generateThumbnail(),
+                'thumbnail'     => $thumbnailURL,
                 'title'         => $parser->title,
                 'last_modified' => $parser->lastModified,
                 "page_relation" => ["name" => "document"],
@@ -90,7 +92,6 @@ class LibrisService implements LibrisInterface
         }
 
         return true;
-
     }//end indexDocument()
 
 
@@ -117,7 +118,6 @@ class LibrisService implements LibrisInterface
                     'system'        => $parser->system,
                     'tags'          => $parser->tags,
                     'title'         => $parser->title,
-                    'thumbnail'     => $parser->generateThumbnail(),
                     "page_relation" => [
                         "name"   => "page",
                         "parent" => $parser->filename,
@@ -128,7 +128,6 @@ class LibrisService implements LibrisInterface
         }//end foreach
 
         Log::debug("[AddDoc] {$parser->filename} Added $pageCount Pages");
-
     }//end indexPages()
 
 
@@ -140,7 +139,6 @@ class LibrisService implements LibrisInterface
             'body'  => $body,
         ];
         $response = Elasticsearch::update($params);
-
     }//end updateDocument()
 
 
@@ -154,7 +152,7 @@ class LibrisService implements LibrisInterface
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->elasticSearchIndex);
-        } else if ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->elasticSearchIndex);
         } else {
@@ -163,7 +161,6 @@ class LibrisService implements LibrisInterface
         }
 
         return $parser;
-
     }//end getParser()
 
 
@@ -203,7 +200,6 @@ class LibrisService implements LibrisInterface
         ];
         // Get doc at /my_index/_doc/my_id
         Elasticsearch::delete($params);
-
     }//end deleteDocument()
 
 
@@ -220,7 +216,6 @@ class LibrisService implements LibrisInterface
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             return false;
         }
-
     }//end fetchDocument()
 
 
@@ -228,7 +223,6 @@ class LibrisService implements LibrisInterface
     {
         Log::warning("Deleting Index");
         return Elasticsearch::indices()->delete(['index' => $this->elasticSearchIndex]);
-
     }//end deleteIndex()
 
 
@@ -273,7 +267,6 @@ class LibrisService implements LibrisInterface
 
             return Elasticsearch::indices()->putMapping($params);
         }
-
     }//end updateIndex()
 
 
@@ -296,7 +289,6 @@ class LibrisService implements LibrisInterface
         ];
 
         $result = Elasticsearch::ingest()->putPipeline($params);
-
     }//end updatePipeline()
 
 
@@ -314,7 +306,6 @@ class LibrisService implements LibrisInterface
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             $this->updatePipeline();
         }
-
     }//end createPipeline()
 
 
@@ -330,7 +321,6 @@ class LibrisService implements LibrisInterface
         Log::info("[dispatchIndexFile] New File Scan Job: File: $filename");
         ScanPDF::dispatch($filename);
         return true;
-
     }//end dispatchIndexFile()
 
 
@@ -347,7 +337,6 @@ class LibrisService implements LibrisInterface
         Log::info("[indexDir] New Dir Scan Job: Sys: $system, Tags: ".implode(',', $tags).", File: $filename");
         ScanDirectory::dispatch($filename);
         return true;
-
     }//end dispatchIndexDir()
 
 
@@ -373,7 +362,6 @@ class LibrisService implements LibrisInterface
         }
 
         return Elasticsearch::search($params);
-
     }//end showAll()
 
 
@@ -436,7 +424,6 @@ class LibrisService implements LibrisInterface
 
         Log::info($return);
         return $return;
-
     }//end systems()
 
 
@@ -498,7 +485,7 @@ class LibrisService implements LibrisInterface
                     ],
                 ],
             ];
-        } else if ($tag === 0) {
+        } elseif ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
                 'script' => ["script" => "doc['tags'].length == 0"],
             ];
@@ -507,7 +494,6 @@ class LibrisService implements LibrisInterface
         $result = Elasticsearch::search($params);
 
         return($result);
-
     }//end AllBySystem()
 
 
@@ -522,7 +508,6 @@ class LibrisService implements LibrisInterface
         } else {
             return -1;
         }
-
     }//end tagSort()
 
 
@@ -569,7 +554,6 @@ class LibrisService implements LibrisInterface
         usort($tagList, [LibrisService::class, "tagSort"]);
 
         return($tagList);
-
     }//end SystemTags()
 
 
@@ -647,56 +631,45 @@ class LibrisService implements LibrisInterface
         Log::debug($result);
 
         return $result;
-
     }//end pageSearch()
 
 
-    public function getThumbnail($doc, $regen=false)
+    public function getDocThumbnail($doc, $regen=false)
     {
         $thumbnailSet = isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'];
 
         if ($regen == "generic" && $thumbnailSet) {
             $mimeType = Storage::disk('libris')->mimeType($doc['_source']['path']);
             if ($mimeType !== "application/pdf") {
-                return $this->updateThumbnail($doc);
+                return $this->updateDocThumbnail($doc);
             }
         }
 
         if ($regen == "all") {
-            return $this->updateThumbnail($doc);
-        } else if ($thumbnailSet) {
+            return $this->updateDocThumbnail($doc);
+        } elseif ($thumbnailSet) {
             return $doc['_source']['thumbnail'];
         } else {
-            return $this->updateThumbnail($doc);
+            return $this->updateDocThumbnail($doc);
         }
+    }//end getDocThumbnail()
 
-    }//end getThumbnail()
 
-
-    public function updateThumbnail($doc)
+    public function updateDocThumbnail($doc)
     {
         $file = $doc['_source']['path'];
-        Log::debug("[updateThumbnail] Update Thumbnail - ".$file);
-        $thumbnailFileName = md5($file).".png";
-        $thumbnailURL      = Storage::disk('thumbnails')->url($thumbnailFileName);
+        Log::debug("[updateDocThumbnail] Update Thumbnail - ".$file);
 
-        if (Storage::disk('libris')->missing($file)) {
-            Log::error("[updateThumbnail] No Such File $file");
-            return false;
-        }
 
         // if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
-        //     Log::info("[updateThumbnail] Already exists $thumbnailFileName");
+        //     Log::info("[updateDocThumbnail] Already exists $thumbnailFileName");
         // } else {
         $image = $this->generateThumbnail($file);
 
-        Storage::disk('thumbnails')->put($thumbnailFileName, $image);
-
-        Log::debug("[updateThumbnail] saved to ".$thumbnailURL);
-        // }
+        $thumbnailURL = $this->saveDocThumbnail($image, $file);
 
         if ($thumbnailURL == $doc['_source']['thumbnail']) {
-            Log::info("[updateThumbnail] Filename already set");
+            Log::info("[updateDocThumbnail] Filename already set");
             return $thumbnailURL;
         }
 
@@ -710,11 +683,25 @@ class LibrisService implements LibrisInterface
 
         // Update doc at /my_index/_doc/my_id
         $response = Elasticsearch::update($params);
-        Log::info("[updateThumbnail] Saved");
+        Log::info("[updateDocThumbnail] Saved");
 
         return $thumbnailURL;
+    }//end updateDocThumbnail()
 
-    }//end updateThumbnail()
+    protected function saveDocThumbnail(\Imagick $image, $file)
+    {
+        if (Storage::disk('libris')->missing($file)) {
+            Log::error("[saveDocThumbnail] No Such File $file");
+            throw new Exception("[saveDocThumbnail] $file not found");
+            return false;
+        }
+
+        $thumbnailFileName = md5($file).".png";
+        $thumbnailURL      = Storage::disk('thumbnails')->url($thumbnailFileName);
+        Storage::disk('thumbnails')->put($thumbnailFileName, $image);
+        Log::debug("[saveDocThumbnail] saved to ".$thumbnailURL);
+        return $thumbnailURL;
+    }
 
 
     public function generateThumbnail($file)
@@ -728,21 +715,18 @@ class LibrisService implements LibrisInterface
         }
 
         return false;
-
     }//end generateThumbnail()
 
 
     public function thumbnailDataURI($file)
     {
         return $this->dataURI($this->generateThumbnail($file));
-
     }//end thumbnailDataURI()
 
 
     public function dataURI($image)
     {
         return 'data:image/png;base64,'.base64_encode($image);
-
     }//end dataURI()
 
 
@@ -750,13 +734,10 @@ class LibrisService implements LibrisInterface
     {
         $file = ".thalium/".strtolower($system).".png";
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[updateThumbnail] No Such a File ".Storage::disk('libris')->path($file));
+            Log::error("[updateDocThumbnail] No Such a File ".Storage::disk('libris')->path($file));
             return $this->dataURI(genericThumbnail($system));
         } else {
             return Storage::disk('libris')->url($file);
         }
-
     }//end getSystemThumbnail()
-
-
 }//end class

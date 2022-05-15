@@ -56,7 +56,7 @@ class LibrisController extends Controller
                 'id'        => $doc['_id'],
                 'name'      => urldecode($doc['_source']['title']),
                 'path'      => $doc['_source']['path'],
-                'thumbnail' => $libris->getThumbnail($doc),
+                'thumbnail' => $libris->getDocThumbnail($doc),
                 'tags'      => $tags,
                 'download'  => Storage::disk('libris')->url($doc['_source']['path']),
             ];

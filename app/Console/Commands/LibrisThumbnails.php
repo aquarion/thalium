@@ -104,7 +104,7 @@ class LibrisThumbnails extends Command
 
             foreach ($docs['hits']['hits'] as $doc) {
                 $bar->setMessage($doc['_source']['path']);
-                $libris->getThumbnail($doc, $regen);
+                $libris->getDocThumbnail($doc, $regen);
                 // true means force regen
                 $bar->advance();
             }
