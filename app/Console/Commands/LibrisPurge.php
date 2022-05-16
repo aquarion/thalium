@@ -33,12 +33,23 @@ class LibrisPurge extends Command
      */
 
 
-    private function nextPage($size=100)
+    private function nextPageOfDocs($size=100)
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
         // } else {
         $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
+        // }
+
+        return $docs;
+    }//end nextPage()
+
+    private function nextPageOfPages($size=100)
+    {
+        // if ($this->option('system')) {
+        //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
+        // } else {
+        $docs = $this->libris->fetchAllPages(false, $size, $this->searchAfter);
         // }
 
         return $docs;
@@ -66,13 +77,15 @@ class LibrisPurge extends Command
         $this->libris = $libris;
 
         $this->purgeDeletedDocuments();
+        $this->purgeDeletedPages();
     }//end handle()
 
     private function purgeDeletedDocuments()
     {
-        $results = $this->libris->fetchAllDocuments(false, 0);
+        $this->searchAfter = false;
         $size    = 100;
-        $total   = $results['hits']['total']['value'];
+        
+        $total = $this->libris->countAllDocuments();
 
         $pages = ceil(($total / $size));
 
@@ -85,7 +98,7 @@ class LibrisPurge extends Command
         $bar->start();
 
         while (true) {
-            $docs = $this->nextPage($size, $this->searchAfter);
+            $docs = $this->nextPageOfDocs($size, $this->searchAfter);
             if (count($docs['hits']['hits']) == 0) {
                 break;
             }
@@ -128,6 +141,41 @@ class LibrisPurge extends Command
 
         $bar->finish();
 
+        $this->line(" - Complete");
+    }
+
+    
+    private function purgeDeletedPages()
+    {
+        $total = $this->libris->countAllPages();
+        
+        $bar = $this->output->createProgressBar($total);
+        $bar->setFormat(' %current%/%max% [%bar%] - %message%');
+        $bar->setMessage('Finding orphaned pages');
+        $bar->start();
+
+        $size = 100;
+        $this->searchAfter = false;
+        $this->libris->openPointInTime();
+        while (true) {
+            $pages = $this->nextPageOfPages($size, $this->searchAfter);
+            if (count($pages['hits']['hits']) == 0) {
+                break;
+            }
+
+            foreach ($pages['hits']['hits'] as $index => $page) {
+                $docId = $page['_id'];
+                $filename = $page['_source']['path'];
+                if (Storage::disk('libris')->missing($filename)) {
+                    $this->libris->deleteDocument($docId);
+                    $bar->setMessage(" Deleted ".$docId);
+                }
+                $bar->advance();
+
+                $this->searchAfter = $page['sort'];
+            }
+        }
+        $bar->finish();
         $this->line(" - Complete");
     }
 }//end class
