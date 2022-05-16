@@ -75,9 +75,7 @@ class LibrisThumbnails extends Command
         $size   = 100;
         $cursor = 0;
 
-        $results = $this->nextPage(0);
-
-        $total = $results['hits']['total']['value'];
+        $total = $this->libris->countAllDocuments();
 
         $this->line("Generating thumbnails");
         $bar = $this->output->createProgressBar($total);

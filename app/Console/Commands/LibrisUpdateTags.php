@@ -42,7 +42,6 @@ class LibrisUpdateTags extends Command
         // }
 
         return $docs;
-
     }//end nextPage()
 
 
@@ -54,7 +53,6 @@ class LibrisUpdateTags extends Command
     public function __construct()
     {
         parent::__construct();
-
     }//end __construct()
 
 
@@ -72,9 +70,7 @@ class LibrisUpdateTags extends Command
         $size   = 100;
         $cursor = 0;
 
-        $results = $this->libris->fetchAllDocuments(false, 0);
-
-        $total = $results['hits']['total']['value'];
+        $total = $this->libris->countAllDocuments();
 
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
@@ -111,8 +107,5 @@ class LibrisUpdateTags extends Command
 
         $bar->finish();
         $this->line("Have a great day.");
-
     }//end handle()
-
-
 }//end class
