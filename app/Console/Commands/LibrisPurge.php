@@ -42,7 +42,9 @@ class LibrisPurge extends Command
         // }
 
         return $docs;
-    }//end nextPage()
+
+    }//end nextPageOfDocs()
+
 
     private function nextPageOfPages($size=100)
     {
@@ -53,7 +55,8 @@ class LibrisPurge extends Command
         // }
 
         return $docs;
-    }//end nextPage()
+
+    }//end nextPageOfPages()
 
 
     /**
@@ -64,6 +67,7 @@ class LibrisPurge extends Command
     public function __construct()
     {
         parent::__construct();
+
     }//end __construct()
 
 
@@ -78,13 +82,15 @@ class LibrisPurge extends Command
 
         $this->purgeDeletedDocuments();
         $this->purgeDeletedPages();
+
     }//end handle()
+
 
     private function purgeDeletedDocuments()
     {
         $this->searchAfter = false;
-        $size    = 100;
-        
+        $size = 100;
+
         $total = $this->libris->countAllDocuments();
 
         $pages = ceil(($total / $size));
@@ -142,13 +148,14 @@ class LibrisPurge extends Command
         $bar->finish();
 
         $this->line(" - Complete");
-    }
 
-    
+    }//end purgeDeletedDocuments()
+
+
     private function purgeDeletedPages()
     {
         $total = $this->libris->countAllPages();
-        
+
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
         $bar->setMessage('Finding orphaned pages');
@@ -164,18 +171,23 @@ class LibrisPurge extends Command
             }
 
             foreach ($pages['hits']['hits'] as $index => $page) {
-                $docId = $page['_id'];
+                $docId    = $page['_id'];
                 $filename = $page['_source']['path'];
                 if (Storage::disk('libris')->missing($filename)) {
                     $this->libris->deleteDocument($docId);
                     $bar->setMessage(" Deleted ".$docId);
                 }
+
                 $bar->advance();
 
                 $this->searchAfter = $page['sort'];
             }
         }
+
         $bar->finish();
         $this->line(" - Complete");
-    }
+
+    }//end purgeDeletedPages()
+
+
 }//end class

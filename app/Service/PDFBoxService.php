@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Log;
 
 class PDFBoxService extends ParserService
 {
+
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
+
     private $pdkTemp = "";
 
 
@@ -27,6 +29,7 @@ class PDFBoxService extends ParserService
         $this->tempFile = tempnam(sys_get_temp_dir(), "pdfbox-");
         $PDFContent     = Storage::disk('libris')->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
+
     }//end __construct()
 
 
@@ -50,17 +53,17 @@ class PDFBoxService extends ParserService
                 $this->pdkTemp = tempnam(sys_get_temp_dir(), "pdftk-");
 
                 $pdftkCmdTemplate = "pdftk %s input_pw output %s";
-                $pdftkCmd = sprintf($pdftkCmdTemplate, $this->tempFile, $this->pdkTemp);
-                
+                $pdftkCmd         = sprintf($pdftkCmdTemplate, $this->tempFile, $this->pdkTemp);
+
                 exec($pdftkCmd, $pdftkOutputRef, $pdftkReturn);
-                
+
                 $pdftkOutput = new \ArrayObject($pdftkOutputRef);
                 $pdftkOutput = $pdftkOutput->getArrayCopy();
 
                 $cmd = sprintf($commandTemplate, $this->pdfboxBin, $command, $this->pdkTemp);
                 Log::Info($cmd);
                 exec($cmd, $outputRef, $return);
-        
+
                 $output = new \ArrayObject($outputRef);
                 $output = $output->getArrayCopy();
                 if ($return > 0) {
@@ -68,12 +71,15 @@ class PDFBoxService extends ParserService
                     Log::Error($error);
                     throw new Exceptions\LibrisParseFailed($error);
                 }
+
                 return $output;
-            }
+            }//end if
+
             throw new Exceptions\LibrisParseFailed($error);
-        }
+        }//end if
 
         return $output;
+
     }//end run_pdfbox()
 
 
@@ -99,6 +105,7 @@ class PDFBoxService extends ParserService
         }
 
         return $pages;
+
     }//end parsePages()
 
 
@@ -117,7 +124,7 @@ class PDFBoxService extends ParserService
 
         if (($w > $h) > 1.1) {
             // dd($w."/".$h." ".($w/$h));
-            $image->cropImage($w/2, $h, $w/2, 0);
+            $image->cropImage(($w / 2), $h, ($w / 2), 0);
         }
 
         // If 0 is provided as a width or height parameter,
@@ -125,6 +132,7 @@ class PDFBoxService extends ParserService
         $image->thumbnailImage(200, 300, true);
 
         return $image;
+
     }//end generateDocThumbnail()
 
 
@@ -140,6 +148,7 @@ class PDFBoxService extends ParserService
         }
 
         return rmdir($dir);
+
     }//end delTree()
 
 
@@ -152,5 +161,8 @@ class PDFBoxService extends ParserService
         if (file_exists($this->tempFile.'.dir')) {
             $this->delTree($this->tempFile.'.dir');
         }
+
     }//end __destruct()
+
+
 }//end class

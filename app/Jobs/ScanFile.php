@@ -43,6 +43,7 @@ class ScanFile implements ShouldQueue
     public function __construct($filename)
     {
         $this->filename = $filename;
+
     }//end __construct()
 
 
@@ -54,6 +55,7 @@ class ScanFile implements ShouldQueue
     public function __toString()
     {
         return sprintf("ScanFile <%s>", $this->filename);
+
     }//end __toString()
 
 
@@ -102,6 +104,7 @@ class ScanFile implements ShouldQueue
         );
 
         // Log::debug("[ScanFile] Bye ".$this->filename);
+
     }//end handle()
 
 
@@ -114,11 +117,15 @@ class ScanFile implements ShouldQueue
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60 * 60 * 24);
+
     }//end retryUntil()
 
 
     public function uniqueId()
     {
         return md5($this->filename);
+
     }//end uniqueId()
+
+
 }//end class

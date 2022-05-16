@@ -31,6 +31,7 @@ function wordWrapAnnotation($image, $draw, $text, $maxWidth)
         $lines,
         $lineHeight,
     ];
+
 }//end wordWrapAnnotation()
 
 
@@ -73,13 +74,14 @@ function genericThumbnail($text)
     for ($i = 0; $i < count($lines); $i++) {
         $y = ($i - (count($lines) / 2) + .5);
         // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
-        $size = $fontSize;
+        $size      = $fontSize;
         $textwidth = $canvas->queryFontMetrics($draw, $lines[$i])['textWidth'];
-        while ($textwidth > ($width-10) && $size > 2) {
+        while ($textwidth > ($width - 10) && $size > 2) {
             $size--;
             $draw->setFontSize($size);
             $textwidth = $canvas->queryFontMetrics($draw, $lines[$i])['textWidth'];
         }
+
         $draw->annotation(0, (0 + $y * $lineHeight), $lines[$i]);
     }
 
@@ -109,4 +111,5 @@ function genericThumbnail($text)
     $canvas->setImageFormat('png');
 
     return $canvas;
+
 }//end genericThumbnail()

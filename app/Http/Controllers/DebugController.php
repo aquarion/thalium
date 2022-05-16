@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 class DebugController extends Controller
 {
+
+
     public function thumbnail(LibrisInterface $libris, Request $request)
     {
         $id = $request->query('id');
@@ -33,17 +35,18 @@ class DebugController extends Controller
             "debug",
             [
                 'content' => $output,
-                'doc' => $doc
+                'doc'     => $doc,
             ]
         );
+
     }//end thumbnail()
+
 
     public function system(LibrisInterface $libris, Request $request)
     {
         $system = $request->query('system');
-        
-        $output = "<h2>System</h2>\n";
 
+        $output = "<h2>System</h2>\n";
 
         $output .= '<img src="'.$libris->getSystemThumbnail($system).'" style="border: 1px solid red;" title="Current Thumbnail">'."\n";
         $output .= '<img src="'.$libris->dataURI(genericThumbnail($system)).'" style="border: 1px solid red;" title="Generic Thumbnail">'."\n";
@@ -56,8 +59,11 @@ class DebugController extends Controller
             "debug",
             [
                 'content' => $output,
-                'doc' => false
+                'doc'     => false,
             ]
         );
-    }//end thumbnail()
+
+    }//end system()
+
+
 }//end class

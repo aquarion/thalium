@@ -38,12 +38,14 @@ class LibrisRemove extends Command
     public function __construct()
     {
         parent::__construct();
+
     }//end __construct()
 
 
     public function debug($out)
     {
         $this->line($out);
+
     }//end debug()
 
 
@@ -67,5 +69,8 @@ class LibrisRemove extends Command
         }
 
         return 0;
+
     }//end handle()
+
+
 }//end class
