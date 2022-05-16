@@ -371,6 +371,45 @@ class LibrisService implements LibrisInterface
     }//end fetchAllDocuments()
 
     
+    
+    public function fetchAllPages($tag=false, $size=100, $searchAfter=false)
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'body'  => [
+                'size'  => $size,
+                'query' => [
+                    'match' => ['doc_type' => 'page'],
+                ],
+                "sort"  => [
+                    [
+                        "path" => ["order" => "asc"],
+                    ],
+                ],
+                'aggs' => [
+                    'uniq_systems' => [
+                        'composite' => [
+                            'size'    => 100,
+                            'sources' => [
+                                'systems' => ['terms' => ['field' => 'document'] ],
+                            ],
+                        ]
+                    ],
+                ],
+            ],
+        ];
+
+        if ($this->pointInTime) {
+            $params['body']['pit'] = ['id' => $this->pointInTime, 'keep_alive' => '1m'];
+            unset($params['index']);
+        }
+
+        if ($searchAfter) {
+            $params['body']['search_after'] = $searchAfter;
+        }
+
+        // dd($params);
+
         return Elasticsearch::search($params);
     }//end fetchAllDocuments()
 
