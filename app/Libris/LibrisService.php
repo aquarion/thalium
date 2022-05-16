@@ -362,6 +362,15 @@ class LibrisService implements LibrisInterface
             $params['body']['search_after'] = $searchAfter;
         }
 
+        if ($this->pointInTime) {
+            $params['body']['pit'] = ['id' => $this->pointInTime, 'keep_alive' => '1m'];
+            unset($params['index']);
+        }
+        
+        return Elasticsearch::search($params);
+    }//end fetchAllDocuments()
+
+    
         return Elasticsearch::search($params);
     }//end fetchAllDocuments()
 
@@ -556,6 +565,31 @@ class LibrisService implements LibrisInterface
 
         return($tagList);
     }//end tagsForSystem()
+
+    public function openPointInTime()
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'keep_alive' => '1m'
+        ];
+        $response = Elasticsearch::openPointInTime($params);
+        
+        $this->pointInTime = $response['id'];
+    }
+
+    public function setPointInTime($id)
+    {
+        $this->pointInTime = $id;
+    }
+
+    public function closePointInTime()
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'id' => $this->pointInTime
+        ];
+        $response = Elasticsearch::closePointInTime($params);
+    }
 
 
     public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
