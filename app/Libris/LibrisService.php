@@ -18,6 +18,8 @@ class LibrisService implements LibrisInterface
 {
     public $elasticSearchIndex = "libris";
 
+    private $pointInTime = false;
+
 
     public function addDocument($file, $log=false)
     {
@@ -340,6 +342,20 @@ class LibrisService implements LibrisInterface
         return true;
     }//end dispatchIndexDir()
 
+    public function countAllDocuments($tag=false)
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'body'  => [
+                'query' => [
+                    'match' => ['doc_type' => 'document'],
+                ]
+            ],
+        ];
+
+        
+        return Elasticsearch::count($params)['count'];
+    }
 
     public function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
     {
@@ -371,6 +387,20 @@ class LibrisService implements LibrisInterface
     }//end fetchAllDocuments()
 
     
+    public function countAllPages($tag=false)
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'body'  => [
+                'query' => [
+                    'match' => ['doc_type' => 'page'],
+                ]
+            ],
+        ];
+
+        
+        return Elasticsearch::count($params)['count'];
+    }
     
     public function fetchAllPages($tag=false, $size=100, $searchAfter=false)
     {
@@ -443,7 +473,6 @@ class LibrisService implements LibrisInterface
 
         $buckets  = [];
         $continue = true;
-        Log::info($params);
 
         while ($continue == true) {
             $results = Elasticsearch::search($params);
@@ -814,4 +843,11 @@ class LibrisService implements LibrisInterface
             return Storage::disk('libris')->url($file);
         }
     }//end getSystemThumbnail()
+
+    public function __destruct()
+    {
+        if ($this->pointInTime) {
+            $this->closePointInTime();
+        }
+    }
 }//end class
