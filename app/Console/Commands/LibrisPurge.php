@@ -141,7 +141,7 @@ class LibrisPurge extends Command
         $bar->start();
         foreach ($deletionList as $docId) {
             $bar->setMessage($docId);
-            $libris->deleteDocument($docId);
+            $this->libris->deleteDocument($docId);
             $bar->advance();
         }
 
