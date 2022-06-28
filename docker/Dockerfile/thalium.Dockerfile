@@ -1,4 +1,4 @@
-FROM php:8.1.0alpha3-fpm
+FROM php:8.1.7RC1-fpm
 
 LABEL maintainer="Nicholas Avenell <nicholas@istic.net>"
 
