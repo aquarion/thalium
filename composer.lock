@@ -68,22 +68,22 @@
         },
         {
             "name": "cviebrock/laravel-elasticsearch",
-            "version": "9.0.1",
+            "version": "9.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cviebrock/laravel-elasticsearch.git",
-                "reference": "898229226bb033584aaaeb1f51e263ac33a94356"
+                "reference": "e638493bb3a4d75a2a62b9d0db6234b8a5684917"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cviebrock/laravel-elasticsearch/zipball/898229226bb033584aaaeb1f51e263ac33a94356",
-                "reference": "898229226bb033584aaaeb1f51e263ac33a94356",
+                "url": "https://api.github.com/repos/cviebrock/laravel-elasticsearch/zipball/e638493bb3a4d75a2a62b9d0db6234b8a5684917",
+                "reference": "e638493bb3a4d75a2a62b9d0db6234b8a5684917",
                 "shasum": ""
             },
             "require": {
                 "elasticsearch/elasticsearch": "^7.11",
                 "ext-json": "*",
-                "guzzlehttp/psr7": "^2.0",
+                "guzzlehttp/psr7": "^1.7|^2.0",
                 "illuminate/contracts": "^7.0|^8.0|^9.0",
                 "illuminate/support": "^7.0|^8.0|^9.0",
                 "php": "^7.3|^8.0",
@@ -134,7 +134,7 @@
             ],
             "support": {
                 "issues": "https://github.com/cviebrock/laravel-elasticsearch/issues",
-                "source": "https://github.com/cviebrock/laravel-elasticsearch/tree/9.0.1"
+                "source": "https://github.com/cviebrock/laravel-elasticsearch/tree/9.0.2"
             },
             "funding": [
                 {
@@ -142,7 +142,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-07-17T03:23:31+00:00"
+            "time": "2022-07-19T02:25:49+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -1339,16 +1339,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v8.83.19",
+            "version": "v8.83.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "4264f2ee12330bdb1be050998f58ba7271236395"
+                "reference": "aa5908e83fccb18b135ca31aa0342cf4bd6909a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/4264f2ee12330bdb1be050998f58ba7271236395",
-                "reference": "4264f2ee12330bdb1be050998f58ba7271236395",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/aa5908e83fccb18b135ca31aa0342cf4bd6909a8",
+                "reference": "aa5908e83fccb18b135ca31aa0342cf4bd6909a8",
                 "shasum": ""
             },
             "require": {
@@ -1508,7 +1508,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2022-07-13T13:23:09+00:00"
+            "time": "2022-07-19T14:11:02+00:00"
         },
         {
             "name": "laravel/horizon",
