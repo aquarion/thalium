@@ -15,7 +15,6 @@ yarn-error.log
 /storage/elasticsearch
 storage/mysql_data
 public/vendor
-docker-compose.yml
 docker/target
 docker/pdfbox/target
 public/css/
