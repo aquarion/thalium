@@ -72,7 +72,7 @@ return [
              * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_security.html#_ssl_encryption_2
              */
 
-            'sslVerification' => null,
+            'sslVerification' => env('ELASTICSEARCH_CACERT', null) ? storage_path(env('ELASTICSEARCH_CACERT')) : null,
 
             /**
              * Logging
@@ -92,7 +92,7 @@ return [
              * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#enabling_logger
              */
 
-            'logging' => false,
+            'logging' => true,
 
             // If you have an existing instance of Monolog you can use it here.
             // 'logObject' => \Log::getMonolog(),
