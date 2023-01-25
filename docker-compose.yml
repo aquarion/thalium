@@ -155,7 +155,7 @@ services:
       - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
       - ./docker/elasticsearch/bin:/usr/share/esbin
     ports:
-      - ${ES_PORT}:9200
+      - ${ES_PORT:-9200}:9200
     environment:
       - node.name=es01
       - cluster.name=${CLUSTER_NAME}
