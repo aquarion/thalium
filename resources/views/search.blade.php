@@ -78,8 +78,8 @@
             <b>{{ $page['_source']['system'] }}</b> &ndash;
 			@if ($agent->is("iOS"))
             	<a href="{{ $page['_source']['download'] }}#page={{ $page['_source']['pageNo'] }}">
-			@else
-            	<a href="{{ route('document.iframe', [ 'file' => urlencode($page['_source']['path']), 'page' => $page['_source']['pageNo'] ] ) }}">
+			@else 
+            	<a href="{{ route('document.iframe', [ 'file' => urlencode($page['_source']['path']), 'search' => urlencode($query), 'page' => $page['_source']['pageNo'] ] ) }}">
 			@endif
         	{{ $page['_source']['title'] }} &ndash; p{{ $page['_source']['pageNo'] }}
         </a></dt>
