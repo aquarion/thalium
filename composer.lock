@@ -1287,16 +1287,16 @@
         },
         {
             "name": "jaybizzle/crawler-detect",
-            "version": "v1.2.112",
+            "version": "v1.2.113",
             "source": {
                 "type": "git",
                 "url": "https://github.com/JayBizzle/Crawler-Detect.git",
-                "reference": "2c555ce35a07a5c1c808cee7d5bb52c41a4c7b2f"
+                "reference": "6710b75871da2b718550c2bc33388315a3b20151"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JayBizzle/Crawler-Detect/zipball/2c555ce35a07a5c1c808cee7d5bb52c41a4c7b2f",
-                "reference": "2c555ce35a07a5c1c808cee7d5bb52c41a4c7b2f",
+                "url": "https://api.github.com/repos/JayBizzle/Crawler-Detect/zipball/6710b75871da2b718550c2bc33388315a3b20151",
+                "reference": "6710b75871da2b718550c2bc33388315a3b20151",
                 "shasum": ""
             },
             "require": {
@@ -1333,9 +1333,9 @@
             ],
             "support": {
                 "issues": "https://github.com/JayBizzle/Crawler-Detect/issues",
-                "source": "https://github.com/JayBizzle/Crawler-Detect/tree/v1.2.112"
+                "source": "https://github.com/JayBizzle/Crawler-Detect/tree/v1.2.113"
             },
-            "time": "2022-10-05T21:52:44+00:00"
+            "time": "2023-02-02T21:01:40+00:00"
         },
         {
             "name": "laravel/framework",
@@ -2646,16 +2646,16 @@
         },
         {
             "name": "phattarachai/laravel-mobile-detect",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phattarachai/laravel-mobile-detect.git",
-                "reference": "08e1ed6f1b6d4aed3055cf1289e8f2303c0d9f24"
+                "reference": "defbaf39dd5a514e6c7c15c11224e5d197e86dd2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phattarachai/laravel-mobile-detect/zipball/08e1ed6f1b6d4aed3055cf1289e8f2303c0d9f24",
-                "reference": "08e1ed6f1b6d4aed3055cf1289e8f2303c0d9f24",
+                "url": "https://api.github.com/repos/phattarachai/laravel-mobile-detect/zipball/defbaf39dd5a514e6c7c15c11224e5d197e86dd2",
+                "reference": "defbaf39dd5a514e6c7c15c11224e5d197e86dd2",
                 "shasum": ""
             },
             "require": {
@@ -2713,9 +2713,9 @@
             ],
             "support": {
                 "issues": "https://github.com/phattarachai/laravel-mobile-detect/issues",
-                "source": "https://github.com/phattarachai/laravel-mobile-detect/tree/v1.0.1"
+                "source": "https://github.com/phattarachai/laravel-mobile-detect/tree/v1.0.2"
             },
-            "time": "2022-02-10T17:47:23+00:00"
+            "time": "2023-03-06T20:11:02+00:00"
         },
         {
             "name": "phpoption/phpoption",
