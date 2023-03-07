@@ -14,7 +14,7 @@
         "fruitcake/laravel-cors": "^3.0",
         "guzzlehttp/guzzle": "^7.3",
         "laravel/framework": "^8.0",
-        "laravel/horizon": "^5.7",
+        "laravel/horizon": "^515.0",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^3.0",
         "mobiledetect/mobiledetectlib": "^2.8",
