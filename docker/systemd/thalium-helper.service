@@ -1,0 +1,20 @@
+[Unit]
+Description=Thalium Helper
+After=network.target
+
+
+[Service]
+RuntimeDirectory=thalium
+RuntimeDirectoryPreserve=yes
+User=aquarion
+Group=docker
+
+Type=oneshot
+;ExecStartPre=-/usr/bin/mkdir /var/run/mydaemon
+;ExecStart=/usr/bin/true
+ExecStart=/usr/bin/chown aquarion:docker /var/run/thalium
+Restart=on-abort
+
+
+[Install]
+WantedBy=multi-user.target
