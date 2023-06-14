@@ -18,6 +18,7 @@ services:
       args:
         user: ${USER}
         uid: ${UID}
+        docker_app_lock_dir: "${DOCKER_APP_LOCK_DIR}"
       context: ./
       dockerfile: docker/Dockerfile/app.Dockerfile
     environment:
@@ -28,9 +29,8 @@ services:
     working_dir: /var/www/
     volumes:
       - .:/var/www
-      - ${HOST_PDF_LIBRARY}:/mnt/rpg
-      - "${LOCK_DIR}:/home/${USER}/lockfiles"
-      #- "/var/run/thalium:/var/run/thalium"
+      - "${HOST_PDF_LIBRARY}:/mnt/rpg"
+      - "${HOST_APP_LOCK_DIR}:${DOCKER_APP_LOCK_DIR}"
 
   scheduler:
     build:
@@ -79,13 +79,14 @@ services:
     restart: unless-stopped
     environment:
       - USER=${USER}
+      - DOCKER_APP_LOCK_DIR=${DOCKER_APP_LOCK_DIR}
     ports:
       - 8000:80
     volumes:
       - ./:/var/www
       - ./docker/nginx:/etc/nginx/conf.d
-      - ${HOST_PDF_LIBRARY}:/mnt/rpg
-      - "${LOCK_DIR}:/var/run/thalium"
+      - "${HOST_PDF_LIBRARY}:/mnt/rpg"
+      - "${HOST_APP_LOCK_DIR}:${DOCKER_APP_LOCK_DIR}"
     profiles:
       - dev
 
