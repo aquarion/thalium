@@ -17,19 +17,22 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::get('/', 'LibrisController@home')->name("home");
+Auth::routes();
 
-Route::get('/system/{system}', 'LibrisController@docsBySystem')->name("system.index");
-Route::get('/document', 'LibrisController@showDocument')->name("document.iframe");
-Route::get('/systemList/{system}', 'LibrisController@docsBySystemList')->name("system.list");
+Route::get('/auth/checkLogin', 'Auth\CheckLoginController@checkLogin');
 
-Route::get('/search', 'LibrisController@search')->name("search");
+Route::get('/', 'LibrisController@home')->name("home")->middleware('auth');
+
+Route::get('/system/{system}', 'LibrisController@docsBySystem')->name("system.index")->middleware('auth');
+Route::get('/document', 'LibrisController@showDocument')->name("document.iframe")->middleware('auth');
+Route::get('/systemList/{system}', 'LibrisController@docsBySystemList')->name("system.list")->middleware('auth');
+
+Route::get('/search', 'LibrisController@search')->name("search")->middleware('auth');
 
 
 if (App::environment(['local', 'staging'])) {
-    Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail");
-    Route::get('/debug/system', 'DebugController@system')->name("debug.system");
+    Route::get('/debug/thumbnail', 'DebugController@thumbnail')->name("debug.thumbnail")->middleware('auth:admin');
+    Route::get('/debug/system', 'DebugController@system')->name("debug.system")->middleware('auth:admin');
 }
-Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home')->middleware('auth');
