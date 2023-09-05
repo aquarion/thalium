@@ -2,14 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
-
-
     /**
      * Bootstrap any application services.
      *
@@ -39,10 +40,9 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
         Gate::define(
             'viewHorizon',
             function ($user) {
-                return in_array(
-                    $user->email,
-                    []
-                );
+                return $user->isAdmin
+                            ? Response::allow()
+                            : Response::deny('You must be an administrator.');
             }
         );
 
