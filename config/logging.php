@@ -5,6 +5,12 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
+if (env("LOG_PREFIX")) {
+    $logname = env("LOG_PREFIX") . "-";
+} else {
+    $logname = "";
+}
+
 return [
 
     /*
@@ -60,20 +66,20 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/'.$logname.'laravel.log'),
+            'path' => storage_path('logs/' . $logname . 'laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
 
         'errors' => [
             'driver' => 'single',
-            'path' => storage_path('logs/'.$logname.'laravel.err.log'),
+            'path' => storage_path('logs/' . $logname . 'laravel.err.log'),
             'level' => 'warning',
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/'.$logname.'laravel.log'),
+            'path' => storage_path('logs/' . $logname . 'laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
             'replace_placeholders' => true,
@@ -95,7 +101,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],

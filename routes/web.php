@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth as FacAuth;
 use App\Http\Controllers\Auth;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\LibrisController;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Auth::routes();
+FacAuth::routes();
 
 Route::get('/auth/checkLogin', [Auth\CheckLoginController::class, 'checkLogin']);
 

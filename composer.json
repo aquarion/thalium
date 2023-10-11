@@ -9,13 +9,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "cviebrock/laravel-elasticsearch": "^10",
         "guzzlehttp/guzzle": "^7.3",
         "laravel/framework": "^10.28",
         "laravel/horizon": "^5.12",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.2",
+        "mailerlite/laravel-elasticsearch": "^11",
         "mobiledetect/mobiledetectlib": "^2.8",
+        "nunomaduro/collision": "^7.9",
         "phattarachai/laravel-mobile-detect": "^1.0",
         "squizlabs/php_codesniffer": "^3.6"
     },

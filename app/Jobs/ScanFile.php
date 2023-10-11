@@ -17,7 +17,10 @@ use App\Exceptions;
 
 class ScanFile implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $system;
 
@@ -50,7 +53,7 @@ class ScanFile implements ShouldQueue
     /**
      * Job as string
      */
-    public function __toString(): void
+    public function __toString(): string
     {
         return sprintf("ScanFile <%s>", $this->filename);
 
@@ -64,19 +67,19 @@ class ScanFile implements ShouldQueue
     {
         $this->libris = $libris;
 
-        Log::info("[Scanfile] Hello ".$this->filename);
+        Log::info("[Scanfile] Hello " . $this->filename);
 
         Redis::funnel('ScanFile')->limit(5)->then(
             function () {
-                Log::debug("[Scanfile] Got lock for ".$this->filename." = ".md5($this->filename));
+                Log::debug("[Scanfile] Got lock for " . $this->filename . " = " . md5($this->filename));
                 try {
                     $returnValue = $this->libris->addDocument($this->filename);
-                    Log::info("[Scanfile] Finished ".$this->filename);
+                    Log::info("[Scanfile] Finished " . $this->filename);
                 } catch (Exceptions\LibrisFileNotSupported $e) {
-                    Log::warning("[Scanfile] Unsupported File Type ".$this->filename);
+                    Log::warning("[Scanfile] Unsupported File Type " . $this->filename);
                     return 0;
                 } catch (Exceptions\LibrisTooLarge $e) {
-                    Log::warning("[Scanfile] File too big ".$this->filename);
+                    Log::warning("[Scanfile] File too big " . $this->filename);
                     return 0;
                 } catch (Exception $e) {
                     Log::info("[Scanfile] Caught Exception");
@@ -94,7 +97,7 @@ class ScanFile implements ShouldQueue
             function () {
                 $release = (60 + rand(0, 20));
                 // Could not obtain lock...
-                Log::debug("[Scanfile] ".$this->filename." bounced ".$release);
+                Log::debug("[Scanfile] " . $this->filename . " bounced " . $release);
                 return $this->release($release);
             }
         );
