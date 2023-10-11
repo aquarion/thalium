@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DRIVER', 'local'),
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
 
@@ -68,14 +68,14 @@ return [
         'libris' => [
             'driver' => 'local',
             'root' => env("DOCKER_PDF_LIBRARY"),
-            'url' => env('APP_URL').'/_libris',
+            'url' => env('APP_URL') . '/_libris',
             'visibility' => 'public',
         ],
 
         'thumbnails' => [
             'driver' => 'local',
             'root' => storage_path('app/thumbnails'),
-            'url' => env('APP_URL').'/_thumbnails',
+            'url' => env('APP_URL') . '/_thumbnails',
             'visibility' => 'public',
         ],
 
