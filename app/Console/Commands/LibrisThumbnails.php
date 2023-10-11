@@ -47,8 +47,6 @@ class LibrisThumbnails extends Command
 
     /**
      * Get the next page of results
-     *
-     * @return int
      */
 
 
@@ -68,8 +66,6 @@ class LibrisThumbnails extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
      */
     public function handle(LibrisInterface $libris): void
     {

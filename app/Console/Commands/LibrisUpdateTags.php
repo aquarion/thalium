@@ -28,8 +28,6 @@ class LibrisUpdateTags extends Command
 
     /**
      * Get the next page of results
-     *
-     * @return int
      */
 
 
@@ -60,8 +58,6 @@ class LibrisUpdateTags extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(LibrisInterface $libris): int
     {

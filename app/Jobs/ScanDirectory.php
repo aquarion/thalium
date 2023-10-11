@@ -34,8 +34,6 @@ class ScanDirectory implements ShouldQueue
 
     /**
      * Job as string
-     *
-     * @return void
      */
     public function __toString(): void
     {
@@ -46,8 +44,6 @@ class ScanDirectory implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
     public function handle(LibrisInterface $libris): void
     {

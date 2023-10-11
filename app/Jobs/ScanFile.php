@@ -49,8 +49,6 @@ class ScanFile implements ShouldQueue
 
     /**
      * Job as string
-     *
-     * @return void
      */
     public function __toString(): void
     {
@@ -61,8 +59,6 @@ class ScanFile implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
     public function handle(LibrisInterface $libris): void
     {
@@ -110,8 +106,6 @@ class ScanFile implements ShouldQueue
 
     /**
      * Determine the time at which the job should timeout.
-     *
-     * @return \DateTime
      */
     public function retryUntil(): DateTime
     {
