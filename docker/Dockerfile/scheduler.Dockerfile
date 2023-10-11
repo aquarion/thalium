@@ -7,11 +7,14 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     supervisor
 
-COPY docker/horizon/horizon.conf /etc/supervisor/conf.d/horizon.conf
+COPY docker/scheduler-app/horizon.supervisor.conf /etc/supervisor/conf.d/horizon.conf
 RUN sed -i "s/__USER__/$user/" /etc/supervisor/conf.d/horizon.conf
-RUN cat /etc/supervisor/conf.d/horizon.conf
-RUN echo "Hello $user"
-COPY docker/horizon/supervisord.conf /etc/supervisor/supervisord.conf
+
+
+COPY docker/scheduler-app/laravel-cron.supervisor.conf /etc/supervisor/conf.d/laravel-cron.conf
+RUN sed -i "s/__USER__/$user/" /etc/supervisor/conf.d/laravel-cron.conf
+
+COPY docker/scheduler-app/supervisord.conf /etc/supervisor/supervisord.conf
 RUN sed -i "s/__USER__/$user/" /etc/supervisor/supervisord.conf
 
 

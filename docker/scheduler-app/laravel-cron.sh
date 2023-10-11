@@ -4,10 +4,6 @@
 role=${CONTAINER_ROLE:-app}
 env=${APP_ENV:-production}
 
-
-echo "Running horizon..."
-php /var/www/artisan horizon
-
 echo "Running schedule loop..."
 while [ true ]
 do
