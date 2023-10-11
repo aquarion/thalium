@@ -37,7 +37,7 @@ class ScanDirectory implements ShouldQueue
      *
      * @return void
      */
-    public function __toString()
+    public function __toString(): void
     {
         return sprintf("ScanDir <%s>", $this->filename);
 

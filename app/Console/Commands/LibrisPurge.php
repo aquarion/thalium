@@ -35,7 +35,7 @@ class LibrisPurge extends Command
      */
 
 
-    private function nextPageOfDocs($size=100)
+    private function nextPageOfDocs($size=100): int
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);

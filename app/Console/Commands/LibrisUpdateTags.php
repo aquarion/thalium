@@ -33,7 +33,7 @@ class LibrisUpdateTags extends Command
      */
 
 
-    private function nextPage($size=100)
+    private function nextPage($size=100): int
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);

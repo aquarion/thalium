@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\View\View;
 use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,7 +13,7 @@ class DebugController extends Controller
 {
 
 
-    public function thumbnail(LibrisInterface $libris, Request $request)
+    public function thumbnail(LibrisInterface $libris, Request $request): View
     {
         $id = $request->query('id');
         // dump($id);
@@ -42,7 +43,7 @@ class DebugController extends Controller
     }//end thumbnail()
 
 
-    public function system(LibrisInterface $libris, Request $request)
+    public function system(LibrisInterface $libris, Request $request): View
     {
         $system = $request->query('system');
 

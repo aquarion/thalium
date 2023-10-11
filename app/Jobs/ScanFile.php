@@ -52,7 +52,7 @@ class ScanFile implements ShouldQueue
      *
      * @return void
      */
-    public function __toString()
+    public function __toString(): void
     {
         return sprintf("ScanFile <%s>", $this->filename);
 
@@ -113,7 +113,7 @@ class ScanFile implements ShouldQueue
      *
      * @return \DateTime
      */
-    public function retryUntil()
+    public function retryUntil(): DateTime
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
         return now()->addSeconds(60 * 60 * 24);
