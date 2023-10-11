@@ -41,7 +41,7 @@ class LibrisDelete extends Command
      *
      * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): void
     {
         var_dump($libris->deleteIndex());
 

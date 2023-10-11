@@ -41,7 +41,7 @@ class LibrisCreate extends Command
      *
      * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
            $libris->updateIndex();
            $libris->updatePipeline();

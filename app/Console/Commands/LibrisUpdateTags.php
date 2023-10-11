@@ -63,7 +63,7 @@ class LibrisUpdateTags extends Command
      *
      * @return int
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
         $this->line("Updating tags, one sec...");
 

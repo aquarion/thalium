@@ -16,7 +16,7 @@ class LibrisServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton(
             LibrisInterface::class,
@@ -33,7 +33,7 @@ class LibrisServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
 
     }//end boot()

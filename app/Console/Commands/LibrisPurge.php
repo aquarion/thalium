@@ -65,7 +65,7 @@ class LibrisPurge extends Command
      *
      * @return int
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
         $this->libris = $libris;
 

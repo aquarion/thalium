@@ -54,7 +54,7 @@ class LibrisRemove extends Command
      *
      * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
         try {

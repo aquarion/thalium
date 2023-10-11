@@ -13,7 +13,7 @@ class PDFBoxServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
 
     }//end register()
@@ -24,7 +24,7 @@ class PDFBoxServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
 
     }//end boot()

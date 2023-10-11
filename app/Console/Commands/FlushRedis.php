@@ -39,7 +39,7 @@ class FlushRedis extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         return 0;
 

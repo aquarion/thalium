@@ -49,7 +49,7 @@ class ScanDirectory implements ShouldQueue
      *
      * @return void
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): void
     {
         $filename = $this->filename;
         Log::debug("[ScanDir] $filename");
