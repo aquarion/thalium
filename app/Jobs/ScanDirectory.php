@@ -15,7 +15,10 @@ use App\Libris\LibrisInterface;
 
 class ScanDirectory implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $filename;
 
@@ -34,10 +37,8 @@ class ScanDirectory implements ShouldQueue
 
     /**
      * Job as string
-     *
-     * @return void
      */
-    public function __toString()
+    public function __toString(): string
     {
         return sprintf("ScanDir <%s>", $this->filename);
 
@@ -46,10 +47,8 @@ class ScanDirectory implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): void
     {
         $filename = $this->filename;
         Log::debug("[ScanDir] $filename");

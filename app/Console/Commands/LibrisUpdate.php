@@ -44,10 +44,8 @@ class LibrisUpdate extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): void
     {
 
         $this->line("Kicking off a reindex for ".Storage::disk('libris')->path("."));

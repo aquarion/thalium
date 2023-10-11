@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\View\View;
 use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ class LibrisController extends Controller
 {
 
 
-    public function home(LibrisInterface $libris)
+    public function home(LibrisInterface $libris): View
     {
         return view('sysindex', ['systems' => $libris->systems()]);
 
@@ -30,7 +31,7 @@ class LibrisController extends Controller
     }//end docsBySystemList()
 
 
-    public function docsBySystem(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
+    public function docsBySystem(LibrisInterface $libris, Request $request, $system, $view="systemGrid"): View
     {
         $page    = $request->query('page', 1);
         $perpage = 60;
@@ -89,7 +90,7 @@ class LibrisController extends Controller
     }//end docsBySystem()
 
 
-    public function search(LibrisInterface $libris, Request $request)
+    public function search(LibrisInterface $libris, Request $request): View
     {
         $perpage = 20;
 
@@ -151,7 +152,7 @@ class LibrisController extends Controller
     }//end search()
 
 
-    public function showDocument(LibrisInterface $libris, Request $request)
+    public function showDocument(LibrisInterface $libris, Request $request): View
     {
         $file = $request->query('file', false);
         $page = $request->query('page', false);

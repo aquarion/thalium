@@ -47,12 +47,10 @@ class LibrisThumbnails extends Command
 
     /**
      * Get the next page of results
-     *
-     * @return int
      */
 
 
-    private function nextPage($size=100)
+    private function nextPage($size=100): int
     {
         if ($this->option('system')) {
             $docs = $this->libris->docsBySystem($this->option('system'), $this->page);
@@ -68,10 +66,8 @@ class LibrisThumbnails extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): void
     {
         $this->libris = $libris;
 

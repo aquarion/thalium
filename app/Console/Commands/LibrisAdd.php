@@ -43,10 +43,8 @@ class LibrisAdd extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
         $exists   = Storage::disk('libris')->exists($filename);

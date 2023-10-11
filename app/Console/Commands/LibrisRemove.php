@@ -51,10 +51,8 @@ class LibrisRemove extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
      */
-    public function handle(LibrisInterface $libris)
+    public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
         try {
