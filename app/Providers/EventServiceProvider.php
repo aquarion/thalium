@@ -32,13 +32,14 @@ class EventServiceProvider extends ServiceProvider
     }//end boot()
 
 
-
     /**
      * Determine if events and listeners should be automatically discovered.
      */
     public function shouldDiscoverEvents(): bool
     {
         return false;
-    }
-}
-//end class
+
+    }//end shouldDiscoverEvents()
+
+
+}//end class
