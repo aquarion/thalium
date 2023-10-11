@@ -11,6 +11,8 @@ use Laravel\Horizon\HorizonApplicationServiceProvider;
 
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
+
+
     /**
      * Bootstrap any application services.
      *
@@ -40,9 +42,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
         Gate::define(
             'viewHorizon',
             function ($user) {
-                return $user->isAdmin
-                            ? Response::allow()
-                            : Response::deny('You must be an administrator.');
+                return $user->isAdmin ? Response::allow() : Response::deny('You must be an administrator.');
             }
         );
 

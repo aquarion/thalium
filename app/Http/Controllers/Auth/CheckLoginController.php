@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 
 class CheckLoginController extends Controller
 {
+
+
     public function checkLogin(Request $request)
     {
         if (Auth::check()) {
@@ -16,5 +18,8 @@ class CheckLoginController extends Controller
         } else {
             abort(401);
         }
-    }
-}
+
+    }//end checkLogin()
+
+
+}//end class
