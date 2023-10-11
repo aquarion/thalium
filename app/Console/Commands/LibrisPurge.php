@@ -26,6 +26,8 @@ class LibrisPurge extends Command
 
     protected $searchAfter = false;
 
+    protected $missingCache = [];
+
     /**
      * Get the next page of results
      *
@@ -44,19 +46,6 @@ class LibrisPurge extends Command
         return $docs;
 
     }//end nextPageOfDocs()
-
-
-    private function nextPageOfPages($size=100)
-    {
-        // if ($this->option('system')) {
-        //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
-        // } else {
-        $docs = $this->libris->fetchAllPages(false, $size, $this->searchAfter);
-        // }
-
-        return $docs;
-
-    }//end nextPageOfPages()
 
 
     /**
@@ -81,7 +70,6 @@ class LibrisPurge extends Command
         $this->libris = $libris;
 
         $this->purgeDeletedDocuments();
-        $this->purgeDeletedPages();
 
     }//end handle()
 
@@ -140,7 +128,7 @@ class LibrisPurge extends Command
         $bar->setMessage('Start');
         $bar->start();
         foreach ($deletionList as $docId) {
-            $bar->setMessage($docId);
+            $bar->setMessage($docId." - Delete Doc");
             $this->libris->deleteDocument($docId);
             $bar->advance();
         }
@@ -150,44 +138,6 @@ class LibrisPurge extends Command
         $this->line(" - Complete");
 
     }//end purgeDeletedDocuments()
-
-
-    private function purgeDeletedPages()
-    {
-        $total = $this->libris->countAllPages();
-
-        $bar = $this->output->createProgressBar($total);
-        $bar->setFormat(' %current%/%max% [%bar%] - %message%');
-        $bar->setMessage('Finding orphaned pages');
-        $bar->start();
-
-        $size = 100;
-        $this->searchAfter = false;
-        $this->libris->openPointInTime();
-        while (true) {
-            $pages = $this->nextPageOfPages($size, $this->searchAfter);
-            if (count($pages['hits']['hits']) == 0) {
-                break;
-            }
-
-            foreach ($pages['hits']['hits'] as $index => $page) {
-                $docId    = $page['_id'];
-                $filename = $page['_source']['path'];
-                if (Storage::disk('libris')->missing($filename)) {
-                    $this->libris->deleteDocument($docId);
-                    $bar->setMessage(" Deleted ".$docId);
-                }
-
-                $bar->advance();
-
-                $this->searchAfter = $page['sort'];
-            }
-        }
-
-        $bar->finish();
-        $this->line(" - Complete");
-
-    }//end purgeDeletedPages()
 
 
 }//end class

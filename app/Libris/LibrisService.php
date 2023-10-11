@@ -172,44 +172,55 @@ class LibrisService implements LibrisInterface
     }//end getParser()
 
 
-    public function deleteDocument($id)
+    public function deleteDocument($docId)
     {
-
-        // Now delete the pages
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'query' => [
-                    'bool' => [
-                        'must'   => [
-                            0 => [
-                                'match' => [
-                                    'path' => [
-                                        'query'    => $id,
-                                        "operator" => "and",
-                                    ],
-                                ],
-                            ],
-                        ],
-                        'filter' => [
-                            'match' => [ 'doc_type' => 'page' ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        Elasticsearch::deleteByQuery($params);
-
         // Now delete the document
         $params = [
             'index' => $this->elasticSearchIndex,
-            'id'    => $id,
+            'id'    => $docId,
         ];
-        // Get doc at /my_index/_doc/my_id
+
         Elasticsearch::delete($params);
+        $this->deleteDocumentPages($docId);
 
     }//end deleteDocument()
+
+
+    public function deletePage($docId)
+    {
+        $params = [
+            'index' => $this->elasticSearchIndex,
+            'id'    => $docId,
+        ];
+
+        Elasticsearch::delete($params);
+
+    }//end deletePage()
+
+
+    private function deleteDocumentPages($docId=false)
+    {
+        $size        = 100;
+        $searchAfter = false;
+        $this->openPointInTime();
+        while (true) {
+            $pages = $this->fetchAllPages($docId, $size, $searchAfter);
+            if (count($pages['hits']['hits']) == 0) {
+                break;
+            }
+
+            foreach ($pages['hits']['hits'] as $index => $page) {
+                $pageId   = $page['_id'];
+                $filename = $page['_source']['path'];
+                if (Storage::disk('libris')->missing($filename)) {
+                    $this->deletePage($pageId);
+                }
+
+                $searchAfter = $page['sort'];
+            }
+        }
+
+    }//end deleteDocumentPages()
 
 
     public function fetchDocument($id)
@@ -406,30 +417,46 @@ class LibrisService implements LibrisInterface
     }//end fetchAllDocuments()
 
 
-    public function countAllPages($tag=false)
+    public function countAllPages($docId=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
             'body'  => [
                 'query' => [
-                    'match' => ['doc_type' => 'page'],
+                    'bool' => [
+                        'filter' => [
+                            ['match' => [ 'doc_type' => 'page' ]],
+                        ],
+
+                    ],
                 ],
             ],
         ];
+
+        if ($docId) {
+            $params['body']['query']['bool']['filter'] = [
+                'match' => [ 'path' => $docId ],
+            ];
+        }
 
         return Elasticsearch::count($params)['count'];
 
     }//end countAllPages()
 
 
-    public function fetchAllPages($tag=false, $size=100, $searchAfter=false)
+    public function fetchAllPages($docId=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
             'body'  => [
                 'size'  => $size,
                 'query' => [
-                    'match' => ['doc_type' => 'page'],
+                    'bool' => [
+                        'filter' => [
+                            ['match' => [ 'doc_type' => 'page' ]],
+                        ],
+
+                    ],
                 ],
                 "sort"  => [
                     [
@@ -448,6 +475,12 @@ class LibrisService implements LibrisInterface
                 ],
             ],
         ];
+
+        if ($docId) {
+            $params['body']['query']['bool']['filter'] = [
+                'match' => [ 'path' => $docId ],
+            ];
+        }
 
         if ($this->pointInTime) {
             $params['body']['pit'] = [

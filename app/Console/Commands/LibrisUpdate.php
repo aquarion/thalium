@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanFile;
 
-class LibrisRebuild extends Command
+class LibrisUpdate extends Command
 {
 
     /**
@@ -20,14 +20,14 @@ class LibrisRebuild extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:rebuild';
+    protected $signature = 'libris:update';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Rebuild Libris index and all document data';
+    protected $description = 'Update Libris index and all document data';
 
 
     /**

@@ -28,8 +28,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('libris:rebuild')->daily();
-        $schedule->command('libris:purge_deleted')->daily();
+        $schedule->command('libris:update')->daily()->onOneServer();
+        $schedule->command('libris:purge_deleted')->daily()->onOneServer();
+        $schedule->command('libris:sweep')->weekly()->onOneServer();
 
     }//end schedule()
 
