@@ -46,7 +46,7 @@ class LibrisSweep extends Command
     /**
      * Execute the console command.
      */
-    public function handle(LibrisInterface $libris): int
+    public function handle(LibrisInterface $libris): void
     {
         $this->libris = $libris;
 

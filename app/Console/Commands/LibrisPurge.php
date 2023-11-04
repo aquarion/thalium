@@ -33,7 +33,7 @@ class LibrisPurge extends Command
      */
 
 
-    private function nextPageOfDocs($size=100): int
+    private function nextPageOfDocs($size=100): array
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
@@ -61,7 +61,7 @@ class LibrisPurge extends Command
     /**
      * Execute the console command.
      */
-    public function handle(LibrisInterface $libris): int
+    public function handle(LibrisInterface $libris): void
     {
         $this->libris = $libris;
 

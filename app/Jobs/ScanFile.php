@@ -71,28 +71,13 @@ class ScanFile implements ShouldQueue
 
         Redis::funnel('ScanFile')->limit(5)->then(
             function () {
-                Log::debug("[Scanfile] Got lock for " . $this->filename . " = " . md5($this->filename));
                 try {
-                    $returnValue = $this->libris->addDocument($this->filename);
-                    Log::info("[Scanfile] Finished " . $this->filename);
-                } catch (Exceptions\LibrisFileNotSupported $e) {
-                    Log::warning("[Scanfile] Unsupported File Type " . $this->filename);
-                    return 0;
-                } catch (Exceptions\LibrisTooLarge $e) {
-                    Log::warning("[Scanfile] File too big " . $this->filename);
-                    return 0;
+                    $this->libris->scanFile($this->filename);
                 } catch (Exception $e) {
                     Log::info("[Scanfile] Caught Exception");
                     $this->fail($e);
                     return;
                 }
-
-                if (!$returnValue) {
-                    Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
-                    $this->fail();
-                }
-
-                return $returnValue;
             },
             function () {
                 $release = (60 + rand(0, 20));
