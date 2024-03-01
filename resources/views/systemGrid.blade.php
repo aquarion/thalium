@@ -39,28 +39,28 @@
 <div class="row">
     @foreach ($docs as $doc)
       <div class="col-sm-6 col-md-4 mb-3 text-center libris-item">
-            @if ($agent->is("iOS"))
-                    <a href="{{ $doc['download'] }}">
-            @else
-                    <a href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}">
-            @endif
-           
+            <a href="{{ $doc['download'] }}" target="_blank">
               <img src="{{ $doc['thumbnail'] }}" class="book-cover">
             <br/>
-            {{ $doc['name'] ? $doc['name'] : '[empty]' }}</a>
+            <div class="doc-title">{{ $doc['name'] ? $doc['name'] : '[empty]' }}</a></div>
             @foreach ($doc['tags'] as $tag)
             <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
             @endforeach
-            @if (App::environment(['local', 'staging']))
-              <a href="/debug/thumbnail?id={{ urlencode($doc['id'])}}" title="Thumbnail debug"><i class="bi bi-image"></i></a>
-            @endif
+            <div class="btn-group" role="group" aria-label="Basic example">
+              @if (App::environment(['local', 'staging']))
+                <a class="btn btn-light" role="button" href="/debug/thumbnail?id={{ urlencode($doc['id'])}}" title="Thumbnail debug"><i class="bi bi-image"></i></a>
+              @endif
+              <a class="btn btn-light" role="button" target="_blank" href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}" title="View in frame"><i class="bi bi-file-earmark-pdf"></i></a>
+              <a class="btn btn-light" role="button" target="_blank" href="{{ $doc['download'] }}" title="View in browser"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+              <!-- <a class="btn btn-light" role="button" target="_blank" href="{{ route('document.iframe', [ 'file' => urlencode($doc['path']) ] ) }}" title="Download"><i class="bi bi-file-earmark-arrow-down-fill"></i></a> -->
+            </div>
       </div>
 	@endforeach
 	</ul>
 
 </div>
 
-	Page {{ $page }} of {{ $pages }}
+	Page {{ $page }} of {{ $pages }} 
 
 
   {!!  $pagination->links() !!}
