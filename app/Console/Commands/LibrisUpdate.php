@@ -9,6 +9,7 @@ use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanFile;
@@ -84,6 +85,9 @@ class LibrisUpdate extends Command
         $systems = Storage::disk('libris')->directories('.');
         $files   = Storage::disk('libris')->files('.');
 
+        $dirCount = 0;
+        $fileCount = 0;
+
         $this->line("Directories:");
         foreach ($systems as $system) {
             ScanDirectory::dispatch($system) && $dirCount++;
@@ -113,7 +117,10 @@ class LibrisUpdate extends Command
         $files   = Storage::disk('libris')->files($dir);
         $subdirs = Storage::disk('libris')->directories($dir);
 
-        $section = $this->output->section($dir);
+        // Use the Symfony base class for console output, because Laravel's interface doesn't support sections.
+        $output = new ConsoleOutput();
+
+        $section = $output->section($dir);
 
 
         $bar = new ProgressBar($section);
@@ -126,14 +133,14 @@ class LibrisUpdate extends Command
             $this->libris->scanFile($file);
             $bar->advance();
         }
-        
+
 
         foreach ($subdirs as $directory) {
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
             $this->scanDirectory($directory);
             $bar->advance();
         }
-        
+
         $bar->finish();
         $section->clear();
     }
