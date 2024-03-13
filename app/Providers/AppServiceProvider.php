@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public const HOME = '/home';
 
+
     /**
      * Register any application services.
      */
@@ -39,11 +40,10 @@ class AppServiceProvider extends ServiceProvider
 
         View::share("adobe_client_id", env('ADOBE_CLIENT_ID', false));
 
-
         $this->bootBroadcast();
         $this->bootEvent();
-    }//end boot()
 
+    }//end boot()
 
 
     public function bootBroadcast(): void
@@ -52,11 +52,14 @@ class AppServiceProvider extends ServiceProvider
 
         include base_path('routes/channels.php');
 
-    }//end boot()
+    }//end bootBroadcast()
+
 
     public function bootEvent(): void
     {
         parent::boot();
 
-    }//end boot()
+    }//end bootEvent()
+
+
 }//end class
