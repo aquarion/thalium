@@ -67,7 +67,7 @@ class ScanFile implements ShouldQueue
     {
         $this->libris = $libris;
 
-        Log::info("[Scanfile] Hello " . $this->filename);
+        Log::info("[Scanfile] Hello ".$this->filename);
 
         Redis::funnel('ScanFile')->limit(5)->then(
             function () {
@@ -82,7 +82,7 @@ class ScanFile implements ShouldQueue
             function () {
                 $release = (60 + rand(0, 20));
                 // Could not obtain lock...
-                Log::debug("[Scanfile] " . $this->filename . " bounced " . $release);
+                Log::debug("[Scanfile] ".$this->filename." bounced ".$release);
                 return $this->release($release);
             }
         );
