@@ -6,7 +6,12 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
-    ->withProviders()
+    ->withProviders([
+        Phattarachai\LaravelMobileDetect\AgentServiceProvider::class, // https://github.com/phattarachai/laravel-mobile-detect,
+        \App\Providers\HorizonServiceProvider::class,
+        \App\Providers\RouteServiceProvider::class,
+        \App\Providers\LibrisServiceProvider::class,
+    ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         // api: __DIR__.'/../routes/api.php',
