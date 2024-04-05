@@ -506,7 +506,7 @@
             "version": "v7.17.2",
             "source": {
                 "type": "git",
-                "url": "git@github.com:elastic/elasticsearch-php.git",
+                "url": "https://github.com/elastic/elasticsearch-php.git",
                 "reference": "2d302233f2bb0926812d82823bb820d405e130fc"
             },
             "dist": {
@@ -562,6 +562,10 @@
                 "elasticsearch",
                 "search"
             ],
+            "support": {
+                "issues": "https://github.com/elastic/elasticsearch-php/issues",
+                "source": "https://github.com/elastic/elasticsearch-php/tree/v7.17.2"
+            },
             "time": "2023-04-21T15:31:12+00:00"
         },
         {
@@ -2268,30 +2272,30 @@
         },
         {
             "name": "mailerlite/laravel-elasticsearch",
-            "version": "11.0.0",
+            "version": "11.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mailerlite/laravel-elasticsearch.git",
-                "reference": "cfa7cbfd4d1289a7760d4b8db0aea0fcc0dcbc2e"
+                "reference": "5f755bc3c69dcc1ff122f627f16c084cfdf3a716"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mailerlite/laravel-elasticsearch/zipball/cfa7cbfd4d1289a7760d4b8db0aea0fcc0dcbc2e",
-                "reference": "cfa7cbfd4d1289a7760d4b8db0aea0fcc0dcbc2e",
+                "url": "https://api.github.com/repos/mailerlite/laravel-elasticsearch/zipball/5f755bc3c69dcc1ff122f627f16c084cfdf3a716",
+                "reference": "5f755bc3c69dcc1ff122f627f16c084cfdf3a716",
                 "shasum": ""
             },
             "require": {
                 "elasticsearch/elasticsearch": "^7.11",
                 "ext-json": "*",
                 "guzzlehttp/psr7": "^1.7|^2.0",
-                "illuminate/contracts": "^7.0|^8.0|^9.0|^10.0",
-                "illuminate/support": "^7.0|^8.0|^9.0|^10.0",
+                "illuminate/contracts": "^7.0|^8.0|^9.0|^10.0|^11.0",
+                "illuminate/support": "^7.0|^8.0|^9.0|^10.0|^11.0",
                 "php": "^7.3|^8.0",
-                "psr/http-message": "^1.0"
+                "psr/http-message": "^1.0|^2.0"
             },
             "require-dev": {
                 "mockery/mockery": "^1.4.3",
-                "orchestra/testbench": "^6.5|^7.0|^8.0",
+                "orchestra/testbench": "^6.5|^7.0|^8.0|^9.0",
                 "phpunit/phpunit": "^9.4"
             },
             "suggest": {
@@ -2333,7 +2337,7 @@
             ],
             "support": {
                 "issues": "https://github.com/mailerlite/laravel-elasticsearch/issues",
-                "source": "https://github.com/mailerlite/laravel-elasticsearch/tree/11.0.0"
+                "source": "https://github.com/mailerlite/laravel-elasticsearch/tree/11.1.0"
             },
             "funding": [
                 {
@@ -2341,7 +2345,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-06-13T10:06:35+00:00"
+            "time": "2024-04-05T13:42:28+00:00"
         },
         {
             "name": "mobiledetect/mobiledetectlib",
@@ -3409,16 +3413,16 @@
         },
         {
             "name": "psr/http-message",
-            "version": "1.1",
+            "version": "2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
-                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
                 "shasum": ""
             },
             "require": {
@@ -3427,7 +3431,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.1.x-dev"
+                    "dev-master": "2.0.x-dev"
                 }
             },
             "autoload": {
@@ -3442,7 +3446,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for HTTP messages",
@@ -3456,9 +3460,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/1.1"
+                "source": "https://github.com/php-fig/http-message/tree/2.0"
             },
-            "time": "2023-04-04T09:50:52+00:00"
+            "time": "2023-04-04T09:54:51+00:00"
         },
         {
             "name": "psr/log",
@@ -3867,23 +3871,23 @@
         },
         {
             "name": "react/promise",
-            "version": "v2.10.0",
+            "version": "v2.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "f913fb8cceba1e6644b7b90c4bfb678ed8a3ef38"
+                "reference": "1a8460931ea36dc5c76838fec5734d55c88c6831"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/f913fb8cceba1e6644b7b90c4bfb678ed8a3ef38",
-                "reference": "f913fb8cceba1e6644b7b90c4bfb678ed8a3ef38",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/1a8460931ea36dc5c76838fec5734d55c88c6831",
+                "reference": "1a8460931ea36dc5c76838fec5734d55c88c6831",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.5 || ^5.7 || ^4.8.36"
+                "phpunit/phpunit": "^9.6 || ^5.7 || ^4.8.36"
             },
             "type": "library",
             "autoload": {
@@ -3927,7 +3931,7 @@
             ],
             "support": {
                 "issues": "https://github.com/reactphp/promise/issues",
-                "source": "https://github.com/reactphp/promise/tree/v2.10.0"
+                "source": "https://github.com/reactphp/promise/tree/v2.11.0"
             },
             "funding": [
                 {
@@ -3935,7 +3939,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2023-05-02T15:15:43+00:00"
+            "time": "2023-11-16T16:16:50+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
