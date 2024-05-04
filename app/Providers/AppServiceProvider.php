@@ -40,8 +40,8 @@ class AppServiceProvider extends ServiceProvider
 
         View::share("adobe_client_id", env('ADOBE_CLIENT_ID', false));
 
-        $this->bootBroadcast();
-        $this->bootEvent();
+        // $this->bootBroadcast();
+        // $this->bootEvent();
 
     }//end boot()
 
