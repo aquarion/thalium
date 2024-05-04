@@ -16,6 +16,7 @@ use App\Jobs\ScanFile;
 
 class LibrisUpdate extends Command
 {
+
     /**
      * The name and signature of the console command.
      *
@@ -44,6 +45,7 @@ class LibrisUpdate extends Command
      */
     protected $bar;
 
+
     /**
      * Create a new command instance.
      *
@@ -63,7 +65,7 @@ class LibrisUpdate extends Command
     {
         $this->libris = $libris;
 
-        $this->line("Kicking off a reindex for " . Storage::disk('libris')->path("."));
+        $this->line("Kicking off a reindex for ".Storage::disk('libris')->path("."));
 
         $this->libris->updatePipeline();
         $this->libris->updateIndex();
@@ -71,45 +73,48 @@ class LibrisUpdate extends Command
         $dirCount  = 0;
         $fileCount = 0;
 
-        if($this->option('foreground')) {
+        if ($this->option('foreground')) {
             $this->foregroundUpdate();
         } else {
             $this->backgroundUpdate();
         }
 
-
     }//end handle()
+
 
     public function backgroundUpdate()
     {
         $systems = Storage::disk('libris')->directories('.');
         $files   = Storage::disk('libris')->files('.');
 
-        $dirCount = 0;
+        $dirCount  = 0;
         $fileCount = 0;
 
         $this->line("Directories:");
         foreach ($systems as $system) {
             ScanDirectory::dispatch($system) && $dirCount++;
-            $this->line(" * " . $system);
+            $this->line(" * ".$system);
         }
 
         if ($files) {
             $this->line("Files:");
             foreach ($files as $filename) {
                 $this->libris->dispatchIndexFile($filename) && $fileCount++;
-                $this->line(" * " . $system);
+                $this->line(" * ".$system);
             }
         }
 
         $this->line("Scanning $dirCount directories & $fileCount files");
 
-    }
+    }//end backgroundUpdate()
+
 
     public function foregroundUpdate()
     {
         $this->scanDirectory(".");
-    }
+
+    }//end foregroundUpdate()
+
 
     public function scanDirectory($dir)
     {
@@ -122,7 +127,6 @@ class LibrisUpdate extends Command
 
         $section = $output->section($dir);
 
-
         $bar = new ProgressBar($section);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
         $bar->setMessage($dir);
@@ -134,7 +138,6 @@ class LibrisUpdate extends Command
             $bar->advance();
         }
 
-
         foreach ($subdirs as $directory) {
             Log::debug("[ScanDir] New Dir Scan Job: $directory");
             $this->scanDirectory($directory);
@@ -143,7 +146,8 @@ class LibrisUpdate extends Command
 
         $bar->finish();
         $section->clear();
-    }
+
+    }//end scanDirectory()
 
 
 }//end class

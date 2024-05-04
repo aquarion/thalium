@@ -16,12 +16,13 @@ use App\Exceptions;
 
 class LibrisService implements LibrisInterface
 {
+
     public $elasticSearchIndex = "libris";
 
     private $pointInTime = false;
 
 
-    public function addDocument($file, $log = false)
+    public function addDocument($file, $log=false)
     {
         $boom        = explode("/", $file);
         $title       = array_pop($boom);
@@ -66,7 +67,7 @@ class LibrisService implements LibrisInterface
             return false;
         }
 
-        Log::debug("[AddDoc] Name: {$parser->title}, System: {$parser->system}, Tags: " . implode(",", $parser->tags));
+        Log::debug("[AddDoc] Name: {$parser->title}, System: {$parser->system}, Tags: ".implode(",", $parser->tags));
 
         $image        = $this->generateDocThumbnail($parser->filename);
         $thumbnailURL = $this->saveDocThumbnail($image, $parser->filename);
@@ -111,7 +112,7 @@ class LibrisService implements LibrisInterface
 
             $params = [
                 'index'    => $this->elasticSearchIndex,
-                'id'       => $parser->filename . "/" . $pageNo,
+                'id'       => $parser->filename."/".$pageNo,
                 'routing'  => $parser->filename,
                 'pipeline' => 'attachment_pipeline',
                 'body'     => [
@@ -158,7 +159,7 @@ class LibrisService implements LibrisInterface
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->elasticSearchIndex);
-        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+        } else if ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->elasticSearchIndex);
         } else {
@@ -197,7 +198,7 @@ class LibrisService implements LibrisInterface
     }//end deletePage()
 
 
-    private function deleteDocumentPages($docId = false)
+    private function deleteDocumentPages($docId=false)
     {
         $size        = 100;
         $searchAfter = false;
@@ -332,17 +333,18 @@ class LibrisService implements LibrisInterface
 
     }//end createPipeline()
 
+
     public function scanFile($filename)
     {
-        Log::debug("[Scanfile] Got lock for " . $filename . " = " . md5($filename));
+        Log::debug("[Scanfile] Got lock for ".$filename." = ".md5($filename));
         try {
             $returnValue = $this->addDocument($filename);
-            Log::info("[Scanfile] Finished " . $filename);
+            Log::info("[Scanfile] Finished ".$filename);
         } catch (Exceptions\LibrisFileNotSupported $e) {
-            Log::warning("[Scanfile] Unsupported File Type " . $filename);
+            Log::warning("[Scanfile] Unsupported File Type ".$filename);
             return 0;
         } catch (Exceptions\LibrisTooLarge $e) {
-            Log::warning("[Scanfile] File too big " . $filename);
+            Log::warning("[Scanfile] File too big ".$filename);
             return 0;
         }
 
@@ -352,7 +354,9 @@ class LibrisService implements LibrisInterface
         }
 
         return $returnValue;
-    }
+
+    }//end scanFile()
+
 
     public function dispatchIndexFile($filename)
     {
@@ -380,14 +384,14 @@ class LibrisService implements LibrisInterface
         $tags   = explode('/', $filename);
         $system = substr(array_unshift($tags), 0, -4);
 
-        Log::info("[indexDir] New Dir Scan Job: Sys: $system, Tags: " . implode(',', $tags) . ", File: $filename");
+        Log::info("[indexDir] New Dir Scan Job: Sys: $system, Tags: ".implode(',', $tags).", File: $filename");
         ScanDirectory::dispatch($filename);
         return true;
 
     }//end dispatchIndexDir()
 
 
-    public function countAllDocuments($tag = false)
+    public function countAllDocuments($tag=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -403,7 +407,7 @@ class LibrisService implements LibrisInterface
     }//end countAllDocuments()
 
 
-    public function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false)
+    public function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -437,7 +441,7 @@ class LibrisService implements LibrisInterface
     }//end fetchAllDocuments()
 
 
-    public function countAllPages($docId = false)
+    public function countAllPages($docId=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -464,7 +468,7 @@ class LibrisService implements LibrisInterface
     }//end countAllPages()
 
 
-    public function fetchAllPages($docId = false, $size = 100, $searchAfter = false)
+    public function fetchAllPages($docId=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -583,7 +587,7 @@ class LibrisService implements LibrisInterface
     }//end systems()
 
 
-    public function docsBySystem($system, $page = 1, $size = 60, $tag = false)
+    public function docsBySystem($system, $page=1, $size=60, $tag=false)
     {
         $from = (($page - 1) * $size);
 
@@ -641,7 +645,7 @@ class LibrisService implements LibrisInterface
                     ],
                 ],
             ];
-        } elseif ($tag === 0) {
+        } else if ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
                 'script' => ["script" => "doc['tags'].length == 0"],
             ];
@@ -747,7 +751,7 @@ class LibrisService implements LibrisInterface
     }//end closePointInTime()
 
 
-    public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
+    public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
     {
 
         // $system = "Goblin Quest";
@@ -825,7 +829,7 @@ class LibrisService implements LibrisInterface
     }//end searchPages()
 
 
-    public function getDocThumbnail($doc, $regen = false)
+    public function getDocThumbnail($doc, $regen=false)
     {
         $thumbnailSet = isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'];
 
@@ -838,7 +842,7 @@ class LibrisService implements LibrisInterface
 
         if ($regen == "all") {
             return $this->updateDocThumbnail($doc);
-        } elseif ($thumbnailSet) {
+        } else if ($thumbnailSet) {
             return $doc['_source']['thumbnail'];
         } else {
             return $this->updateDocThumbnail($doc);
@@ -850,7 +854,7 @@ class LibrisService implements LibrisInterface
     public function updateDocThumbnail($doc)
     {
         $file = $doc['_source']['path'];
-        Log::debug("[updateDocThumbnail] Update Thumbnail - " . $file);
+        Log::debug("[updateDocThumbnail] Update Thumbnail - ".$file);
 
         // if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
         //     Log::info("[updateDocThumbnail] Already exists $thumbnailFileName");
@@ -889,10 +893,10 @@ class LibrisService implements LibrisInterface
             return false;
         }
 
-        $thumbnailFileName = md5($file) . ".png";
+        $thumbnailFileName = md5($file).".png";
         $thumbnailURL      = Storage::disk('thumbnails')->url($thumbnailFileName);
         Storage::disk('thumbnails')->put($thumbnailFileName, $image);
-        Log::debug("[saveDocThumbnail] saved to " . $thumbnailURL);
+        Log::debug("[saveDocThumbnail] saved to ".$thumbnailURL);
         return $thumbnailURL;
 
     }//end saveDocThumbnail()
@@ -900,7 +904,7 @@ class LibrisService implements LibrisInterface
 
     public function generateDocThumbnail($file)
     {
-        Log::debug("[generateDocThumbnail] " . $file);
+        Log::debug("[generateDocThumbnail] ".$file);
 
         $parser = $this->getParser($file);
 
@@ -922,16 +926,16 @@ class LibrisService implements LibrisInterface
 
     public function dataURI($image)
     {
-        return 'data:image/png;base64,' . base64_encode($image);
+        return 'data:image/png;base64,'.base64_encode($image);
 
     }//end dataURI()
 
 
     public function getSystemThumbnail($system)
     {
-        $file = ".thalium/" . strtolower($system) . ".png";
+        $file = ".thalium/".strtolower($system).".png";
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[updateDocThumbnail] No Such thumbnail at " . Storage::disk('libris')->path($file));
+            Log::error("[updateDocThumbnail] No Such thumbnail at ".Storage::disk('libris')->path($file));
             return $this->dataURI(genericThumbnail($system));
         } else {
             return Storage::disk('libris')->url($file);
