@@ -1,8 +1,6 @@
-version: "3.7"
-
-
 services:
   base:
+    image: thalium_base
     build:
       args:
         user: ${USER}

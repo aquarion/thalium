@@ -43,7 +43,8 @@ class LibrisCreate extends Command
     {
            $libris->updateIndex();
            $libris->updatePipeline();
-           return "Done";
+           $this->info("Successfully created/updated index and pipelines");
+           return 0;
 
     }//end handle()
 
