@@ -7,7 +7,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
-        Phattarachai\LaravelMobileDetect\AgentServiceProvider::class, // https://github.com/phattarachai/laravel-mobile-detect,
         \App\Providers\HorizonServiceProvider::class,
         \App\Providers\RouteServiceProvider::class,
         \App\Providers\LibrisServiceProvider::class,

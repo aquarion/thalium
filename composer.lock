@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "708ba08563a2fae14ad27ae32d3aeda6",
+    "content-hash": "9792e0eeea31b286166c4c498a3c7071",
     "packages": [
         {
             "name": "brick/math",
@@ -1297,58 +1297,6 @@
                 }
             ],
             "time": "2023-12-03T19:50:20+00:00"
-        },
-        {
-            "name": "jaybizzle/crawler-detect",
-            "version": "v1.2.119",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/JayBizzle/Crawler-Detect.git",
-                "reference": "275002e22b0333c15a7c6792fdae5d5deefc9ef0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/JayBizzle/Crawler-Detect/zipball/275002e22b0333c15a7c6792fdae5d5deefc9ef0",
-                "reference": "275002e22b0333c15a7c6792fdae5d5deefc9ef0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.8|^5.5|^6.5|^9.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Jaybizzle\\CrawlerDetect\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Mark Beech",
-                    "email": "m@rkbee.ch",
-                    "role": "Developer"
-                }
-            ],
-            "description": "CrawlerDetect is a PHP class for detecting bots/crawlers/spiders via the user agent",
-            "homepage": "https://github.com/JayBizzle/Crawler-Detect/",
-            "keywords": [
-                "crawler",
-                "crawler detect",
-                "crawler detector",
-                "crawlerdetect",
-                "php crawler detect"
-            ],
-            "support": {
-                "issues": "https://github.com/JayBizzle/Crawler-Detect/issues",
-                "source": "https://github.com/JayBizzle/Crawler-Detect/tree/v1.2.119"
-            },
-            "time": "2024-06-07T07:58:43+00:00"
         },
         {
             "name": "laravel/framework",
@@ -2994,80 +2942,6 @@
                 }
             ],
             "time": "2024-03-06T16:17:14+00:00"
-        },
-        {
-            "name": "phattarachai/laravel-mobile-detect",
-            "version": "v1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phattarachai/laravel-mobile-detect.git",
-                "reference": "defbaf39dd5a514e6c7c15c11224e5d197e86dd2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phattarachai/laravel-mobile-detect/zipball/defbaf39dd5a514e6c7c15c11224e5d197e86dd2",
-                "reference": "defbaf39dd5a514e6c7c15c11224e5d197e86dd2",
-                "shasum": ""
-            },
-            "require": {
-                "jaybizzle/crawler-detect": "^1.2",
-                "mobiledetect/mobiledetectlib": "^2.8.37",
-                "php": "^7.4|^8.0"
-            },
-            "require-dev": {
-                "php-coveralls/php-coveralls": "^v2.5.2",
-                "phpunit/phpunit": "^9.5.13"
-            },
-            "suggest": {
-                "illuminate/support": "Required for laravel service providers"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                },
-                "laravel": {
-                    "providers": [
-                        "Phattarachai\\LaravelMobileDetect\\AgentServiceProvider"
-                    ],
-                    "aliases": {
-                        "Agent": "Phattarachai\\LaravelMobileDetect\\Facades\\Agent"
-                    }
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Phattarachai\\LaravelMobileDetect\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Phattarachai Chaiimongkol",
-                    "homepage": "https://phattarachai.dev"
-                }
-            ],
-            "description": "Desktop/mobile user agent parser with support for Laravel, based on MobileDetect",
-            "homepage": "https://github.com/phattarachai/laravel-moibile-detect",
-            "keywords": [
-                "Agent",
-                "browser",
-                "desktop",
-                "laravel",
-                "mobile",
-                "platform",
-                "user agent",
-                "useragent"
-            ],
-            "support": {
-                "issues": "https://github.com/phattarachai/laravel-mobile-detect/issues",
-                "source": "https://github.com/phattarachai/laravel-mobile-detect/tree/v1.0.2"
-            },
-            "abandoned": true,
-            "time": "2023-03-06T20:11:02+00:00"
         },
         {
             "name": "phpoption/phpoption",

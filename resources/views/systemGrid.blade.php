@@ -1,6 +1,4 @@
 @extends('layouts.app')
-@inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
-
 @section('title', 'Systems - '.$system)
 
 

@@ -1,5 +1,3 @@
-@inject('agent', 'Phattarachai\LaravelMobileDetect\Agent')
-
 <!doctype html>
 <html lang="en">
   <head>
