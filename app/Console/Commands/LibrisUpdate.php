@@ -22,7 +22,7 @@ class LibrisUpdate extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:update {--foreground}';
+    protected $signature = 'libris:update {--foreground : Run in foreground } {--start=. : The directory to start at}';
 
     /**
      * The console command description.
@@ -65,7 +65,9 @@ class LibrisUpdate extends Command
     {
         $this->libris = $libris;
 
-        $this->line("Kicking off a reindex for ".Storage::disk('libris')->path("."));
+        $root = $this->option('start');
+
+        $this->line("Kicking off a reindex for ".Storage::disk('libris')->path($root));
 
         $this->libris->updatePipeline();
         $this->libris->updateIndex();
@@ -84,8 +86,11 @@ class LibrisUpdate extends Command
 
     public function backgroundUpdate()
     {
-        $systems = Storage::disk('libris')->directories('.');
-        $files   = Storage::disk('libris')->files('.');
+        
+        $root = $this->option('start');
+
+        $systems = Storage::disk('libris')->directories($root);
+        $files   = Storage::disk('libris')->files($root);
 
         $dirCount  = 0;
         $fileCount = 0;
@@ -111,13 +116,19 @@ class LibrisUpdate extends Command
 
     public function foregroundUpdate()
     {
-        $this->scanDirectory(".");
+        $root = $this->option('start');
+        $this->scanDirectory($root);
 
     }//end foregroundUpdate()
 
 
     public function scanDirectory($dir)
     {
+        
+        if (strpos($dir, ".") === 0 && $dir !== ".") {
+            Log::warning("[ScanDir] Ignoring Name: [{$dir}], hidden directory");
+            return true;
+        }
 
         $files   = Storage::disk('libris')->files($dir);
         $subdirs = Storage::disk('libris')->directories($dir);

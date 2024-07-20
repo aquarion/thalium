@@ -21,6 +21,8 @@ class LibrisService implements LibrisInterface
 
     private $pointInTime = false;
 
+    protected $title;
+
 
     public function addDocument($file, $log=false)
     {
@@ -49,7 +51,7 @@ class LibrisService implements LibrisInterface
         $parser = $this->getParser($file);
 
         if ($parser) {
-            return $this->indexDocument($parser);
+            $this->indexDocument($parser);
         } else {
             Log::warning("[AddDoc] No parser for $file");
             throw new Exceptions\LibrisFileNotSupported("No parser for $file");
@@ -60,12 +62,17 @@ class LibrisService implements LibrisInterface
 
     public function indexDocument(ParserService $parser)
     {
-        try {
-            $parser->pages = $parser->parsePages();
-        } catch (Exceptions\LibrisParseFailed $e) {
-            Log::error("[AddDoc] FAILED TO PARSE Name: [{$parser->filename}], System: [{$parser->system}]");
-            return false;
+        // try {
+        $parser->pages = $parser->parsePages();
+            
+        if(!$parser->pages){
+            Log::warning("No searchable content found in document {$parser->filename}");
+            # Todo: Add a way to index documents without searchable content
         }
+        // } catch (Exceptions\LibrisParseFailed $e) {
+        //     Log::error("[AddDoc] FAILED TO PARSE Name: [{$parser->filename}], System: [{$parser->system}]");
+        //     return 5;
+        // }
 
         Log::debug("[AddDoc] Name: {$parser->title}, System: {$parser->system}, Tags: ".implode(",", $parser->tags));
 
@@ -95,7 +102,7 @@ class LibrisService implements LibrisInterface
             $this->indexPages($parser);
         }
 
-        return true;
+        return 0;
 
     }//end indexDocument()
 
@@ -348,10 +355,10 @@ class LibrisService implements LibrisInterface
             return 0;
         }
 
-        if (!$returnValue) {
-            Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
-            throw new Exceptions\LibrisParserError("Bad return value ($returnValue) from PDFBox");
-        }
+        // if ($returnValue !== true) {
+        //     Log::error("[Scanfile] Bad return value ($returnValue) from PDFBox");
+        //     throw new Exceptions\LibrisParserError("Bad return value ($returnValue) from PDFBox");
+        // }
 
         return $returnValue;
 
@@ -376,7 +383,7 @@ class LibrisService implements LibrisInterface
 
     public function dispatchIndexDir($filename)
     {
-        if (Storage::disk('libris')->getMetadata($filename)['type'] !== 'dir') {
+        if (Storage::disk('libris')->directoryExists($filename)) {
             Log::error("$filename is not a directory");
             return false;
         }
