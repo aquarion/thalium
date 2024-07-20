@@ -99,7 +99,7 @@ return [
 
             'logPath' => storage_path('logs/elasticsearch.log'),
 
-            'logLevel' => Monolog\Logger::INFO,
+            'logLevel' => Monolog\Level::Info,
 
             /**
              * Retries

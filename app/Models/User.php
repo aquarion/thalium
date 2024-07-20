@@ -43,5 +43,11 @@ class User extends Authenticatable
 
     }//end casts()
 
+    protected function getIsAdminAttribute(): bool
+    {
+        return true;
+
+    }//end checkAdmin()
+
 
 }//end class

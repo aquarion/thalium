@@ -16,6 +16,8 @@ abstract class ParserService
 
     protected $elasticSearchIndex;
 
+    protected $pages;
+
     public $lastModified;
 
     public $system;
@@ -23,6 +25,8 @@ abstract class ParserService
     public $tags;
 
     public $title;
+
+    public $filename;
 
 
     abstract public function parsePages();

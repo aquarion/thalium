@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use DateTime;
+
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -98,7 +100,7 @@ class ScanFile implements ShouldQueue
     public function retryUntil(): DateTime
     {
         // Log::debug("[ScanFile] Add ".(60*60*24)." secs to ".$this->filename);
-        return now()->addSeconds(60 * 60 * 24);
+        return now()->addSeconds(60 * 60 * 24)->toDateTime();
 
     }//end retryUntil()
 
