@@ -21,5 +21,22 @@
         "commandCenter.border": "#e7e7e799"
     },
     "peacock.remoteColor": "#462756",
-    "peacock.color": "#6f08a3"
+    "peacock.color": "#6f08a3",
+    "logViewer.options": {
+
+    },
+    "logViewer.watch": [
+        {
+            "title": "Laravel",
+            "pattern": "${workspaceFolder}/storage/logs/laravel.log"
+        },
+        {
+            "title": "Horizon",
+            "pattern": "${workspaceFolder}/storage/logs/horizon.*.log"
+        },
+        {
+            "title": "Elasticsearch",
+            "pattern": "${workspaceFolder}/storage/logs/elasticsearch.*.log"
+        },
+    ]
 }
