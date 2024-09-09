@@ -12,7 +12,7 @@ set -o pipefail # Return code of a pipeline is the right-most failure. 0 if none
 # curl --fail -s -L https://api.github.com/repos/apache/pdfbox/git/refs/tags > /tmp/pdfbox.json
 # VERSION=`jq -r '.[] | select(.ref|test("tags/2")).ref' < /tmp/pdfbox.json | tail -1 | cut -d/ -f 3`
 
-MAJOR_VERSION=2
+MAJOR_VERSION=3
 
 VERSION=`curl --fail -s -l https://projects.apache.org/json/projects/pdfbox.json | jq -r "[ .release[] | select(.revision|test(\"^$MAJOR_VERSION\")).revision ][0]"`
 
@@ -20,7 +20,7 @@ echo Installing version $VERSION
 URL=https://dlcdn.apache.org/pdfbox/$VERSION/pdfbox-app-$VERSION.jar
 echo Downloading from $URL
 
-curl --fail -q -L $URL > /usr/share/java/pdfbox.jar
+curl --fail -q -L $URL > pdfbox.jar > /usr/share/java/pdfbox.jar
 # </CURL>
 
 # <MAVEN> Version that builds our own from Maven

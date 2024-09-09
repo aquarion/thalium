@@ -5,10 +5,8 @@ namespace App\Libris;
 use Elasticsearch;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanFile;
-
 use App\Service\PDFBoxService;
 use App\Service\ParserService;
 use App\Service\ParseTextService;
@@ -16,7 +14,6 @@ use App\Exceptions;
 
 class LibrisService implements LibrisInterface
 {
-
     public $elasticSearchIndex = "libris";
 
     private $pointInTime = false;
@@ -24,7 +21,7 @@ class LibrisService implements LibrisInterface
     protected $title;
 
 
-    public function addDocument($file, $log=false)
+    public function addDocument($file, $log = false)
     {
         $boom        = explode("/", $file);
         $title       = array_pop($boom);
@@ -63,9 +60,10 @@ class LibrisService implements LibrisInterface
     public function indexDocument(ParserService $parser)
     {
         // try {
-        $parser->pages = $parser->parsePages();
-            
-        if(!$parser->pages){
+        
+        $parseResult = $parser->parsePages();
+
+        if (!$parseResult) {
             Log::warning("No searchable content found in document {$parser->filename}");
             # Todo: Add a way to index documents without searchable content
         }
@@ -98,7 +96,7 @@ class LibrisService implements LibrisInterface
         Log::debug("[AddDoc] {$parser->filename} Indexing");
         Elasticsearch::index($params);
 
-        if ($parser->pages) {
+        if ($parseResult) { // If we have pages
             $this->indexPages($parser);
         }
 
@@ -166,7 +164,7 @@ class LibrisService implements LibrisInterface
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file, $this->elasticSearchIndex);
-        } else if ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file, $this->elasticSearchIndex);
         } else {
@@ -205,7 +203,7 @@ class LibrisService implements LibrisInterface
     }//end deletePage()
 
 
-    private function deleteDocumentPages($docId=false)
+    private function deleteDocumentPages($docId = false)
     {
         $size        = 100;
         $searchAfter = false;
@@ -398,7 +396,7 @@ class LibrisService implements LibrisInterface
     }//end dispatchIndexDir()
 
 
-    public function countAllDocuments($tag=false)
+    public function countAllDocuments($tag = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -414,7 +412,7 @@ class LibrisService implements LibrisInterface
     }//end countAllDocuments()
 
 
-    public function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
+    public function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -448,7 +446,7 @@ class LibrisService implements LibrisInterface
     }//end fetchAllDocuments()
 
 
-    public function countAllPages($docId=false)
+    public function countAllPages($docId = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -475,7 +473,7 @@ class LibrisService implements LibrisInterface
     }//end countAllPages()
 
 
-    public function fetchAllPages($docId=false, $size=100, $searchAfter=false)
+    public function fetchAllPages($docId = false, $size = 100, $searchAfter = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -594,7 +592,7 @@ class LibrisService implements LibrisInterface
     }//end systems()
 
 
-    public function docsBySystem($system, $page=1, $size=60, $tag=false)
+    public function docsBySystem($system, $page = 1, $size = 60, $tag = false)
     {
         $from = (($page - 1) * $size);
 
@@ -652,7 +650,7 @@ class LibrisService implements LibrisInterface
                     ],
                 ],
             ];
-        } else if ($tag === 0) {
+        } elseif ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
                 'script' => ["script" => "doc['tags'].length == 0"],
             ];
@@ -758,7 +756,7 @@ class LibrisService implements LibrisInterface
     }//end closePointInTime()
 
 
-    public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
+    public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
     {
 
         // $system = "Goblin Quest";
@@ -836,7 +834,7 @@ class LibrisService implements LibrisInterface
     }//end searchPages()
 
 
-    public function getDocThumbnail($doc, $regen=false)
+    public function getDocThumbnail($doc, $regen = false)
     {
         $thumbnailSet = isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'];
 
@@ -849,7 +847,7 @@ class LibrisService implements LibrisInterface
 
         if ($regen == "all") {
             return $this->updateDocThumbnail($doc);
-        } else if ($thumbnailSet) {
+        } elseif ($thumbnailSet) {
             return $doc['_source']['thumbnail'];
         } else {
             return $this->updateDocThumbnail($doc);

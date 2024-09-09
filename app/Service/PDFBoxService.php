@@ -3,21 +3,18 @@
 namespace App\Service;
 
 use App\Exceptions;
-
 use App\Service\ParserService;
-
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class PDFBoxService extends ParserService
 {
-
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
 
     private $pdkTemp = "";
-    
+
     protected $pages;
 
 
@@ -34,7 +31,8 @@ class PDFBoxService extends ParserService
 
     }//end __construct()
 
-    private function exec($cmd){
+    private function exec($cmd)
+    {
         $descriptorspec = array(
             0 => array("pipe", "r"), // STDIN
             1 => array("pipe", "w"), // STDOUT
@@ -48,7 +46,7 @@ class PDFBoxService extends ParserService
             'STDERR' => '',
             'return_value' => 127
         );
-        
+
         $proc = proc_open($cmd, $descriptorspec, $pipes, $cwd, $env);
         if (is_resource($proc)) {
             // Output test:
@@ -80,23 +78,23 @@ class PDFBoxService extends ParserService
                 $pdftkExecTemplate = "pdftk %s input_pw output %s";
                 $pdftkCmd         = sprintf($pdftkExecTemplate, $this->tempFile, $this->pdkTemp);
 
-                
+
                 $pdftkResult = $this->exec($pdftkCmd);
                 if ($pdftkResult['return_value'] > 0) {
                     Log::error("PDFTK Error Parsing PDF ". $this->filename);
-                    Log::Error( $pdftkResult['STDOUT'] );
-                    Log::Error( $pdftkResult['STDERR'] );
+                    Log::Error($pdftkResult['STDOUT']);
+                    Log::Error($pdftkResult['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
                 }
-                
+
 
                 $cmd = sprintf($PDFBoxExecTemplate, $this->pdfboxBin, $command, $this->pdkTemp);
                 $retryPDFBoxExec = $this->exec($cmd);
 
                 if ($retryPDFBoxExec['return_value'] > 0) {
                     Log::error("PDFBox + PDFTK Error Parsing PDF ". $this->filename);
-                    Log::Error( $retryPDFBoxExec['STDOUT'] );
-                    Log::Error( $retryPDFBoxExec['STDERR'] );
+                    Log::Error($retryPDFBoxExec['STDOUT']);
+                    Log::Error($retryPDFBoxExec['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
                 }
 
@@ -104,8 +102,8 @@ class PDFBoxService extends ParserService
             }//end if
 
             Log::error("PDFBox Error Parsing PDF ". $this->filename);
-            Log::Error( $PDFBoxExecute['STDOUT'] );
-            Log::Error( $PDFBoxExecute['STDERR'] );
+            Log::Error($PDFBoxExecute['STDOUT']);
+            Log::Error($PDFBoxExecute['STDERR']);
             throw new Exceptions\LibrisParseFailed($error);
         }//end if
 
@@ -116,7 +114,7 @@ class PDFBoxService extends ParserService
 
     public function parsePages()
     {
-        $output = $this->run_pdfbox("ExtractText -html -console");
+        $output = $this->run_pdfbox("export:text -html -console");
 
         $page  = "";
         $pages = [];
@@ -136,10 +134,14 @@ class PDFBoxService extends ParserService
             }
 
             $page .= $line." ";
-            $line = strtok( $separator );
+            $line = strtok($separator);
         }
 
-        return $pages;
+        $this->pages = $pages;
+
+        if (count($this->pages) == 0) {
+            return false;
+        }
 
     }//end parsePages()
 
