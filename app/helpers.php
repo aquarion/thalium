@@ -1,5 +1,7 @@
 <?php
 
+use Imagick;
+use ImagickDraw;
 
 function wordWrapAnnotation($image, $draw, $text, $maxWidth)
 {
@@ -42,7 +44,7 @@ function genericThumbnail($text)
 
     // Create a new canvas object and a white image
     $canvas = new \Imagick();
-    $canvas->setGravity(\Imagick::GRAVITY_CENTER);
+    $canvas->setGravity(Imagick::GRAVITY_CENTER);
     $canvas->newImage($width, $height, "#380744");
 
     // // Create imagickdraw object
@@ -52,7 +54,7 @@ function genericThumbnail($text)
     // $draw->pushPattern('gradient', 0, 0, 50, 50);
 
     // // Composite the gradient on the pattern
-    // $draw->composite(\Imagick::COMPOSITE_OVER, 0, 0, 50, 50, $im);
+    // $draw->composite(Imagick::COMPOSITE_OVER, 0, 0, 50, 50, $im);
 
     // // Close the pattern
     // $draw->popPattern();
@@ -60,7 +62,7 @@ function genericThumbnail($text)
     // // Use the pattern called "gradient" as the fill
     // $draw->setFillPatternURL('#gradient');
 
-    $draw->setGravity(\Imagick::GRAVITY_CENTER);
+    $draw->setGravity(Imagick::GRAVITY_CENTER);
     $fontSize = 42;
 
     // // Set font size to 52
@@ -86,7 +88,7 @@ function genericThumbnail($text)
     }
 
     // Let's read the images.
-    $icon = new \Imagick();
+    $icon = new Imagick();
     if ($icon->readImage(resource_path('genericThumbnail/noun-book-of-spells.png')) === false) {
         throw new Exception();
     }
