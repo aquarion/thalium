@@ -1,7 +1,7 @@
 <?php
 
-use Imagick;
-use ImagickDraw;
+use Imagick as Imagek;
+use ImagickDraw as ImagekDraw;
 
 function wordWrapAnnotation($image, $draw, $text, $maxWidth)
 {
