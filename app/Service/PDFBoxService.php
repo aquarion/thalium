@@ -18,9 +18,9 @@ class PDFBoxService extends ParserService
     protected $pages;
 
 
-    public function __construct($file, $elasticSearchIndex)
+    public function __construct($file)
     {
-        parent::__construct($file, $elasticSearchIndex);
+        parent::__construct($file);
 
         set_time_limit(120);
         ini_set('memory_limit', '2G');
@@ -148,7 +148,7 @@ class PDFBoxService extends ParserService
 
     public function generateDocThumbnail()
     {
-        Log::info("[generateDocThumbnail] {$this->filename} Generating PDF Thumbnail");
+        Log::info("[generateDocThumbnail] {$this->filename} Generating PDF Thumbnail from PDFBox");
 
         $image = new \Imagick($this->tempFile.'[0]');
         Log::Info('[Imagick] Hello '.$this->tempFile);
@@ -167,6 +167,9 @@ class PDFBoxService extends ParserService
         // If 0 is provided as a width or height parameter,
         // aspect ratio is maintained
         $image->thumbnailImage(200, 300, true);
+
+
+        Log::info("[generateDocThumbnail] Success");
 
         return $image;
 

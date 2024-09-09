@@ -50,7 +50,7 @@ class LibrisThumbnails extends Command
      */
 
 
-    private function nextPage($size=100): int
+    private function nextPage($size=100): array
     {
         if ($this->option('system')) {
             $docs = $this->libris->docsBySystem($this->option('system'), $this->page);

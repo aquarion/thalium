@@ -69,8 +69,8 @@ class LibrisUpdate extends Command
 
         $this->line("Kicking off a reindex for ".Storage::disk('libris')->path($root));
 
-        $this->libris->updatePipeline();
-        $this->libris->updateIndex();
+        $indexer = $libris->getIndexer();
+        $indexer->setup();
 
         $dirCount  = 0;
         $fileCount = 0;

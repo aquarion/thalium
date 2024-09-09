@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\PromptsForMissingInput;
 
 use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 use App\Jobs\ScanFile;
 
-class LibrisAdd extends Command
+class LibrisAdd extends Command implements PromptsForMissingInput
 {
 
     /**
@@ -47,17 +48,15 @@ class LibrisAdd extends Command
     public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
-        $exists   = Storage::disk('libris')->exists($filename);
-        if ($exists) {
-            if (Storage::disk('libris')->getMetadata($filename)['type'] === 'dir') {
-                $this->info("Scanning directory $filename");
-                $libris->dispatchIndexDir($filename);
-            } else {
-                $this->info("Scanning file $filename");
-                $libris->addDocument($filename, $this);
-            }
+        
+        if (Storage::disk('libris')->directoryExists($filename)) {
+            $this->info("Scanning directory $filename");
+            $libris->dispatchIndexDir($filename);
+        } elseif (Storage::disk('libris')->fileExists($filename)) {
+            $this->info("Scanning file $filename");
+            $libris->addDocument($filename, $this);
         } else {
-            $this->error($filename.' not found in Libris');
+            $this->error(Storage::disk('libris')->path($filename).' not found on disk');
         }
 
         return 0;
