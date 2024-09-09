@@ -21,3 +21,4 @@ docker/pdfbox/target
 public/css/
 public/js/
 storage/opensearch
+*.bak
