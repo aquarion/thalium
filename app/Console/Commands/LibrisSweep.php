@@ -65,36 +65,7 @@ class LibrisSweep extends Command
         $bar->setMessage('Finding orphaned pages');
         $bar->start();
 
-        $deleted  = 0;
-        $filename = false;
-
-        $size        = 100;
-        $searchAfter = false;
-        $this->libris->openPointInTime();
-
-        while (true) {
-            $pages = $this->libris->fetchAllPages($docId, $size, $searchAfter);
-            if (count($pages['hits']['hits']) == 0) {
-                break;
-            }
-
-            foreach ($pages['hits']['hits'] as $index => $page) {
-                $pageId = $page['_id'];
-                // if($filename != $page['_source']['path']) {
-                //     $bar->setMessage("[" . $deleted . "] " . $filename);
-                // }
-                $filename = $page['_source']['path'];
-                if ($this->isMissing($filename)) {
-                    $this->libris->deletePage($pageId);
-                    $bar->setMessage(" Deleted ".$pageId);
-                    $deleted++;
-                }
-
-                $bar->advance();
-
-                $searchAfter = $page['sort'];
-            }
-        }//end while
+        $this->libris->sweepPages($docId, $bar);
 
         $bar->finish();
         $this->line(" - Complete");
@@ -102,25 +73,6 @@ class LibrisSweep extends Command
     }//end purgeDeletedPages()
 
 
-    protected function isMissing($docId)
-    {
-        if (array_key_exists($docId, $this->presentCache)) {
-            return false;
-        } else if (array_key_exists($docId, $this->missingCache)) {
-            return true;
-        }
-
-        if (Storage::disk('libris')->missing($docId)) {
-            array_push($this->missingCache, $docId);
-            return true;
-        } else {
-            array_push($this->presentCache, $docId);
-            return false;
-        }
-
-        throw new \Exception("Shouldn't have got here");
-
-    }//end isMissing()
 
 
 }//end class

@@ -35,8 +35,8 @@ Route::get('/search', [LibrisController::class, 'search'])->name("search")->midd
 
 
 if (App::environment(['local', 'staging'])) {
-    Route::get('/debug/thumbnail', [DebugController::class, 'thumbnail'])->name("debug.thumbnail")->middleware('auth:admin');
-    Route::get('/debug/system', [DebugController::class, 'system'])->name("debug.system")->middleware('auth:admin');
+    Route::get('/debug/thumbnail', [DebugController::class, 'thumbnail'])->name("debug.thumbnail");
+    Route::get('/debug/system', [DebugController::class, 'system'])->name("debug.system");
 }
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home')->middleware('auth');

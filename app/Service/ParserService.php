@@ -14,7 +14,6 @@ abstract class ParserService
 
     protected $file;
 
-    protected $elasticSearchIndex;
 
     protected $pages;
 
@@ -42,7 +41,7 @@ abstract class ParserService
     }//end generateTags()
 
 
-    public function __construct($file, $elasticSearchIndex)
+    public function __construct($file)
     {
         if (Storage::disk('libris')->missing($file)) {
             Log::error("[AddDoc] ".$this->filename." in 'total existance failure' error");
@@ -50,7 +49,6 @@ abstract class ParserService
         }
 
         $this->filename           = $file;
-        $this->elasticSearchIndex = $elasticSearchIndex;
         $this->lastModified       = Storage::disk('libris')->lastModified($file);
 
         $this->tags = $this->generateTags();
@@ -72,10 +70,10 @@ abstract class ParserService
         $sizeMB = number_format($size / 1024);
 
         if ($size > (1024 * 1024 * 1024)) {
-            Log::error("[AddDoc] {$this->title} is ".$sizeMB."Mb, too large to index");
+            Log::error("[Parser] TOO LARGE: {$this->title} is ".$sizeMB."Mb, too large to index");
             throw new Exceptions\LibrisTooLarge();
         } else {
-            Log::info("[AddDoc] {$this->title} is a ".$sizeMB."Mb");
+            Log::info("[Parser] {$this->title} is a ".$sizeMB."Mb PDF");
         }
 
     }//end __construct()

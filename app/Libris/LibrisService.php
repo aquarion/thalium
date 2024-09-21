@@ -2,7 +2,6 @@
 
 namespace App\Libris;
 
-use Elasticsearch;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ScanDirectory;
@@ -11,14 +10,18 @@ use App\Service\PDFBoxService;
 use App\Service\ParserService;
 use App\Service\ParseTextService;
 use App\Exceptions;
+use App\Service\Indexer\ElasticSearch;
 
 class LibrisService implements LibrisInterface
 {
-    public $elasticSearchIndex = "libris";
-
-    private $pointInTime = false;
-
     protected $title;
+
+    private $indexer;
+
+    public function __construct()
+    {
+        $this->indexer = new ElasticSearch();
+    }
 
 
     public function addDocument($file, $log = false)
@@ -60,7 +63,7 @@ class LibrisService implements LibrisInterface
     public function indexDocument(ParserService $parser)
     {
         // try {
-        
+
         $parseResult = $parser->parsePages();
 
         if (!$parseResult) {
@@ -77,81 +80,16 @@ class LibrisService implements LibrisInterface
         $image        = $this->generateDocThumbnail($parser->filename);
         $thumbnailURL = $this->saveDocThumbnail($image, $parser->filename);
 
-        $params = [
-            'index'   => $this->elasticSearchIndex,
-            'id'      => $parser->filename,
-            'routing' => $parser->filename,
-            'body'    => [
-                "doc_type"      => "document",
-                'path'          => $parser->filename,
-                'system'        => $parser->system,
-                'tags'          => $parser->tags,
-                'thumbnail'     => $thumbnailURL,
-                'title'         => $parser->title,
-                'last_modified' => $parser->lastModified,
-                "page_relation" => ["name" => "document"],
-            ],
-        ];
-
-        Log::debug("[AddDoc] {$parser->filename} Indexing");
-        Elasticsearch::index($params);
+        $this->indexer->indexDocument($parser, $thumbnailURL);
 
         if ($parseResult) { // If we have pages
-            $this->indexPages($parser);
+            $this->indexer->indexPages($parser);
         }
 
         return 0;
 
     }//end indexDocument()
 
-
-    public function indexPages(ParserService $parser)
-    {
-        Log::info("[AddDoc] {$parser->filename} Indexing Pages");
-
-        $pageCount = count($parser->pages);
-
-        foreach ($parser->pages as $pageIndex => $text) {
-            $pageNo = ($pageIndex + 1);
-            set_time_limit(30);
-
-            $params = [
-                'index'    => $this->elasticSearchIndex,
-                'id'       => $parser->filename."/".$pageNo,
-                'routing'  => $parser->filename,
-                'pipeline' => 'attachment_pipeline',
-                'body'     => [
-                    "doc_type"      => "page",
-                    'data'          => base64_encode($text),
-                    'pageNo'        => $pageNo,
-                    'path'          => $parser->filename,
-                    'system'        => $parser->system,
-                    'tags'          => $parser->tags,
-                    'title'         => $parser->title,
-                    "page_relation" => [
-                        "name"   => "page",
-                        "parent" => $parser->filename,
-                    ],
-                ],
-            ];
-            Elasticsearch::index($params);
-        }//end foreach
-
-        Log::debug("[AddDoc] {$parser->filename} Added $pageCount Pages");
-
-    }//end indexPages()
-
-
-    public function updateDocument($id, $body)
-    {
-        $params   = [
-            'index' => $this->elasticSearchIndex,
-            'id'    => $id,
-            'body'  => $body,
-        ];
-        $response = Elasticsearch::update($params);
-
-    }//end updateDocument()
 
 
     public function getParser($file)
@@ -163,10 +101,10 @@ class LibrisService implements LibrisInterface
 
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
-            $parser = new PDFBoxService($file, $this->elasticSearchIndex);
+            $parser = new PDFBoxService($file);
         } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
-            $parser = new ParseTextService($file, $this->elasticSearchIndex);
+            $parser = new ParseTextService($file);
         } else {
             Log::debug("[Parser] Ignoring $mimeType $file, cannot parse ...");
             return false;
@@ -176,167 +114,39 @@ class LibrisService implements LibrisInterface
 
     }//end getParser()
 
-
     public function deleteDocument($docId)
     {
-        // Now delete the document
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'id'    => $docId,
-        ];
-
-        Elasticsearch::delete($params);
-        $this->deleteDocumentPages($docId);
+        return $this->indexer->deleteDocument($docId);
 
     }//end deleteDocument()
 
+    public function updateDocument($docId, $body)
+    {
+        return $this->indexer->updateDocument($docId, $body);
+
+    }//end deleteDocument()
 
     public function deletePage($docId)
     {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'id'    => $docId,
-        ];
-
-        Elasticsearch::delete($params);
+        $this->indexer->deletePage($docId);
 
     }//end deletePage()
 
 
-    private function deleteDocumentPages($docId = false)
-    {
-        $size        = 100;
-        $searchAfter = false;
-        $this->openPointInTime();
-        while (true) {
-            $pages = $this->fetchAllPages($docId, $size, $searchAfter);
-            if (count($pages['hits']['hits']) == 0) {
-                break;
-            }
-
-            foreach ($pages['hits']['hits'] as $index => $page) {
-                $pageId   = $page['_id'];
-                $filename = $page['_source']['path'];
-                if (Storage::disk('libris')->missing($filename)) {
-                    $this->deletePage($pageId);
-                }
-
-                $searchAfter = $page['sort'];
-            }
-        }
-
-    }//end deleteDocumentPages()
-
-
     public function fetchDocument($id)
     {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'id'    => $id,
-        ];
-
-        try {
-            // Get doc at /my_index/_doc/my_id
-            return Elasticsearch::get($params);
-        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
-            return false;
-        }
+        return $this->indexer->fetchDocument($id);
 
     }//end fetchDocument()
 
 
     public function deleteIndex()
     {
-        Log::warning("Deleting Index");
-        return Elasticsearch::indices()->delete(['index' => $this->elasticSearchIndex]);
+        $this->indexer->deleteIndex();
 
     }//end deleteIndex()
 
 
-    public function updateIndex()
-    {
-        Log::info("Update/Create Index");
-
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                '_source'    => ['enabled' => true],
-
-                'properties' => [
-                    'system'        => ['type' => 'keyword'],
-                    'tags'          => ['type' => 'keyword'],
-                    'filename'      => ['type' => 'keyword'],
-                    'path'          => ['type' => 'keyword'],
-                    'title'         => ['type' => 'keyword'],
-                    'content'       => ['type' => 'keyword'],
-                    'doc_type'      => ['type' => 'keyword'],
-                    'pageNo'        => ['type' => 'integer'],
-                    'thumbnail'     => ['type' => 'text'],
-
-                    'page_relation' => [
-                        "type"      => "join",
-                        "relations" => [ "document" => "page" ],
-                    ],
-                ],
-            ],
-        ];
-
-        // If it's missing, create it.
-        try {
-            return Elasticsearch::indices()->putMapping($params);
-        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
-            $indexparams = [
-                'index' => $this->elasticSearchIndex,
-            ];
-
-            // Create the index
-            Elasticsearch::indices()->create($indexparams);
-
-            return Elasticsearch::indices()->putMapping($params);
-        }
-
-    }//end updateIndex()
-
-
-    public function updatePipeline()
-    {
-        Log::info("Update Pipeline");
-        $params = [
-            'id'   => 'attachment_pipeline',
-            'body' => [
-                'description' => 'my attachment ingest processor',
-                'processors'  => [
-                    [
-                        'attachment' => ['field' => 'data'],
-                    ],
-                    [
-                        'remove' => ['field' => 'data'],
-                    ],
-                ],
-            ],
-        ];
-
-        $result = Elasticsearch::ingest()->putPipeline($params);
-
-    }//end updatePipeline()
-
-
-    public function createPipeline()
-    {
-
-        // If it's missing, create it.
-        try {
-            Log::info("Create Pipeline");
-            $params = ['id' => 'attachment_pipeline'];
-
-            $hasPipeline = Elasticsearch::ingest()->getPipeline($params);
-
-            return;
-        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
-            $this->updatePipeline();
-        }
-
-    }//end createPipeline()
 
 
     public function scanFile($filename)
@@ -396,271 +206,36 @@ class LibrisService implements LibrisInterface
     }//end dispatchIndexDir()
 
 
-    public function countAllDocuments($tag = false)
+    public function countAllDocuments()
     {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'query' => [
-                    'match' => ['doc_type' => 'document'],
-                ],
-            ],
-        ];
-
-        return Elasticsearch::count($params)['count'];
+        return $this->indexer->countAllDocuments();
 
     }//end countAllDocuments()
 
+    function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false){
+        return $this->indexer->fetchAllDocuments($tag, $size, $searchAfter);
+    }
 
-    public function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false)
-    {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
-                'query' => [
-                    'match' => ['doc_type' => 'document'],
-                ],
-                "sort"  => [
-                    [
-                        "path" => ["order" => "asc"],
-                    ],
-                ],
-            ],
-        ];
+    function countAllPages($docId = false){
+        return $this->indexer->countAllPages($docId);
+    }
 
-        if ($searchAfter) {
-            $params['body']['search_after'] = $searchAfter;
+    function fetchAllPages($docId = false, $size = 100, $searchAfter = false){
+        return $this->indexer->fetchAllPages($docId, $size, $searchAfter)['hits']['hits'] ;
+    }
+    
+
+    public function systems(){
+        $systems = $this->indexer->listSystems();
+        foreach ($systems as &$system) {
+            $system['thumbnail'] = $this->getSystemThumbnail($system['system']);
         }
+        return $systems;
+    }
 
-        if ($this->pointInTime) {
-            $params['body']['pit'] = [
-                'id'         => $this->pointInTime,
-                'keep_alive' => '1m',
-            ];
-            unset($params['index']);
-        }
-
-        return Elasticsearch::search($params);
-
-    }//end fetchAllDocuments()
-
-
-    public function countAllPages($docId = false)
-    {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['match' => [ 'doc_type' => 'page' ]],
-                        ],
-
-                    ],
-                ],
-            ],
-        ];
-
-        if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
-                'match' => [ 'path' => $docId ],
-            ];
-        }
-
-        return Elasticsearch::count($params)['count'];
-
-    }//end countAllPages()
-
-
-    public function fetchAllPages($docId = false, $size = 100, $searchAfter = false)
-    {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['match' => [ 'doc_type' => 'page' ]],
-                        ],
-
-                    ],
-                ],
-                "sort"  => [
-                    [
-                        "path" => ["order" => "asc"],
-                    ],
-                ],
-                'aggs'  => [
-                    'uniq_systems' => [
-                        'composite' => [
-                            'size'    => 100,
-                            'sources' => [
-                                'systems' => ['terms' => ['field' => 'document'] ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
-                'match' => [ 'path' => $docId ],
-            ];
-        }
-
-        if ($this->pointInTime) {
-            $params['body']['pit'] = [
-                'id'         => $this->pointInTime,
-                'keep_alive' => '1m',
-            ];
-            unset($params['index']);
-        }
-
-        if ($searchAfter) {
-            $params['body']['search_after'] = $searchAfter;
-        }
-
-        // dd($params);
-
-        return Elasticsearch::search($params);
-
-    }//end fetchAllPages()
-
-
-    public function systems()
-    {
-        $filter = [
-            'only_documents' => [
-                'filter' => [
-                    'term' => ['doc_type' => 'document'],
-                ],
-            ],
-        ];
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                "size" => 0,
-                'aggs' => [
-                    'uniq_systems' => [
-                        'composite' => [
-                            'size'    => 100,
-                            'sources' => [
-                                'systems' => ['terms' => ['field' => 'system'] ],
-                            ],
-                        ],
-                        'aggs'      => $filter,
-                    ],
-                ],
-            ],
-        ];
-
-        $buckets  = [];
-        $continue = true;
-
-        while ($continue == true) {
-            $results = Elasticsearch::search($params);
-            $buckets = array_merge($buckets, $results['aggregations']['uniq_systems']['buckets']);
-            if (isset($results['aggregations']['uniq_systems']['after_key'])) {
-                $params['body']['aggs']['uniq_systems']['composite']['after']
-                    = $results['aggregations']['uniq_systems']['after_key'];
-            } else {
-                $continue = false;
-            }
-        }
-
-        $return = [];
-        foreach ($buckets as $bucket) {
-            $system = $bucket['key']['systems'];
-            $count  = $bucket['only_documents']['doc_count'];
-
-            if ($count) {
-                $thumbnail = $this->getSystemThumbnail($system);
-                $return[]  = [
-                    'system'    => $system,
-                    'count'     => $count,
-                    'thumbnail' => $thumbnail,
-                ];
-            }
-        }
-
-        Log::info($return);
-        return $return;
-
-    }//end systems()
-
-
-    public function docsBySystem($system, $page = 1, $size = 60, $tag = false)
-    {
-        $from = (($page - 1) * $size);
-
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
-                'from'  => $from,
-                'sort'  => [
-                    [
-                        "tags"  => [
-                            "missing" => "_first",
-                            "order"   => "asc",
-                        ],
-                        "path"  => [ "order" => "asc"],
-                        "title" => [ "order" => "asc"],
-                    ],
-                ],
-                'query' => [
-                    'bool' => [
-                        'must'   => [
-                            0 => [
-                                'match' => [
-                                    'system' => [
-                                        'query'    => $system,
-                                        "operator" => "and",
-                                    ],
-                                ],
-                            ],
-                        ],
-                        'filter' => [
-                            ['match' => [ 'doc_type' => 'document' ]],
-                        ],
-
-                    ],
-                ],
-            ],
-        ];
-
-        $params['body']["aggs"] = [
-            "tags" => [
-                "terms" => [
-                    "field" => "tags",
-                    "size"  => 30,
-                ],
-            ],
-        ];
-
-        if ($tag) {
-            $params['body']['query']['bool']['must'][] = [
-                'match' => [
-                    'tags' => [
-                        'query'    => $tag,
-                        "operator" => "and",
-                    ],
-                ],
-            ];
-        } elseif ($tag === 0) {
-            $params['body']['query']['bool']['filter'][] = [
-                'script' => ["script" => "doc['tags'].length == 0"],
-            ];
-        }
-
-        $result = Elasticsearch::search($params);
-
-        return($result);
-
-    }//end docsBySystem()
+    public function docsBySystem($system){
+        return $this->indexer->listDocuments($system);
+    }
 
 
     public static function tagSort($a, $b)
@@ -680,43 +255,7 @@ class LibrisService implements LibrisInterface
 
     public function tagsForSystem($system)
     {
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => 0,
-                'query' => [
-                    'bool' => [
-                        'must'   => [
-                            0 => [
-                                'match' => [
-                                    'system' => [
-                                        'query'    => $system,
-                                        "operator" => "and",
-                                    ],
-                                ],
-                            ],
-                        ],
-                        'filter' => [
-                            ['match' => [ 'doc_type' => 'document' ]],
-                        ],
-
-                    ],
-                ],
-            ],
-        ];
-
-        $params['body']["aggs"] = [
-            "tags" => [
-                "terms" => [
-                    "field" => "tags",
-                    "size"  => 30,
-                ],
-            ],
-        ];
-
-        $result = Elasticsearch::search($params);
-
-        $tagList = $result['aggregations']['tags']['buckets'];
+        $tagList = $this->indexer->tagsForSystem($system);
 
         usort($tagList, [LibrisService::class, "tagSort"]);
 
@@ -725,120 +264,18 @@ class LibrisService implements LibrisInterface
     }//end tagsForSystem()
 
 
-    public function openPointInTime()
-    {
-        $params   = [
-            'index'      => $this->elasticSearchIndex,
-            'keep_alive' => '1m',
-        ];
-        $response = Elasticsearch::openPointInTime($params);
-
-        $this->pointInTime = $response['id'];
-
-    }//end openPointInTime()
-
-
-    public function setPointInTime($id)
-    {
-        $this->pointInTime = $id;
-
-    }//end setPointInTime()
-
-
-    public function closePointInTime()
-    {
-        $params   = [
-            'index' => $this->elasticSearchIndex,
-            'id'    => $this->pointInTime,
-        ];
-        $response = Elasticsearch::closePointInTime($params);
-
-    }//end closePointInTime()
-
-
     public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
     {
-
-        // $system = "Goblin Quest";
-        $from = (($page - 1) * $size);
-
-        $params = [
-            'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'      => $size,
-                'from'      => $from,
-                'query'     => [
-                    'bool' => [
-                        'must' => [
-                            'match_phrase' => [
-                                'attachment.content' => ['query' => $terms],
-                            ],
-                        ],
-                    ],
-                ],
-                "highlight" => [
-                    "fields" => [
-                        "attachment.content" => new \stdClass(),
-                    ],
-                ],
-            ],
-        ];
-
-        if ($system) {
-            $params['body']['query']['bool']['filter'][] = [
-                'match' => [ 'system' => $system ],
-            ];
-        }
-
-        if ($document) {
-            $params['body']['query']['bool']['filter'][] = [
-                'match' => [ 'path' => $document ],
-            ];
-        }
-
-        if ($tag) {
-            $params['body']['query']['bool']['filter'][] = [
-                'match' => [ 'tags' => $tag ],
-            ];
-        }
-
-        $params['body']["aggs"] = [
-            "parents" => [
-                "terms" => [
-                    "field" => "page_relation#document",
-                    "size"  => 30,
-                ],
-            ],
-            "systems" => [
-                "terms" => [
-                    "field" => "system",
-                    "size"  => 30,
-                ],
-                "aggs"  => [
-                    "tags" => [
-                        "terms" => [
-                            "field" => "tags",
-                            "size"  => 30,
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        Log::debug($params);
-        $result = Elasticsearch::search($params);
-        Log::debug($result);
-
-        return $result;
+        return $this->indexer->searchPages($terms, $system, $document, $tag, $page, $size);
 
     }//end searchPages()
 
 
     public function getDocThumbnail($doc, $regen = false)
     {
-        $thumbnailSet = isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail'];
+        $thumbnailUrl = $this->indexer->getDocThumbnail($doc);
 
-        if ($regen == "generic" && $thumbnailSet) {
+        if ($regen == "generic" && $thumbnailUrl) {
             $mimeType = Storage::disk('libris')->mimeType($doc['_source']['path']);
             if ($mimeType !== "application/pdf") {
                 return $this->updateDocThumbnail($doc);
@@ -847,8 +284,8 @@ class LibrisService implements LibrisInterface
 
         if ($regen == "all") {
             return $this->updateDocThumbnail($doc);
-        } elseif ($thumbnailSet) {
-            return $doc['_source']['thumbnail'];
+        } elseif ($thumbnailUrl) {
+            return $thumbnailUrl;
         } else {
             return $this->updateDocThumbnail($doc);
         }
@@ -858,12 +295,15 @@ class LibrisService implements LibrisInterface
 
     public function updateDocThumbnail($doc)
     {
-        $file = $doc['_source']['path'];
-        Log::debug("[updateDocThumbnail] Update Thumbnail - ".$file);
+       
+        $file = $this->indexer->getLocalFilename($doc);
 
-        // if (Storage::disk('thumbnails')->exists($thumbnailFileName)) {
-        //     Log::info("[updateDocThumbnail] Already exists $thumbnailFileName");
-        // } else {
+        Log::info("[updateDocThumbnail] Update Thumbnail - ".$file);
+
+        if (Storage::disk('thumbnails')->exists($file)) {
+            Log::info("[updateDocThumbnail] Already exists $file");
+
+        }
         $image = $this->generateDocThumbnail($file);
 
         $thumbnailURL = $this->saveDocThumbnail($image, $file);
@@ -873,16 +313,7 @@ class LibrisService implements LibrisInterface
             return $thumbnailURL;
         }
 
-        $params = [
-            'index' => $doc['_index'],
-            'id'    => $doc['_id'],
-            'body'  => [
-                'doc' => ['thumbnail' => $thumbnailURL],
-            ],
-        ];
-
-        // Update doc at /my_index/_doc/my_id
-        $response = Elasticsearch::update($params);
+        $this->indexer->updateSingleField($doc['_id'], 'thumbnail', $thumbnailURL);
         Log::info("[updateDocThumbnail] Saved");
 
         return $thumbnailURL;
@@ -910,6 +341,8 @@ class LibrisService implements LibrisInterface
     public function generateDocThumbnail($file)
     {
         Log::debug("[generateDocThumbnail] ".$file);
+        $called_by = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT|DEBUG_BACKTRACE_IGNORE_ARGS,2)[1]['function'];
+        Log::debug("[generateDocThumbnail] Called by ".$called_by);
 
         $parser = $this->getParser($file);
 
@@ -917,6 +350,7 @@ class LibrisService implements LibrisInterface
             return $parser->generateDocThumbnail($file);
         }
 
+        Log::debug("[generateDocThumbnail] No thumbnail generated");
         return false;
 
     }//end generateDocThumbnail()
@@ -949,13 +383,69 @@ class LibrisService implements LibrisInterface
     }//end getSystemThumbnail()
 
 
-    public function __destruct()
+    public function sweepPages($docId, $bar=false)
     {
-        if ($this->pointInTime) {
-            $this->closePointInTime();
+        
+        $deleted  = 0;
+        $filename = false;
+
+        $size        = 100;
+        $searchAfter = false;
+        $this->indexer->openPointInTime();
+
+        while (true) {
+            $pages = $this->fetchAllPages($docId, $size, $searchAfter);
+            if (count($pages) == 0) {
+                break;
+            }
+
+            foreach ($pages as $index => $page) {
+                var_dump($page);
+                $pageId = $page['_id'];
+                // if($filename != $page['_source']['path']) {
+                //     $bar->setMessage("[" . $deleted . "] " . $filename);
+                // }
+                $filename = $page['_source']['path'];
+                if ($this->fileIsMissing($filename)) {
+                    $this->libris->deletePage($pageId);
+                    $bar ? $bar->setMessage(" Deleted ".$pageId) : null;
+                    $deleted++;
+                }
+
+                $bar ? $bar->advance() : null;
+
+                $searchAfter = $page['sort'];
+            }
+        }//end while
+
+    }//end sweepPages()
+
+
+    protected function fileIsMissing($docId)
+    {
+        if (array_key_exists($docId, $this->presentCache)) {
+            return false;
+        } else if (array_key_exists($docId, $this->missingCache)) {
+            return true;
         }
 
-    }//end __destruct()
+        if (Storage::disk('libris')->missing($docId)) {
+            array_push($this->missingCache, $docId);
+            return true;
+        } else {
+            array_push($this->presentCache, $docId);
+            return false;
+        }
 
+        throw new \Exception("Shouldn't have got here");
+
+    }//end isMissing()
+
+
+    public function getIndexer()
+    {
+        return $this->indexer;
+
+    }//end getIndexer()
 
 }//end class
