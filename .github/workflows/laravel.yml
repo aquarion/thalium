@@ -21,6 +21,8 @@ jobs:
         php_version: 8.3
         args: --ignore-platform-reqs
         version: 2
+    - name: Check version
+      run: php --version
     - name: Generate key
       run: php artisan key:generate
     - name: Directory Permissions
