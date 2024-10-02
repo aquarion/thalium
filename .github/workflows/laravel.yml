@@ -18,9 +18,15 @@ jobs:
     - name: Install Dependencies
       uses: php-actions/composer@v6
       with:
-        php_version: 8.3
+        php_version: "8.3"
         args: --ignore-platform-reqs
         version: 2
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.3
+    - name: Check version
+      run: php --version
     - name: Generate key
       run: php artisan key:generate
     - name: Directory Permissions
