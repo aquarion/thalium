@@ -28,3 +28,4 @@ storage/opensearch
 .DS_Store
 >>>>>>> 8e16afd (Refactor gitignore and VSCode settings)
 test_data
+storage/meili_data

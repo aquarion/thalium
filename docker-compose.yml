@@ -88,103 +88,81 @@ services:
     profiles:
       - dev
 
-  # elasticsearch:
-  #   build:
-  #     context: ./
-  #     dockerfile: docker/Dockerfile/elasticsearch.Dockerfile
-  #   container_name: elasticsearch
+
+  meilisearch:
+      image: getmeili/meilisearch:v1.10
+      ports:
+          - "7700:7700"
+      environment:
+          MEILI_ENV: '${MEILI_ENV}'
+      volumes:
+          - ./storage/meili_data:/meili_data
+
+
+  # elasticsetup:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+  #   profiles:
+  #     - dev
+  #   volumes:
+  #     - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
+  #     - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+  #     - ./docker/elasticsearch/bin:/usr/share/esbin
+  #   user: "0"
+  #   command: >
+  #     bash -c '/usr/share/esbin/gen_certs.sh'
+
   #   environment:
-  #   #   - node.name=libris
-  #   #   - cluster.name=thalium-cluster
-  #     - discovery.seed_hosts=127.0.0.1
-  #   #   - xpack.security.transport.ssl.enabled=true
-  #   #   # - cluster.initial_master_nodes=es01,es02,es03
-  #   #   - cluster.initial_master_nodes=libris
-  #   #   # - bootstrap.system_call_filter=false
-  #   #   # - bootstrap.memory_lock=true
-  #     - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
-  #     - xpack.security.transport.ssl.enabled=true 
-  #     # - xpack.security.transport.ssl.verification_mode=certificate 
-  #     # - xpack.security.transport.ssl.keystore.path=elasticsearch.p12 
-  #     # - xpack.security.transport.ssl.truststore.path=elasticsearch.p12 
+  #     - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+  #     interval: 1s
+  #     timeout: 5s
+  #     retries: 120
+
+  # es01:
+  #   depends_on:
+  #     elasticsetup:
+  #       condition: service_healthy
+  #   profiles:
+  #     - dev
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+  #   volumes:
+  #     - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
+  #     - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+  #     - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
+  #     - ./docker/elasticsearch/bin:/usr/share/esbin
+  #   ports:
+  #     - ${ES_PORT:-9200}:9200
+  #   environment:
+  #     - node.name=es01
+  #     - cluster.name=${CLUSTER_NAME}
+  #     - cluster.initial_master_nodes=es01
+  #     # - discovery.seed_hosts=es02,es03
+  #     - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
+  #     - bootstrap.memory_lock=true
+  #     - xpack.security.enabled=true
+  #     - xpack.security.http.ssl.enabled=true
+  #     - xpack.security.http.ssl.key=certs/es01/es01.key
+  #     - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+  #     - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+  #     - xpack.security.http.ssl.verification_mode=certificate
+  #     - xpack.security.transport.ssl.enabled=true
+  #     - xpack.security.transport.ssl.key=certs/es01/es01.key
+  #     - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+  #     - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+  #     - xpack.security.transport.ssl.verification_mode=certificate
+  #     - xpack.license.self_generated.type=${LICENSE}
+  #   mem_limit: ${MEM_LIMIT}
   #   ulimits:
   #     memlock:
   #       soft: -1
   #       hard: -1
-  #   volumes:
-  #     - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-  #     # - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
-  #   ports:
-  #     - 9200
-  #     - 9300
-  #   profiles:
-  #     - dev
-
-
-  elasticsetup:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    profiles:
-      - dev
-    volumes:
-      - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
-      - ./docker/elasticsearch/bin:/usr/share/esbin
-    user: "0"
-    command: >
-      bash -c '/usr/share/esbin/gen_certs.sh'
-
-    environment:
-      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
-      interval: 1s
-      timeout: 5s
-      retries: 120
-
-  es01:
-    depends_on:
-      elasticsetup:
-        condition: service_healthy
-    profiles:
-      - dev
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    volumes:
-      - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
-      - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
-      - ./docker/elasticsearch/bin:/usr/share/esbin
-    ports:
-      - ${ES_PORT:-9200}:9200
-    environment:
-      - node.name=es01
-      - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
-      # - discovery.seed_hosts=es02,es03
-      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=certs/es01/es01.key
-      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
-      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.http.ssl.verification_mode=certificate
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=certs/es01/es01.key
-      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
-      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 120
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD-SHELL",
+  #         "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+  #       ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 120

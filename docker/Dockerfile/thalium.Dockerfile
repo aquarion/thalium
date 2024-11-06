@@ -79,16 +79,17 @@ RUN echo mkdir -p /home/$user/.composer
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-RUN mkdir -p /home/$user/lockfiles && \
+    RUN mkdir -p /home/$user/lockfiles && \
     chown -R $user:$user /home/$user/lockfiles
 
 
-# RUN chown -R $user:$user /var/run/thalium
+RUN mkdir /var/run/thalium
+RUN chown -R $user:$user /var/run/thalium
 
 COPY docker/imagemagic_policy.xml /etc/ImageMagick-6/policy.xml
 
 
-run mkdir -p /usr/src/pdfbox
+RUN mkdir -p /usr/src/pdfbox
 COPY docker/pdfbox/pom.xml /usr/src/pdfbox
 COPY docker/pdfbox/install_pdfbox.sh /usr/src/pdfbox/install_pdfbox.sh
 RUN bash /usr/src/pdfbox/install_pdfbox.sh
