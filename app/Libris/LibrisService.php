@@ -233,8 +233,8 @@ class LibrisService implements LibrisInterface
         return $systems;
     }
 
-    public function docsBySystem($system){
-        return $this->indexer->listDocuments($system);
+    public function docsBySystem($system, $page, $perpage, $tag){
+        return $this->indexer->listDocuments($system, $page, $perpage, $tag);
     }
 
 
