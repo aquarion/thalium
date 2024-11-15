@@ -2218,16 +2218,16 @@
         },
         {
             "name": "mailerlite/laravel-elasticsearch",
-            "version": "11.1.0",
+            "version": "11.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mailerlite/laravel-elasticsearch.git",
-                "reference": "5f755bc3c69dcc1ff122f627f16c084cfdf3a716"
+                "reference": "eba15222466e9f55a80f7dfdeafa2c99ae53358b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mailerlite/laravel-elasticsearch/zipball/5f755bc3c69dcc1ff122f627f16c084cfdf3a716",
-                "reference": "5f755bc3c69dcc1ff122f627f16c084cfdf3a716",
+                "url": "https://api.github.com/repos/mailerlite/laravel-elasticsearch/zipball/eba15222466e9f55a80f7dfdeafa2c99ae53358b",
+                "reference": "eba15222466e9f55a80f7dfdeafa2c99ae53358b",
                 "shasum": ""
             },
             "require": {
@@ -2241,7 +2241,7 @@
             },
             "require-dev": {
                 "mockery/mockery": "^1.4.3",
-                "orchestra/testbench": "^6.5|^7.0|^8.0|^9.0",
+                "orchestra/testbench": "^6.45|^7.44|^8.25|^9.3",
                 "phpunit/phpunit": "^9.4"
             },
             "suggest": {
@@ -2283,7 +2283,7 @@
             ],
             "support": {
                 "issues": "https://github.com/mailerlite/laravel-elasticsearch/issues",
-                "source": "https://github.com/mailerlite/laravel-elasticsearch/tree/11.1.0"
+                "source": "https://github.com/mailerlite/laravel-elasticsearch/tree/11.1.1"
             },
             "funding": [
                 {
@@ -2291,7 +2291,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-04-05T13:42:28+00:00"
+            "time": "2024-11-15T04:54:47+00:00"
         },
         {
             "name": "mobiledetect/mobiledetectlib",
