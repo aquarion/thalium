@@ -18,6 +18,9 @@ class LibrisService implements LibrisInterface
 
     private $indexer;
 
+    private $presentCache = array();
+    private $missingCache = array();
+
     public function __construct()
     {
         $this->indexer = new ElasticSearch();
@@ -400,14 +403,14 @@ class LibrisService implements LibrisInterface
             }
 
             foreach ($pages as $index => $page) {
-                var_dump($page);
+                //var_dump($page);
                 $pageId = $page['_id'];
                 // if($filename != $page['_source']['path']) {
                 //     $bar->setMessage("[" . $deleted . "] " . $filename);
                 // }
                 $filename = $page['_source']['path'];
                 if ($this->fileIsMissing($filename)) {
-                    $this->libris->deletePage($pageId);
+                    $this->deletePage($pageId);
                     $bar ? $bar->setMessage(" Deleted ".$pageId) : null;
                     $deleted++;
                 }
