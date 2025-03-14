@@ -48,11 +48,11 @@ class LibrisAdd extends Command implements PromptsForMissingInput
     public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
-        
+
         if (Storage::disk('libris')->directoryExists($filename)) {
             $this->info("Scanning directory $filename");
             $libris->dispatchIndexDir($filename);
-        } elseif (Storage::disk('libris')->fileExists($filename)) {
+        } else if (Storage::disk('libris')->fileExists($filename)) {
             $this->info("Scanning file $filename");
             $libris->addDocument($filename, $this);
         } else {
