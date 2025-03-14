@@ -3,6 +3,7 @@
 /public/storage
 /public/fonts/vendor/*
 /storage/*.key
+/storage/pail
 /vendor
 .env
 .env.backup
@@ -28,3 +29,4 @@ storage/opensearch
 .DS_Store
 >>>>>>> 8e16afd (Refactor gitignore and VSCode settings)
 test_data
+/.nova
