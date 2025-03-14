@@ -33,19 +33,19 @@ class PDFBoxService extends ParserService
 
     private function exec($cmd)
     {
-        $descriptorspec = array(
-            0 => array("pipe", "r"), // STDIN
-            1 => array("pipe", "w"), // STDOUT
-            2 => array("pipe", "w"), // STDERR
-        );
+        $descriptorspec = [
+            0 => ["pipe", "r"], // STDIN
+            1 => ["pipe", "w"], // STDOUT
+            2 => ["pipe", "w"], // STDERR
+        ];
         $cwd = getcwd();
         $env = null;
 
-        $return = array(
+        $return = [
             'STDOUT' => '',
             'STDERR' => '',
             'return_value' => 127
-        );
+        ];
 
         $proc = proc_open($cmd, $descriptorspec, $pipes, $cwd, $env);
         if (is_resource($proc)) {

@@ -18,8 +18,8 @@ class LibrisService implements LibrisInterface
 
     private $indexer;
 
-    private $presentCache = array();
-    private $missingCache = array();
+    private $presentCache = [];
+    private $missingCache = [];
 
     public function __construct()
     {
