@@ -34,10 +34,9 @@ class ConfirmPasswordController extends Controller implements HasMiddleware
 
     public static function middleware(): array
     {
-        return [
-            'auth',
-        ];
-    }//end __construct()
+        return ['auth'];
+
+    }//end middleware()
 
 
 }//end class

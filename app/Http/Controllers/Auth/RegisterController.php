@@ -37,10 +37,9 @@ class RegisterController extends Controller implements HasMiddleware
 
     public static function middleware(): array
     {
-        return [
-            'guest',
-        ];
-    }//end __construct()
+        return ['guest'];
+
+    }//end middleware()
 
 
     /**

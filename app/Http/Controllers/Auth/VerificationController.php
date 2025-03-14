@@ -39,7 +39,8 @@ class VerificationController extends Controller implements HasMiddleware
             new Middleware('signed', only: ['verify']),
             new Middleware('throttle:6,1', only: ['verify', 'resend']),
         ];
-    }//end __construct()
+
+    }//end middleware()
 
 
 }//end class

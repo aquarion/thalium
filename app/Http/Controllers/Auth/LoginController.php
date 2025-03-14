@@ -37,7 +37,8 @@ class LoginController extends Controller implements HasMiddleware
         return [
             new Middleware('guest', except: ['logout']),
         ];
-    }//end __construct()
+
+    }//end middleware()
 
 
 }//end class
