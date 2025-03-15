@@ -3,7 +3,8 @@
 use Imagick as Imagek;
 use ImagickDraw as ImagekDraw;
 
-if(!function_exists('wordWrapAnnotate')) { // Sometimes helpers is being included twice
+if (!function_exists('wordWrapAnnotate')) {
+    // Sometimes helpers is being included twice
     function wordWrapAnnotate($image, $draw, $text, $maxWidth)
     {
         $text = trim($text);
@@ -35,11 +36,14 @@ if(!function_exists('wordWrapAnnotate')) { // Sometimes helpers is being include
             $lineHeight,
         ];
 
-    }
-}
+    }//end wordWrapAnnotate()
 
 
-if(!function_exists('genericThumbnail')) { // Sometimes helpers is being included twice
+}//end if
+
+
+if (!function_exists('genericThumbnail')) {
+    // Sometimes helpers is being included twice
     function genericThumbnail($text)
     {
         $height = 265;
@@ -118,4 +122,6 @@ if(!function_exists('genericThumbnail')) { // Sometimes helpers is being include
         return $canvas;
 
     }//end genericThumbnail()
-}
+
+
+}//end if

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class PDFBoxService extends ParserService
 {
+
     private $pdfboxBin = "/usr/share/java/pdfbox.jar";
 
     private $tempFile = "";
@@ -31,6 +32,7 @@ class PDFBoxService extends ParserService
 
     }//end __construct()
 
+
     private function exec($cmd)
     {
         $descriptorspec = [
@@ -42,20 +44,22 @@ class PDFBoxService extends ParserService
         $env = null;
 
         $return = [
-            'STDOUT' => '',
-            'STDERR' => '',
-            'return_value' => 127
+            'STDOUT'       => '',
+            'STDERR'       => '',
+            'return_value' => 127,
         ];
 
         $proc = proc_open($cmd, $descriptorspec, $pipes, $cwd, $env);
         if (is_resource($proc)) {
             // Output test:
-            $return['STDOUT'] = stream_get_contents($pipes[1]);
-            $return['STDERR'] = stream_get_contents($pipes[2]);
+            $return['STDOUT']       = stream_get_contents($pipes[1]);
+            $return['STDERR']       = stream_get_contents($pipes[2]);
             $return['return_value'] = proc_close($proc);
         }
+
         return $return;
-    }
+
+    }//end exec()
 
 
     public function run_pdfbox($command)
@@ -76,23 +80,21 @@ class PDFBoxService extends ParserService
                 $this->pdkTemp = tempnam(sys_get_temp_dir(), "pdftk-");
 
                 $pdftkExecTemplate = "pdftk %s input_pw output %s";
-                $pdftkCmd         = sprintf($pdftkExecTemplate, $this->tempFile, $this->pdkTemp);
-
+                $pdftkCmd          = sprintf($pdftkExecTemplate, $this->tempFile, $this->pdkTemp);
 
                 $pdftkResult = $this->exec($pdftkCmd);
                 if ($pdftkResult['return_value'] > 0) {
-                    Log::error("PDFTK Error Parsing PDF ". $this->filename);
+                    Log::error("PDFTK Error Parsing PDF ".$this->filename);
                     Log::Error($pdftkResult['STDOUT']);
                     Log::Error($pdftkResult['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
                 }
 
-
                 $cmd = sprintf($PDFBoxExecTemplate, $this->pdfboxBin, $command, $this->pdkTemp);
                 $retryPDFBoxExec = $this->exec($cmd);
 
                 if ($retryPDFBoxExec['return_value'] > 0) {
-                    Log::error("PDFBox + PDFTK Error Parsing PDF ". $this->filename);
+                    Log::error("PDFBox + PDFTK Error Parsing PDF ".$this->filename);
                     Log::Error($retryPDFBoxExec['STDOUT']);
                     Log::Error($retryPDFBoxExec['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
@@ -101,7 +103,7 @@ class PDFBoxService extends ParserService
                 return $retryPDFBoxExec['STDOUT'];
             }//end if
 
-            Log::error("PDFBox Error Parsing PDF ". $this->filename);
+            Log::error("PDFBox Error Parsing PDF ".$this->filename);
             Log::Error($PDFBoxExecute['STDOUT']);
             Log::Error($PDFBoxExecute['STDERR']);
             throw new Exceptions\LibrisParseFailed($error);
@@ -120,7 +122,7 @@ class PDFBoxService extends ParserService
         $pages = [];
 
         $separator = "\r\n";
-        $line = strtok($output, $separator);
+        $line      = strtok($output, $separator);
 
         while ($line !== false) {
             if (substr($line, 0, 4) == "<div") {
@@ -134,7 +136,7 @@ class PDFBoxService extends ParserService
             }
 
             $page .= $line." ";
-            $line = strtok($separator);
+            $line  = strtok($separator);
         }
 
         $this->pages = $pages;
@@ -167,7 +169,6 @@ class PDFBoxService extends ParserService
         // If 0 is provided as a width or height parameter,
         // aspect ratio is maintained
         $image->thumbnailImage(200, 300, true);
-
 
         Log::info("[generateDocThumbnail] Success");
 

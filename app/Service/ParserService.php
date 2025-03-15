@@ -14,7 +14,6 @@ abstract class ParserService
 
     protected $file;
 
-
     protected $pages;
 
     public $lastModified;
@@ -48,8 +47,8 @@ abstract class ParserService
             throw new Exceptions\LibrisNotFound();
         }
 
-        $this->filename           = $file;
-        $this->lastModified       = Storage::disk('libris')->lastModified($file);
+        $this->filename     = $file;
+        $this->lastModified = Storage::disk('libris')->lastModified($file);
 
         $this->tags = $this->generateTags();
 
