@@ -36,21 +36,9 @@ class PDFBoxService extends ParserService
     private function exec($cmd)
     {
         $descriptorspec = [
-            0 => [
-                "pipe",
-                "r",
-            ],
-            // STDIN
-            1 => [
-                "pipe",
-                "w",
-            ],
-            // STDOUT
-            2 => [
-                "pipe",
-                "w",
-            ],
-            // STDERR
+            0 => ["pipe", "r"], // STDIN
+            1 => ["pipe", "w"], // STDOUT
+            2 => ["pipe", "w"], // STDERR
         ];
         $cwd = getcwd();
         $env = null;

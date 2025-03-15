@@ -20,10 +20,8 @@ class LibrisService implements LibrisInterface
     private $indexer;
 
     private $presentCache = [];
-
     private $missingCache = [];
-
-
+  
     public function __construct()
     {
         $this->indexer = new ElasticSearch();
