@@ -26,6 +26,6 @@
         "concurrently": "^9.0.1"
     },
     "dependencies": {
-        "bootstrap-icons": "^1.13.0"
+        "bootstrap-icons": "^1.13.1"
     }
 }
