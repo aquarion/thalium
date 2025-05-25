@@ -3,6 +3,7 @@
 /public/storage
 /public/fonts/vendor/*
 /storage/*.key
+/storage/pail
 /vendor
 .env
 .env.backup
@@ -22,10 +23,8 @@ docker/pdfbox/target
 public/css/
 public/js/
 storage/opensearch
-<<<<<<< HEAD
 *.bak
-=======
 .DS_Store
->>>>>>> 8e16afd (Refactor gitignore and VSCode settings)
 test_data
 storage/meili_data
+/.nova

@@ -9,19 +9,24 @@ use App\Service\ParserService;
 
 class ElasticSearch implements IndexerInterface
 {
+
     public $elasticSearchIndex = "libris";
+
     private $pointInTime = false;
+
+
     /**
      * Create a new class instance.
      */
     public function __construct()
     {
-        
-    }
+
+    }//end __construct()
 
 
-    public function indexDocument(ParserService $parser, $thumbnailURL){
-        
+    public function indexDocument(ParserService $parser, $thumbnailURL)
+    {
+
         $params = [
             'index'   => $this->elasticSearchIndex,
             'id'      => $parser->filename,
@@ -41,7 +46,7 @@ class ElasticSearch implements IndexerInterface
         Log::debug("[AddDoc] {$parser->filename} Indexing");
         return ElasticSearchClient::index($params);
 
-    }
+    }//end indexDocument()
 
 
     public function indexPages(ParserService $parser)
@@ -79,6 +84,7 @@ class ElasticSearch implements IndexerInterface
         Log::debug("[AddDoc] {$parser->filename} Added $pageCount Pages");
 
     }//end indexPages()
+
 
     public function updateDocument($id, $body)
     {
@@ -118,7 +124,7 @@ class ElasticSearch implements IndexerInterface
     }//end deletePage()
 
 
-    public function deleteDocumentPages($docId = false)
+    public function deleteDocumentPages($docId=false)
     {
         $size        = 100;
         $searchAfter = false;
@@ -130,7 +136,7 @@ class ElasticSearch implements IndexerInterface
             }
 
             foreach ($pages['hits']['hits'] as $index => $page) {
-                $pageId   = $page['_id'];
+                $pageId = $page['_id'];
                 $this->deletePage($pageId);
                 $searchAfter = $page['sort'];
             }
@@ -156,7 +162,7 @@ class ElasticSearch implements IndexerInterface
     }//end fetchDocument()
 
 
-    public function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false)
+    public function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -189,7 +195,9 @@ class ElasticSearch implements IndexerInterface
 
     }//end fetchAllDocuments()
 
-    public function countAllDocuments(){
+
+    public function countAllDocuments()
+    {
         $params = [
             'index' => $this->elasticSearchIndex,
             'body'  => [
@@ -200,9 +208,11 @@ class ElasticSearch implements IndexerInterface
         ];
 
         return ElasticSearchClient::count($params)['count'];
-    }
 
-    public function countAllPages($docId = false)
+    }//end countAllDocuments()
+
+
+    public function countAllPages($docId=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -229,7 +239,7 @@ class ElasticSearch implements IndexerInterface
     }//end countAllPages()
 
 
-    public function fetchAllPages($docId = false, $size = 100, $searchAfter = false)
+    public function fetchAllPages($docId=false, $size=100, $searchAfter=false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -285,9 +295,13 @@ class ElasticSearch implements IndexerInterface
 
     }//end fetchAllPages()
 
-    public function setup(){
+
+    public function setup()
+    {
         $this->updateIndex();
-    }
+
+    }//end setup()
+
 
     public function updateIndex()
     {
@@ -385,8 +399,6 @@ class ElasticSearch implements IndexerInterface
     }//end createPipeline()
 
 
-
-
     public function listSystems()
     {
         $filter = [
@@ -434,8 +446,7 @@ class ElasticSearch implements IndexerInterface
             $count  = $bucket['only_documents']['doc_count'];
 
             if ($count) {
-                
-                $return[]  = [
+                $return[] = [
                     'system'    => $system,
                     'count'     => $count,
                     'thumbnail' => false,
@@ -446,10 +457,10 @@ class ElasticSearch implements IndexerInterface
         Log::info($return);
         return $return;
 
-    }//end systems()
+    }//end listSystems()
 
 
-    public function listDocuments($system, $page = 1, $size = 60, $tag = false)
+    public function listDocuments($system, $page=1, $size=60, $tag=false)
     {
         $from = (($page - 1) * $size);
 
@@ -507,7 +518,7 @@ class ElasticSearch implements IndexerInterface
                     ],
                 ],
             ];
-        } elseif ($tag === 0) {
+        } else if ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
                 'script' => ["script" => "doc['tags'].length == 0"],
             ];
@@ -517,9 +528,11 @@ class ElasticSearch implements IndexerInterface
 
         return($result);
 
-    }//end docsBySystem()
+    }//end listDocuments()
 
-    public function tagsForSystem($system){
+
+    public function tagsForSystem($system)
+    {
 
         $params = [
             'index' => $this->elasticSearchIndex,
@@ -559,10 +572,10 @@ class ElasticSearch implements IndexerInterface
 
         return $result['aggregations']['tags']['buckets'];
 
-    }
+    }//end tagsForSystem()
 
 
-    public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
+    public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
     {
 
         // $system = "Goblin Quest";
@@ -662,26 +675,35 @@ class ElasticSearch implements IndexerInterface
 
     private function closePointInTime()
     {
-        $params   = [
+        $params = [
             // 'index' => $this->elasticSearchIndex,
-            'id'    => $this->pointInTime,
+            'id' => $this->pointInTime,
         ];
         // $response = ElasticSearchClient::closePointInTime($params);
 
     }//end closePointInTime()
 
-    public function getDocThumbnail($doc){
+
+    public function getDocThumbnail($doc)
+    {
         if (isset($doc['_source']['thumbnail']) && $doc['_source']['thumbnail']) {
             return $doc['_source']['thumbnail'];
         }
+
         return false;
-    }
 
-    public function getLocalFilename($doc){
+    }//end getDocThumbnail()
+
+
+    public function getLocalFilename($doc)
+    {
         return $doc['_source']['path'];
-    }
 
-    public function updateSingleField($document, $field, $value){
+    }//end getLocalFilename()
+
+
+    public function updateSingleField($document, $field, $value)
+    {
 
         $params = [
             'index' => $document['_index'],
@@ -694,7 +716,8 @@ class ElasticSearch implements IndexerInterface
         // Update doc at /my_index/_doc/my_id
         ElasticSearchClient::update($params);
 
-    }
+    }//end updateSingleField()
+
 
     public function __destruct()
     {
@@ -704,7 +727,9 @@ class ElasticSearch implements IndexerInterface
 
     }//end __destruct()
 
-    public function sweepPages($bar){
+
+    public function sweepPages($bar)
+    {
 
         $deleted  = 0;
         $filename = false;
@@ -737,5 +762,7 @@ class ElasticSearch implements IndexerInterface
             }
         }//end while
 
-    }
-}
+    }//end sweepPages()
+
+
+}//end class

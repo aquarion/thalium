@@ -14,17 +14,22 @@ use App\Service\Indexer\ElasticSearch;
 
 class LibrisService implements LibrisInterface
 {
+
     protected $title;
 
     private $indexer;
 
+    private $presentCache = [];
+    private $missingCache = [];
+  
     public function __construct()
     {
         $this->indexer = new ElasticSearch();
-    }
+
+    }//end __construct()
 
 
-    public function addDocument($file, $log = false)
+    public function addDocument($file, $log=false)
     {
         $boom        = explode("/", $file);
         $title       = array_pop($boom);
@@ -70,6 +75,7 @@ class LibrisService implements LibrisInterface
             Log::warning("No searchable content found in document {$parser->filename}");
             # Todo: Add a way to index documents without searchable content
         }
+
         // } catch (Exceptions\LibrisParseFailed $e) {
         //     Log::error("[AddDoc] FAILED TO PARSE Name: [{$parser->filename}], System: [{$parser->system}]");
         //     return 5;
@@ -82,14 +88,14 @@ class LibrisService implements LibrisInterface
 
         $this->indexer->indexDocument($parser, $thumbnailURL);
 
-        if ($parseResult) { // If we have pages
+        if ($parseResult) {
+            // If we have pages
             $this->indexer->indexPages($parser);
         }
 
         return 0;
 
     }//end indexDocument()
-
 
 
     public function getParser($file)
@@ -102,7 +108,7 @@ class LibrisService implements LibrisInterface
         if ($mimeType == "application/pdf") {
             Log::debug("[Parser] Parsing PDF $file ...");
             $parser = new PDFBoxService($file);
-        } elseif ($mimeTypeArray && $mimeTypeArray[0] == "text") {
+        } else if ($mimeTypeArray && $mimeTypeArray[0] == "text") {
             Log::debug("[Parser] Parsing $mimeType $file as text ...");
             $parser = new ParseTextService($file);
         } else {
@@ -114,17 +120,20 @@ class LibrisService implements LibrisInterface
 
     }//end getParser()
 
+
     public function deleteDocument($docId)
     {
         return $this->indexer->deleteDocument($docId);
 
     }//end deleteDocument()
 
+
     public function updateDocument($docId, $body)
     {
         return $this->indexer->updateDocument($docId, $body);
 
-    }//end deleteDocument()
+    }//end updateDocument()
+
 
     public function deletePage($docId)
     {
@@ -145,8 +154,6 @@ class LibrisService implements LibrisInterface
         $this->indexer->deleteIndex();
 
     }//end deleteIndex()
-
-
 
 
     public function scanFile($filename)
@@ -212,30 +219,45 @@ class LibrisService implements LibrisInterface
 
     }//end countAllDocuments()
 
-    function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false){
+
+    function fetchAllDocuments($tag=false, $size=100, $searchAfter=false)
+    {
         return $this->indexer->fetchAllDocuments($tag, $size, $searchAfter);
-    }
 
-    function countAllPages($docId = false){
+    }//end fetchAllDocuments()
+
+
+    function countAllPages($docId=false)
+    {
         return $this->indexer->countAllPages($docId);
-    }
 
-    function fetchAllPages($docId = false, $size = 100, $searchAfter = false){
+    }//end countAllPages()
+
+
+    function fetchAllPages($docId=false, $size=100, $searchAfter=false)
+    {
         return $this->indexer->fetchAllPages($docId, $size, $searchAfter)['hits']['hits'] ;
-    }
-    
 
-    public function systems(){
+    }//end fetchAllPages()
+
+
+    public function systems()
+    {
         $systems = $this->indexer->listSystems();
         foreach ($systems as &$system) {
             $system['thumbnail'] = $this->getSystemThumbnail($system['system']);
         }
-        return $systems;
-    }
 
-    public function docsBySystem($system){
-        return $this->indexer->listDocuments($system);
-    }
+        return $systems;
+
+    }//end systems()
+
+
+    public function docsBySystem($system, $page, $perpage, $tag)
+    {
+        return $this->indexer->listDocuments($system, $page, $perpage, $tag);
+
+    }//end docsBySystem()
 
 
     public static function tagSort($a, $b)
@@ -264,14 +286,14 @@ class LibrisService implements LibrisInterface
     }//end tagsForSystem()
 
 
-    public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
+    public function searchPages($terms, $system, $document, $tag, $page=1, $size=60)
     {
         return $this->indexer->searchPages($terms, $system, $document, $tag, $page, $size);
 
     }//end searchPages()
 
 
-    public function getDocThumbnail($doc, $regen = false)
+    public function getDocThumbnail($doc, $regen=false)
     {
         $thumbnailUrl = $this->indexer->getDocThumbnail($doc);
 
@@ -284,7 +306,7 @@ class LibrisService implements LibrisInterface
 
         if ($regen == "all") {
             return $this->updateDocThumbnail($doc);
-        } elseif ($thumbnailUrl) {
+        } else if ($thumbnailUrl) {
             return $thumbnailUrl;
         } else {
             return $this->updateDocThumbnail($doc);
@@ -295,15 +317,15 @@ class LibrisService implements LibrisInterface
 
     public function updateDocThumbnail($doc)
     {
-       
+
         $file = $this->indexer->getLocalFilename($doc);
 
         Log::info("[updateDocThumbnail] Update Thumbnail - ".$file);
 
         if (Storage::disk('thumbnails')->exists($file)) {
             Log::info("[updateDocThumbnail] Already exists $file");
-
         }
+
         $image = $this->generateDocThumbnail($file);
 
         $thumbnailURL = $this->saveDocThumbnail($image, $file);
@@ -341,7 +363,7 @@ class LibrisService implements LibrisInterface
     public function generateDocThumbnail($file)
     {
         Log::debug("[generateDocThumbnail] ".$file);
-        $called_by = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT|DEBUG_BACKTRACE_IGNORE_ARGS,2)[1]['function'];
+        $called_by = debug_backtrace(!(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS), 2)[1]['function'];
         Log::debug("[generateDocThumbnail] Called by ".$called_by);
 
         $parser = $this->getParser($file);
@@ -385,7 +407,7 @@ class LibrisService implements LibrisInterface
 
     public function sweepPages($docId, $bar=false)
     {
-        
+
         $deleted  = 0;
         $filename = false;
 
@@ -400,14 +422,14 @@ class LibrisService implements LibrisInterface
             }
 
             foreach ($pages as $index => $page) {
-                var_dump($page);
+                //var_dump($page);
                 $pageId = $page['_id'];
                 // if($filename != $page['_source']['path']) {
                 //     $bar->setMessage("[" . $deleted . "] " . $filename);
                 // }
                 $filename = $page['_source']['path'];
                 if ($this->fileIsMissing($filename)) {
-                    $this->libris->deletePage($pageId);
+                    $this->deletePage($pageId);
                     $bar ? $bar->setMessage(" Deleted ".$pageId) : null;
                     $deleted++;
                 }
@@ -439,7 +461,7 @@ class LibrisService implements LibrisInterface
 
         throw new \Exception("Shouldn't have got here");
 
-    }//end isMissing()
+    }//end fileIsMissing()
 
 
     public function getIndexer()
@@ -447,5 +469,6 @@ class LibrisService implements LibrisInterface
         return $this->indexer;
 
     }//end getIndexer()
+
 
 }//end class

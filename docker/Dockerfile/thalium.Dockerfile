@@ -53,12 +53,12 @@ RUN pecl install redis \
 # Manual install of Imagick - because the pecl version is broken
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-      libmagickwand-dev \
+    libmagickwand-dev \
     && mkdir -p /usr/src/php/ext/imagick \
     && curl -fsSL https://github.com/Imagick/imagick/archive/944b67fce68bcb5835999a149f917670555b6fcb.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
     && docker-php-ext-install imagick \
     && apt-get remove -y \
-      libmagickwand-dev \
+    libmagickwand-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/pear

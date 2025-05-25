@@ -86,7 +86,7 @@ class LibrisUpdate extends Command
 
     public function backgroundUpdate()
     {
-        
+
         $root = $this->option('start');
 
         $systems = Storage::disk('libris')->directories($root);
@@ -124,7 +124,7 @@ class LibrisUpdate extends Command
 
     public function scanDirectory($dir)
     {
-        
+
         if (strpos($dir, ".") === 0 && $dir !== ".") {
             Log::warning("[ScanDir] Ignoring Name: [{$dir}], hidden directory");
             return true;

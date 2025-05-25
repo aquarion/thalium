@@ -25,10 +25,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-
-    }//end register()
+    public function register(): void {} //end register()
 
 
     /**
@@ -39,11 +36,19 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
 
         View::share("adobe_client_id", env('ADOBE_CLIENT_ID', false));
+        View::share("app_env", env('APP_ENV', false));
+
+        if (file_exists(base_path('.git')) && env('APP_ENV', false) !== 'production') {
+            $git_branch = exec('git rev-parse --abbrev-ref HEAD');
+            View::share("git_branch", $git_branch);
+        } else {
+            View::share("git_branch", false);
+        }
 
         // $this->bootBroadcast();
         // $this->bootEvent();
 
-    }//end boot()
+    } //end boot()
 
 
     public function bootBroadcast(): void
@@ -51,15 +56,13 @@ class AppServiceProvider extends ServiceProvider
         Broadcast::routes();
 
         include base_path('routes/channels.php');
-
-    }//end bootBroadcast()
+    } //end bootBroadcast()
 
 
     public function bootEvent(): void
     {
         parent::boot();
-
-    }//end bootEvent()
+    } //end bootEvent()
 
 
 }//end class
