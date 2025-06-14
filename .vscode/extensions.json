@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        "austenc.laravel-blade-spacer",
+        "codingyu.laravel-goto-view",
+        "devastion.php-laravel-all-in-one",
+        "naoray.laravel-goto-components",
+        "onecentlin.laravel-blade",
+        "onecentlin.laravel5-snippets",
+        "open-southeners.laravel-pint",
+        "ryannaddy.laravel-artisan",
+        "tiansin.vscode-laravel-assist",
+        "laravel.vscode-laravel",
+        "amiralizadeh9480.laravel-extra-intellisense"
+    ]
+}
