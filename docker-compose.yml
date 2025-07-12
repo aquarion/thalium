@@ -29,6 +29,7 @@ services:
       - .:/var/www
       - "${HOST_PDF_LIBRARY}:/mnt/rpg"
       - "${HOST_APP_LOCK_DIR}:${DOCKER_APP_LOCK_DIR}"
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
 
   scheduler:
     build:
@@ -45,6 +46,7 @@ services:
     volumes:
       - .:/var/www
       - ${HOST_PDF_LIBRARY}:/mnt/rpg
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
 
   ## Localdev Support Images
   db:
@@ -103,10 +105,10 @@ services:
   #   #   # - bootstrap.system_call_filter=false
   #   #   # - bootstrap.memory_lock=true
   #     - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
-  #     - xpack.security.transport.ssl.enabled=true 
-  #     # - xpack.security.transport.ssl.verification_mode=certificate 
-  #     # - xpack.security.transport.ssl.keystore.path=elasticsearch.p12 
-  #     # - xpack.security.transport.ssl.truststore.path=elasticsearch.p12 
+  #     - xpack.security.transport.ssl.enabled=true
+  #     # - xpack.security.transport.ssl.verification_mode=certificate
+  #     # - xpack.security.transport.ssl.keystore.path=elasticsearch.p12
+  #     # - xpack.security.transport.ssl.truststore.path=elasticsearch.p12
   #   ulimits:
   #     memlock:
   #       soft: -1
@@ -119,7 +121,6 @@ services:
   #     - 9300
   #   profiles:
   #     - dev
-
 
   elasticsetup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
@@ -188,3 +189,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+
+volumes:
+  elasticsearch_certs:
+    external: true
+    name: elasticsearch_certs

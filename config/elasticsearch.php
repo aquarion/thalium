@@ -72,7 +72,9 @@ return [
              * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_security.html#_ssl_encryption_2
              */
 
-            'sslVerification' => env('ELASTICSEARCH_CACERT', null) ? storage_path(env('ELASTICSEARCH_CACERT')) : null,
+            'sslVerification' => env('ELASTICSEARCH_CACERT', null)
+                ? env('ELASTICSEARCH_CACERT')
+                : null,
 
             /**
              * Logging
