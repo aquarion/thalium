@@ -36,14 +36,13 @@ abstract class ParserService
         array_pop($tags);
         // remove the filename from the tags list
         return $tags;
-
-    }//end generateTags()
+    } //end generateTags()
 
 
     public function __construct($file)
     {
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[AddDoc] ".$this->filename." in 'total existance failure' error");
+            Log::error("[AddDoc] " . $this->filename . " in 'total existance failure' error");
             throw new Exceptions\LibrisNotFound();
         }
 
@@ -69,21 +68,39 @@ abstract class ParserService
         $sizeMB = number_format($size / 1024);
 
         if ($size > (1024 * 1024 * 1024)) {
-            Log::error("[Parser] TOO LARGE: {$this->title} is ".$sizeMB."Mb, too large to index");
+            Log::error("[Parser] TOO LARGE: {$this->title} is " . $sizeMB . "Mb, too large to index");
             throw new Exceptions\LibrisTooLarge();
         } else {
-            Log::info("[Parser] {$this->title} is a ".$sizeMB."Mb PDF");
+            Log::info("[Parser] {$this->title} is a " . $sizeMB . "Mb PDF");
         }
-
-    }//end __construct()
+    } //end __construct()
 
 
     public function generateDocThumbnail()
     {
         Log::info("[AddDoc] {$this->filename} Generating Thumbnail");
         return genericThumbnail($this->title);
+    } //end generateDocThumbnail()
 
-    }//end generateDocThumbnail()
+    public function getPageCount()
+    {
+        if (isset($this->pages)) {
+            return count($this->pages);
+        } else {
+            Log::error("[Parser] No pages parsed for {$this->filename}");
+            return 0;
+        }
+    } //end getPageCount()
+
+    public function getPages()
+    {
+        if (isset($this->pages)) {
+            return $this->pages;
+        } else {
+            Log::error("[Parser] No pages parsed for {$this->filename}");
+            return [];
+        }
+    } //end getPages()
 
 
 }//end class
