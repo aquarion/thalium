@@ -163,7 +163,8 @@
 
 
 </main><!-- /.container -->
-<script src="js/app.js" charset="utf-8"></script>
+
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
 </body>
