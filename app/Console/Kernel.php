@@ -22,14 +22,7 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
-    {
-        // $schedule->command('inspire')->hourly();
-        $schedule->command('libris:update')->daily()->onOneServer();
-        $schedule->command('libris:purge_deleted')->daily()->onOneServer();
-        $schedule->command('libris:sweep')->weekly()->onOneServer();
-
-    }//end schedule()
+    protected function schedule(Schedule $schedule): void {} //end schedule()
 
 
     /**
@@ -37,11 +30,10 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         include base_path('routes/console.php');
-
-    }//end commands()
+    } //end commands()
 
 
 }//end class
