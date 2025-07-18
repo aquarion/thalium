@@ -6,15 +6,13 @@ LABEL maintainer="Nicholas Avenell <nicholas@istic.net>"
 ARG user
 ARG uid
 
-COPY docker/apt/debian_contrib.list /etc/apt/sources.list.d/debian_contrib.list
-
 # RUN set -x \
 #         && deluser www-data \
 #         && addgroup -g 500 -S www-data \
 #         && adduser -u 500 -D -S -G www-data www-data
 
-COPY docker/php /usr/local/etc/php-fpm.d/
-RUN sed -i "s/__USER__/$user/" /usr/local/etc/php-fpm.d/*
+# COPY docker/php /usr/local/etc/php-fpm.d/
+# RUN sed -i "s/__USER__/$user/" /usr/local/etc/php-fpm.d/*
 
 RUN mkdir -p /usr/share/man/man1
 
@@ -32,7 +30,10 @@ RUN apt-get -qq update && apt-get -qqy install \
     default-jre \
     npm \
     imagemagick \
-    pdftk
+    pdftk \
+    software-properties-common
+
+RUN apt-add-repository contrib
 
 # Clear cache
 # RUN apt-get clean && rm -rf /var/lib/apt/lists/*
