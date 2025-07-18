@@ -4,7 +4,7 @@ services:
     build:
       args:
         user: ${USER}
-        uid: ${UID}
+        uid: ${USERID}
       context: ./
       dockerfile: docker/Dockerfile/thalium.Dockerfile
     profiles:
@@ -15,7 +15,7 @@ services:
     build:
       args:
         user: ${USER}
-        uid: ${UID}
+        uid: ${USERID}
         docker_app_lock_dir: "${DOCKER_APP_LOCK_DIR}"
         environment: "${APP_ENV}"
       context: ./
@@ -36,7 +36,7 @@ services:
     build:
       args:
         user: ${USER}
-        uid: ${UID}
+        uid: ${USERID}
       context: ./
       dockerfile: docker/Dockerfile/scheduler.Dockerfile
     environment:
@@ -152,7 +152,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
       - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
       - ./docker/elasticsearch/bin:/usr/share/esbin
     ports:
