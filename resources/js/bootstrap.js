@@ -7,10 +7,10 @@ window._ = _;
  * code may be modified to fit the specific needs of your application.
  */
 
-try {
+//try {
     import Popper from "popper.js";
     window.Popper = Popper.default || Popper; // For compatibility with older versions
-} catch (e) {}
+//} catch (e) {}
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
