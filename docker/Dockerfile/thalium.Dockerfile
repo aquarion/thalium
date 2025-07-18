@@ -3,7 +3,6 @@ FROM php:8.3-fpm
 LABEL maintainer="Nicholas Avenell <nicholas@istic.net>"
 
 # Arguments defined in docker-compose.yml
-ARG user
 ARG uid
 
 # RUN set -x \
@@ -11,8 +10,6 @@ ARG uid
 #         && addgroup -g 500 -S www-data \
 #         && adduser -u 500 -D -S -G www-data www-data
 
-# COPY docker/php /usr/local/etc/php-fpm.d/
-# RUN sed -i "s/__USER__/$user/" /usr/local/etc/php-fpm.d/*
 
 RUN mkdir -p /usr/share/man/man1
 
@@ -67,25 +64,6 @@ RUN apt-get update \
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN echo mkdir -p /home/$user
-
-# Create system user to run Composer and Artisan Commands
-RUN getent passwd $user || useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-
-RUN echo mkdir -p /home/$user/.composer
-
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-RUN mkdir -p /home/$user/lockfiles && \
-    chown -R $user:$user /home/$user/lockfiles
-
-
-# RUN chown -R $user:$user /var/run/thalium
-
 COPY docker/imagemagic_policy.xml /etc/ImageMagick-6/policy.xml
 
 
@@ -96,4 +74,4 @@ RUN bash /usr/src/pdfbox/install_pdfbox.sh
 # Set working directory
 WORKDIR /var/www
 
-USER $user
+USER www-data
