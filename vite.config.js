@@ -4,16 +4,12 @@ import laravel from "laravel-vite-plugin";
 import { resolve } from "path";
 
 export default defineConfig({
+    server: {
+        cors: true,
+    },
     plugins: [
         laravel({
-            input: [
-                "resources/css/app.css",
-                "resources/js/app.js",
-                "resources/css/admin.css",
-                "resources/js/admin.js",
-                "resources/css/comingSoon.css",
-                "resources/js/comingSoon.js",
-            ],
+            input: ["resources/sass/app.scss", "resources/js/app.js"],
             refresh: true,
         }),
     ],
