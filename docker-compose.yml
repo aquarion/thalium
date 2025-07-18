@@ -17,6 +17,7 @@ services:
         user: ${USER}
         uid: ${UID}
         docker_app_lock_dir: "${DOCKER_APP_LOCK_DIR}"
+        environment: "${APP_ENV}"
       context: ./
       dockerfile: docker/Dockerfile/app.Dockerfile
     environment:
