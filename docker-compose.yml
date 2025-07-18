@@ -2,9 +2,6 @@ services:
   base:
     image: thalium_base
     build:
-      args:
-        user: ${USER}
-        uid: ${UID}
       context: ./
       dockerfile: docker/Dockerfile/thalium.Dockerfile
     profiles:
@@ -14,9 +11,8 @@ services:
   app:
     build:
       args:
-        user: ${USER}
-        uid: ${UID}
         docker_app_lock_dir: "${DOCKER_APP_LOCK_DIR}"
+        environment: "${APP_ENV}"
       context: ./
       dockerfile: docker/Dockerfile/app.Dockerfile
     environment:
@@ -33,9 +29,6 @@ services:
 
   scheduler:
     build:
-      args:
-        user: ${USER}
-        uid: ${UID}
       context: ./
       dockerfile: docker/Dockerfile/scheduler.Dockerfile
     environment:
@@ -81,7 +74,7 @@ services:
       - USER=${USER}
       - DOCKER_APP_LOCK_DIR=${DOCKER_APP_LOCK_DIR}
     ports:
-      - 8000:80
+      - 80:80
     volumes:
       - ./:/var/www
       - ./docker/nginx:/etc/nginx/conf.d
@@ -128,7 +121,7 @@ services:
       - dev
     volumes:
       - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
       - ./docker/elasticsearch/bin:/usr/share/esbin
     user: "0"
     command: >
@@ -151,7 +144,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
       - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
       - ./docker/elasticsearch/bin:/usr/share/esbin
     ports:

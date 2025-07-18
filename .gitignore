@@ -23,10 +23,9 @@ docker/pdfbox/target
 public/css/
 public/js/
 storage/opensearch
-<<<<<<< HEAD
 *.bak
-=======
 .DS_Store
->>>>>>> 8e16afd (Refactor gitignore and VSCode settings)
 test_data
 /.nova
+.npm
+public/build
