@@ -29,3 +29,4 @@ test_data
 /.nova
 .npm
 public/build
+.gitconfig
