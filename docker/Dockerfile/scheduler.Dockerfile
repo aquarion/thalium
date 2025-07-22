@@ -18,4 +18,6 @@ COPY docker/scheduler-app/supervisord.conf /etc/supervisor/supervisord.conf
 ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisor/supervisord.conf"]
 WORKDIR /etc/supervisor/conf.d/
 
+USER www-data
+
 # USER $user
