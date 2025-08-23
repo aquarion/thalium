@@ -1,189 +1,70 @@
+name: thalium
 services:
-  base:
-    image: thalium_base
-    build:
-      context: ./
-      dockerfile: docker/Dockerfile/thalium.Dockerfile
-    profiles:
-      - parent_image
-      # Parent_image is a profile to stop it being launched, generally
-
   app:
     build:
-      args:
-        docker_app_lock_dir: "${DOCKER_APP_LOCK_DIR}"
-        environment: "${APP_ENV}"
-      context: ./
+      context: /home/aquarion/docker/thalium
       dockerfile: docker/Dockerfile/app.Dockerfile
-    environment:
-      - LOG_PREFIX=thalium
-    image: thalium
+      args:
+        docker_app_lock_dir: /var/run/thalium
+        environment: staging
     container_name: thalium-app
+    environment:
+      LOG_PREFIX: thalium
+    image: thalium
+    networks:
+      default: null
     restart: unless-stopped
-    working_dir: /var/www/
     volumes:
-      - .:/var/www
-      - "${HOST_PDF_LIBRARY}:/mnt/rpg"
-      - "${HOST_APP_LOCK_DIR}:${DOCKER_APP_LOCK_DIR}"
-      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
-
+      - type: bind
+        source: /home/aquarion/docker/thalium
+        target: /var/www
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /home/library/RPG/Systems
+        target: /mnt/rpg
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /home/docker/.run
+        target: /var/run/thalium
+        bind:
+          create_host_path: true
+      - type: volume
+        source: elasticsearch_certs
+        target: /usr/share/elasticsearch/config/certs
+        volume: {}
+    working_dir: /var/www/
   scheduler:
     build:
-      context: ./
+      context: /home/aquarion/docker/thalium
       dockerfile: docker/Dockerfile/scheduler.Dockerfile
-    environment:
-      - LOG_PREFIX=scheduler
     container_name: scheduler-app
+    environment:
+      LOG_PREFIX: scheduler
+    networks:
+      default: null
     restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /home/aquarion/docker/thalium
+        target: /var/www
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /home/library/RPG/Systems
+        target: /mnt/rpg
+        bind:
+          create_host_path: true
+      - type: volume
+        source: elasticsearch_certs
+        target: /usr/share/elasticsearch/config/certs
+        volume: {}
     working_dir: /var/www/
-    volumes:
-      - .:/var/www
-      - ${HOST_PDF_LIBRARY}:/mnt/rpg
-      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
-
-  ## Localdev Support Images
-  db:
-    image: mariadb:latest
-    container_name: thalium-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    volumes:
-      - ./docker/mysql:/docker-entrypoint-initdb.d
-      - ./storage/mysql_data:/var/lib/mysql
-    profiles:
-      - dev
-  redis:
-    image: redis:6
-    container_name: thalium-redis
-    restart: unless-stopped
-    volumes:
-      - ./storage/redis:/data
-    profiles:
-      - dev
-  nginx:
-    image: nginx:1.17-alpine
-    container_name: thalium-nginx
-    restart: unless-stopped
-    environment:
-      - USER=${USER}
-      - DOCKER_APP_LOCK_DIR=${DOCKER_APP_LOCK_DIR}
-    ports:
-      - 80:80
-    volumes:
-      - ./:/var/www
-      - ./docker/nginx:/etc/nginx/conf.d
-      - "${HOST_PDF_LIBRARY}:/mnt/rpg"
-      - "${HOST_APP_LOCK_DIR}:${DOCKER_APP_LOCK_DIR}"
-    profiles:
-      - dev
-
-  # elasticsearch:
-  #   build:
-  #     context: ./
-  #     dockerfile: docker/Dockerfile/elasticsearch.Dockerfile
-  #   container_name: elasticsearch
-  #   environment:
-  #   #   - node.name=libris
-  #   #   - cluster.name=thalium-cluster
-  #     - discovery.seed_hosts=127.0.0.1
-  #   #   - xpack.security.transport.ssl.enabled=true
-  #   #   # - cluster.initial_master_nodes=es01,es02,es03
-  #   #   - cluster.initial_master_nodes=libris
-  #   #   # - bootstrap.system_call_filter=false
-  #   #   # - bootstrap.memory_lock=true
-  #     - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
-  #     - xpack.security.transport.ssl.enabled=true
-  #     # - xpack.security.transport.ssl.verification_mode=certificate
-  #     # - xpack.security.transport.ssl.keystore.path=elasticsearch.p12
-  #     # - xpack.security.transport.ssl.truststore.path=elasticsearch.p12
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   volumes:
-  #     - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-  #     # - ./storage/elasticsearch/certs:/usr/share/elasticsearch/config/certs
-  #   ports:
-  #     - 9200
-  #     - 9300
-  #   profiles:
-  #     - dev
-
-  elasticsetup:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    profiles:
-      - dev
-    volumes:
-      - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
-      - ./docker/elasticsearch/bin:/usr/share/esbin
-    user: "0"
-    command: >
-      bash -c '/usr/share/esbin/gen_certs.sh'
-
-    environment:
-      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
-      interval: 1s
-      timeout: 5s
-      retries: 120
-
-  es01:
-    depends_on:
-      elasticsetup:
-        condition: service_healthy
-    profiles:
-      - dev
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    volumes:
-      - ./storage/elasticsearch/data:/usr/share/elasticsearch/data
-      - elasticsearch_certs:/usr/share/elasticsearch/config/certs
-      - ./docker/elasticsearch/elasticsearch-plugins.yml:/usr/share/elasticsearch/config/elasticsearch-plugins.yml
-      - ./docker/elasticsearch/bin:/usr/share/esbin
-    ports:
-      - ${ES_PORT:-9200}:9200
-    environment:
-      - node.name=es01
-      - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
-      # - discovery.seed_hosts=es02,es03
-      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASS}
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=certs/es01/es01.key
-      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
-      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.http.ssl.verification_mode=certificate
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=certs/es01/es01.key
-      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
-      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 120
-
+networks:
+  default:
+    name: thalium_default
 volumes:
   elasticsearch_certs:
-    external: true
     name: elasticsearch_certs
+    external: true
