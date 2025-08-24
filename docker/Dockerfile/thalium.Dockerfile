@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
 LABEL maintainer="Nicholas Avenell <nicholas@istic.net>"
 
@@ -12,6 +12,8 @@ ARG uid
 
 
 RUN mkdir -p /usr/share/man/man1
+
+COPY docker/apt/debian-contrib.sources /etc/apt/sources.list.d/
 
 # Install system dependencies
 RUN apt-get -qq update && apt-get -qqy install \
@@ -27,10 +29,8 @@ RUN apt-get -qq update && apt-get -qqy install \
     default-jre \
     npm \
     imagemagick \
-    pdftk \
-    software-properties-common
+    pdftk
 
-RUN apt-add-repository contrib
 
 # Clear cache
 # RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -53,7 +53,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     libmagickwand-dev \
     && mkdir -p /usr/src/php/ext/imagick \
-    && curl -fsSL https://github.com/Imagick/imagick/archive/944b67fce68bcb5835999a149f917670555b6fcb.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
+    && curl -fsSL https://github.com/Imagick/imagick/archive/refs/tags/3.8.0.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
     && docker-php-ext-install imagick \
     && apt-get remove -y \
     libmagickwand-dev \
