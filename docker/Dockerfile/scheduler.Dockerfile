@@ -1,4 +1,4 @@
-FROM thalium_base
+FROM isticco/thalium_base:v1
 ARG user
 
 USER root
