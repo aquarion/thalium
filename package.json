@@ -7,7 +7,7 @@
     "devDependencies": {
         "axios": "^1.11",
         "bootstrap": "^5.3.7",
-        "concurrently": "^9.2.0",
+        "concurrently": "^9.2.1",
         "cross-env": "^10.0",
         "jquery": "^3.7",
         "jsoneditor": "^10.4.0",
