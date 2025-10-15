@@ -10,7 +10,7 @@
         "concurrently": "^9.2.1",
         "cross-env": "^10.1",
         "jquery": "^3.7",
-        "jsoneditor": "^10.4.1",
+        "jsoneditor": "^10.4.2",
         "laravel-vite-plugin": "^2.0.1",
         "lodash": ">=4.17.21",
         "popper.js": "^1.12",
