@@ -18,18 +18,15 @@ services:
       - type: bind
         source: /home/aquarion/docker/thalium
         target: /var/www
-        bind:
-          create_host_path: true
+        bind: {}
       - type: bind
         source: /home/library/RPG/Systems
         target: /mnt/rpg
-        bind:
-          create_host_path: true
+        bind: {}
       - type: bind
         source: /home/docker/.run
         target: /var/run/thalium
-        bind:
-          create_host_path: true
+        bind: {}
       - type: volume
         source: elasticsearch_certs
         target: /usr/share/elasticsearch/config/certs
@@ -49,13 +46,11 @@ services:
       - type: bind
         source: /home/aquarion/docker/thalium
         target: /var/www
-        bind:
-          create_host_path: true
+        bind: {}
       - type: bind
         source: /home/library/RPG/Systems
         target: /mnt/rpg
-        bind:
-          create_host_path: true
+        bind: {}
       - type: volume
         source: elasticsearch_certs
         target: /usr/share/elasticsearch/config/certs
