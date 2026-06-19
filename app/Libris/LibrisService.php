@@ -198,7 +198,7 @@ class LibrisService implements LibrisInterface
 
     public function dispatchIndexDir($filename)
     {
-        if (Storage::disk('libris')->directoryExists($filename)) {
+        if (!Storage::disk('libris')->directoryExists($filename)) {
             Log::error("$filename is not a directory");
             return false;
         }
@@ -347,8 +347,7 @@ class LibrisService implements LibrisInterface
     {
         if (Storage::disk('libris')->missing($file)) {
             Log::error("[saveDocThumbnail] No Such File $file");
-            throw new Exception("[saveDocThumbnail] $file not found");
-            return false;
+            throw new \Exception("[saveDocThumbnail] $file not found");
         }
 
         $thumbnailFileName = md5($file).".png";
@@ -452,14 +451,12 @@ class LibrisService implements LibrisInterface
         }
 
         if (Storage::disk('libris')->missing($docId)) {
-            array_push($this->missingCache, $docId);
+            $this->missingCache[$docId] = true;
             return true;
         } else {
-            array_push($this->presentCache, $docId);
+            $this->presentCache[$docId] = true;
             return false;
         }
-
-        throw new \Exception("Shouldn't have got here");
 
     }//end fileIsMissing()
 
