@@ -27,6 +27,12 @@ RUN apk add --no-cache \
         zip \
     && apk del .build-deps
 
+# ImageMagick policy to allow PDF processing
+COPY docker/imagemagic_policy.xml /tmp/imagemagick-policy.xml
+RUN for dir in /etc/ImageMagick-6 /etc/ImageMagick-7; do \
+      mkdir -p "$dir" && cp /tmp/imagemagick-policy.xml "$dir/policy.xml"; \
+    done && rm /tmp/imagemagick-policy.xml
+
 # PDFBox jar (pinned version for reproducible builds)
 RUN mkdir -p /usr/share/java \
     && curl -fL "https://dlcdn.apache.org/pdfbox/3.0.4/pdfbox-app-3.0.4.jar" \
