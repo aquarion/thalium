@@ -45,7 +45,7 @@ Replace the `require-dev` block and `scripts` in `composer.json`:
 
 ```json
 "require": {
-    "php": "^8.2",
+    "php": "^8.4",
     "laravel/framework": "^12.2",
     "laravel/horizon": "^5.30",
     "laravel/octane": "^2.0",
