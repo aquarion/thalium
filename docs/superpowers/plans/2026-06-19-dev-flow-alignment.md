@@ -1084,18 +1084,252 @@ git commit -m "❌ Remove old php-fpm/nginx Docker build artefacts"
 
 ---
 
-## Autopelago (Separate Repo — Not in This Plan)
+## Task 9: Extend firth_laravel_app Role (autopelago repo)
 
-The following changes are required in `aquarion/autopelago` but are tracked separately:
+**Files:**
+- Modify: `roles/firth_laravel_app/tasks/app.yml`
+- Modify: `roles/firth_laravel_app/tasks/staging.yml`
+- Modify: `roles/firth_laravel_app/templates/docker-compose.yml.j2`
 
-1. **Extend `firth_laravel_app` role** — add `additional_volumes` support to `roles/firth_laravel_app/templates/docker-compose.yml.j2`. Two entry shapes:
-   - `{ src: <host-path>, dest: <container-path> }` — bind mount
-   - `{ name: <volume-name>, dest: <container-path>, external: true }` — named external volume
+Work in the `aquarion/autopelago` repo. Create a branch before committing.
 
-2. **Add `FIRTH_SSH_KEY` GitHub secret** to the `aquarion/thalium` repository (under Settings → Secrets). This is the private key for the `thalium` system user on firth.
+- [ ] **Step 1: Add `additional_volumes` to `fla_ctx` in `tasks/app.yml`**
 
-3. **Add `REBASE_TOKEN` GitHub secret** — a PAT with `repo` scope for rebasing.
+Add one line after `additional_files` in the `set_fact` block:
 
-4. **Add `vars.php_version` and `vars.node_version`** to the repository variables (Settings → Variables). Set to `8.4` and `22` respectively.
+```yaml
+      additional_files: "{{ firth_laravel_app_item.additional_files | default([]) }}"
+      additional_volumes: "{{ firth_laravel_app_item.additional_volumes | default([]) }}"
+      system_user: "{{ firth_laravel_app_item.name }}"
+```
 
-5. **Add Thalium to `host_vars/firth.water.gkhs.net/laravel_apps.yml`** and run the Ansible playbook to provision the system user, directories, and staging environment.
+- [ ] **Step 2: Add `additional_volumes` to the staging context in `tasks/staging.yml`**
+
+Add one line after the `additional_files` line in the staging `set_fact` block:
+
+```yaml
+      additional_files: "{{ fla.staging.additional_files | default(fla.additional_files | default([])) }}"
+      additional_volumes: "{{ fla.staging.additional_volumes | default(fla.additional_volumes | default([])) }}"
+      system_user: "{{ fla.name }}"
+```
+
+- [ ] **Step 3: Update `templates/docker-compose.yml.j2` — volume mounts in app service**
+
+After the existing `additional_files` volume entries in the `app` service, add:
+
+```jinja2
+{% for file in fla_ctx.additional_files %}
+      - {{ docker_root }}/{{ fla_ctx.name }}/secrets/{{ file.dest }}:{{ fla_ctx.workdir }}/storage/app/{{ file.dest }}:ro
+{% endfor %}
+{% for vol in fla_ctx.additional_volumes %}
+{% if vol.src is defined %}
+      - {{ vol.src }}:{{ vol.dest }}
+{% else %}
+      - {{ vol.name }}:{{ vol.dest }}
+{% endif %}
+{% endfor %}
+```
+
+- [ ] **Step 4: Add the same volume mounts to the worker service**
+
+The worker service block has the same `additional_files` loop. Add the same `additional_volumes` loop immediately after it:
+
+```jinja2
+{% for file in fla_ctx.additional_files %}
+      - {{ docker_root }}/{{ fla_ctx.name }}/secrets/{{ file.dest }}:{{ fla_ctx.workdir }}/storage/app/{{ file.dest }}:ro
+{% endfor %}
+{% for vol in fla_ctx.additional_volumes %}
+{% if vol.src is defined %}
+      - {{ vol.src }}:{{ vol.dest }}
+{% else %}
+      - {{ vol.name }}:{{ vol.dest }}
+{% endif %}
+{% endfor %}
+```
+
+- [ ] **Step 5: Add named volumes to the top-level `volumes:` section**
+
+After `storage:` in the top-level volumes block:
+
+```jinja2
+volumes:
+  storage:
+
+{% for vol in fla_ctx.additional_volumes %}
+{% if vol.name is defined %}
+  {{ vol.name }}:
+{% if vol.external | default(false) %}
+    external: true
+    name: {{ vol.name }}
+{% endif %}
+{% endif %}
+{% endfor %}
+```
+
+- [ ] **Step 6: Verify with ansible-lint**
+
+```bash
+ansible-lint roles/firth_laravel_app/
+```
+
+Expected: no errors (warnings about `var-naming[no-role-prefix]` on the `fla`/`fla_ctx` facts are pre-existing and expected).
+
+- [ ] **Step 7: Commit to autopelago**
+
+```bash
+git add roles/firth_laravel_app/tasks/app.yml \
+        roles/firth_laravel_app/tasks/staging.yml \
+        roles/firth_laravel_app/templates/docker-compose.yml.j2
+git commit -m "🎇 firth_laravel_app: add additional_volumes support"
+```
+
+---
+
+## Task 10: Add Thalium to host_vars and GitHub Secrets (autopelago repo)
+
+**Files:**
+- Modify: `host_vars/firth.water.gkhs.net/laravel_apps.yml`
+- Modify: `host_vars/firth.water.gkhs.net/vault.yml` (encrypted — use `ansible-vault edit`)
+
+**Context:** Ports 8000/8001 are bloom prod/staging. Use 8002/8003 for Thalium. The `ssl_snippet` must match an existing file in `roles/firth_nginx/templates/snippets/` — check what snippet covers `thalium.aquarionics.com` and use that name. Elasticsearch runs on the host; `host.docker.internal` resolves to it from inside the container.
+
+- [ ] **Step 1: Add Thalium vault secrets**
+
+```bash
+ansible-vault edit host_vars/firth.water.gkhs.net/vault.yml
+```
+
+Add:
+
+```yaml
+vault_thalium_app_key: "base64:..."          # generate: php artisan key:generate --show
+vault_thalium_staging_app_key: "base64:..."  # generate separately
+vault_thalium_redis_password: "..."          # generate a random password
+vault_thalium_staging_redis_password: "..."  # generate a random password
+vault_thalium_es_user: "..."                 # from existing Elasticsearch config
+vault_thalium_es_pass: "..."                 # from existing Elasticsearch config
+```
+
+- [ ] **Step 2: Add Thalium to `laravel_apps.yml`**
+
+Append to `firth_laravel_app_apps`:
+
+```yaml
+  - name: thalium
+    image: ghcr.io/aquarion/thalium
+    image_tag: latest
+    backend: octane
+    port: 8002
+    server_name: thalium.aquarionics.com
+    app_url: https://thalium.aquarionics.com
+    app_key: "{{ vault_thalium_app_key }}"
+    app_name: Thalium
+    ssl_snippet: aquarionics  # verify this snippet exists in firth_nginx/templates/snippets/
+    github_repo: aquarion/thalium
+    github_deploy_token: "{{ laravel_apps_deploy_token_aquarion }}"
+    ghcr_username: "{{ ghcr_username }}"
+    ghcr_token: "{{ ghcr_token }}"
+    worker: true
+    redis:
+      username: thalium
+      password: "{{ vault_thalium_redis_password }}"
+    additional_env:
+      ELASTICSEARCH_HOST: host.docker.internal
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_SCHEME: https
+      ELASTICSEARCH_USER: "{{ vault_thalium_es_user }}"
+      ELASTICSEARCH_PASS: "{{ vault_thalium_es_pass }}"
+      DOCKER_PDF_LIBRARY: /mnt/rpg
+      LIBRARY_URL: https://thalium.aquarionics.com/_libris/
+    additional_volumes:
+      - src: /home/library/RPG/Systems
+        dest: /mnt/rpg
+      - name: elasticsearch_certs
+        dest: /usr/share/elasticsearch/config/certs
+        external: true
+    staging:
+      image_tag: staging
+      port: 8003
+      server_name: thalium.istic.dev
+      app_url: https://thalium.istic.dev
+      app_key: "{{ vault_thalium_staging_app_key }}"
+      ssl_snippet: istic_dev
+      redis:
+        username: thalium_staging
+        password: "{{ vault_thalium_staging_redis_password }}"
+      additional_env:
+        ELASTICSEARCH_HOST: host.docker.internal
+        ELASTICSEARCH_PORT: "9200"
+        ELASTICSEARCH_SCHEME: https
+        ELASTICSEARCH_USER: "{{ vault_thalium_es_user }}"
+        ELASTICSEARCH_PASS: "{{ vault_thalium_es_pass }}"
+        DOCKER_PDF_LIBRARY: /mnt/rpg
+        LIBRARY_URL: https://thalium.istic.dev/_libris/
+```
+
+- [ ] **Step 3: Verify SSL snippet exists**
+
+```bash
+ls roles/firth_nginx/templates/snippets/
+```
+
+Confirm a snippet exists for `thalium.aquarionics.com`. If not, add one following the existing pattern before running the playbook.
+
+- [ ] **Step 4: Commit to autopelago**
+
+```bash
+git add host_vars/firth.water.gkhs.net/laravel_apps.yml \
+        host_vars/firth.water.gkhs.net/vault.yml
+git commit -m "⚙️ Add thalium to firth laravel apps"
+```
+
+---
+
+## Task 11: Add GitHub Secrets and Variables, Run Ansible
+
+- [ ] **Step 1: Add repository secrets to `aquarion/thalium`**
+
+In GitHub → Settings → Secrets and variables → Actions:
+
+- `FIRTH_SSH_KEY` — private key for the `thalium` system user on firth (generated by Ansible when it creates the user; retrieve from the server or Ansible vault)
+- `REBASE_TOKEN` — PAT with `repo` and `workflow` scopes (reuse the one from other aquarion repos if already created)
+
+- [ ] **Step 2: Add repository variables to `aquarion/thalium`**
+
+In GitHub → Settings → Secrets and variables → Actions → Variables:
+
+- `php_version` = `8.4`
+- `node_version` = `22`
+
+- [ ] **Step 3: Run the Ansible playbook against firth**
+
+```bash
+cd /path/to/autopelago
+ansible-playbook firth.yml --tags firth_laravel_app --limit firth.water.gkhs.net
+```
+
+Expected: system user `thalium` created, Redis user provisioned, GHCR login configured, docker-compose files templated for production and staging, nginx vhosts deployed.
+
+- [ ] **Step 4: Verify the containers start**
+
+SSH into firth and confirm:
+
+```bash
+ssh thalium@firth.water.gkhs.net
+cd /home/docker/thalium
+docker compose pull
+docker compose up -d
+docker compose logs app --tail=30
+```
+
+Expected: container starts, entrypoint runs migrations, Octane begins serving on port 8002.
+
+- [ ] **Step 5: Open a PR in thalium to trigger the first staging deploy**
+
+Push the `feature/dev-flow-alignment` branch to GitHub and open a PR against `main`. This triggers `ci.yml` which builds the image and deploys to staging on firth.
+
+Verify:
+- CI passes all jobs
+- `https://thalium.istic.dev` returns the Thalium UI
+- `https://thalium.istic.dev/_thumbnails/` is accessible (thumbnail storage working)
+- Horizon dashboard accessible at `https://thalium.istic.dev/horizon`
