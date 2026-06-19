@@ -1,12 +1,10 @@
 name: "[Auto] Merge Dependabot Updates"
 
 on:
-  workflow_run:
-    workflows: ["[Tests] Acceptance Testing"]
-    types:
-      - completed
-    branches-ignore:
-      - 'main'
+  pull_request:
+    branches: [dependabot-updates]
+
+permissions: {}
 
 jobs:
   automerge:
