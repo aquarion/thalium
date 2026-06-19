@@ -2,42 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\View\View;
 use App\Libris\LibrisInterface;
-use Illuminate\Support\Facades\Storage;
-use Psr\Http\Message\ServerRequestInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-
-
-use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class LibrisController extends Controller
 {
-
-
     public function home(LibrisInterface $libris): View
     {
         return view('sysindex', ['systems' => $libris->systems()]);
 
-    }//end home()
+    }// end home()
 
-
-    public function docsBySystemList(LibrisInterface $libris, Request $request, $system, $view="systemGrid")
+    public function docsBySystemList(LibrisInterface $libris, Request $request, $system, $view = 'systemGrid')
     {
         return $this->docsBySystem($libris, $request, $system, 'systemList');
 
-    }//end docsBySystemList()
+    }// end docsBySystemList()
 
-
-    public function docsBySystem(LibrisInterface $libris, Request $request, $system, $view="systemGrid"): View
+    public function docsBySystem(LibrisInterface $libris, Request $request, $system, $view = 'systemGrid'): View
     {
-        $page    = $request->query('page', 1);
+        $page = $request->query('page', 1);
         $perpage = 60;
 
-        if ($system == "null") {
-            $system = "";
+        if ($system == 'null') {
+            $system = '';
         } else {
             $system = $system;
         }
@@ -47,19 +39,19 @@ class LibrisController extends Controller
         $docresult = [];
 
         $documents = $libris->docsBySystem($system, $page, $perpage, $tag);
-        $total     = $documents['hits']['total']['value'];
+        $total = $documents['hits']['total']['value'];
 
         foreach ($documents['hits']['hits'] as $doc) {
             $tags = $doc['_source']['tags'];
             array_pop($tags);
 
             $docresult[] = [
-                'id'        => $doc['_id'],
-                'name'      => urldecode($doc['_source']['title']),
-                'path'      => $doc['_source']['path'],
+                'id' => $doc['_id'],
+                'name' => urldecode($doc['_source']['title']),
+                'path' => $doc['_source']['path'],
                 'thumbnail' => $libris->getDocThumbnail($doc),
-                'tags'      => $tags,
-                'download'  => Storage::disk('libris')->url($doc['_source']['path']),
+                'tags' => $tags,
+                'download' => Storage::disk('libris')->url($doc['_source']['path']),
             ];
         }
 
@@ -77,34 +69,33 @@ class LibrisController extends Controller
         return view(
             $view,
             [
-                'system'     => $system,
-                'tag'        => $tag,
-                'tagList'    => $tagList,
-                'docs'       => $docresult,
-                'page'       => $page,
-                'pages'      => ceil($total / $perpage),
+                'system' => $system,
+                'tag' => $tag,
+                'tagList' => $tagList,
+                'docs' => $docresult,
+                'page' => $page,
+                'pages' => ceil($total / $perpage),
                 'pagination' => $paginate,
             ]
         );
 
-    }//end docsBySystem()
-
+    }// end docsBySystem()
 
     public function search(LibrisInterface $libris, Request $request): View
     {
         $perpage = 20;
 
-        $query    = $request->query('q');
-        $system   = $request->query('s', false);
+        $query = $request->query('q');
+        $system = $request->query('s', false);
         $document = $request->query('d', false);
-        $tag      = $request->query('t', false);
-        $page     = $request->query('page', 1);
+        $tag = $request->query('t', false);
+        $page = $request->query('page', 1);
 
         $result = $libris->searchPages($query, $system, $document, $tag, $page, $perpage);
 
         $total = $result['hits']['total']['value'];
 
-        $appends = ['q' => $query ];
+        $appends = ['q' => $query];
 
         if ($system) {
             $appends['s'] = $system;
@@ -124,7 +115,7 @@ class LibrisController extends Controller
             $perpage,
             $page,
             [
-                'path'    => url()->current(),
+                'path' => url()->current(),
                 'appends' => $appends,
             ]
         );
@@ -132,14 +123,14 @@ class LibrisController extends Controller
         $paginate->appends($appends);
 
         $values = [
-            'systems'    => $result['aggregations']['systems']['buckets'],
-            'top_docs'   => $result['aggregations']['parents']['buckets'],
-            'tagList'    => &$result['aggregations']['systems']['buckets'][0]['tags']['buckets'],
-            'hits'       => $result['hits']['hits'],
-            'query'      => $query,
-            'system'     => $system,
+            'systems' => $result['aggregations']['systems']['buckets'],
+            'top_docs' => $result['aggregations']['parents']['buckets'],
+            'tagList' => &$result['aggregations']['systems']['buckets'][0]['tags']['buckets'],
+            'hits' => $result['hits']['hits'],
+            'query' => $query,
+            'system' => $system,
             'active_tag' => $tag,
-            'document'   => $document,
+            'document' => $document,
             'pagination' => $paginate,
         ];
 
@@ -149,21 +140,20 @@ class LibrisController extends Controller
 
         return view('search', $values);
 
-    }//end search()
-
+    }// end search()
 
     public function showDocument(LibrisInterface $libris, Request $request): View
     {
         $file = $request->query('file', false);
         $page = $request->query('page', false);
-        if (!$file) {
+        if (! $file) {
             abort(400);
         }
 
         $file = urldecode($file);
 
         $document = $libris->fetchDocument($file);
-        if (!$document) {
+        if (! $document) {
             abort(404);
         }
 
@@ -173,18 +163,17 @@ class LibrisController extends Controller
         }
 
         $values = [
-            'system'            => $document['_source']['system'],
-            'display_document'  => $document,
+            'system' => $document['_source']['system'],
+            'display_document' => $document,
             'document_download' => Storage::disk('libris')->url($document['_source']['path']).$fragment,
-            'title'             => $document['_source']['title'],
-            'document_page'     => $page,
+            'title' => $document['_source']['title'],
+            'document_page' => $page,
         ];
 
         Log::debug($document);
 
         return view('document', $values);
 
-    }//end showDocument()
+    }// end showDocument()
 
-
-}//end class
+}// end class

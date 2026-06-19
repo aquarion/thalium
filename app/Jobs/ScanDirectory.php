@@ -2,16 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Libris\LibrisInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-
-use App\Jobs\ScanFile;
-use App\Libris\LibrisInterface;
+use Illuminate\Support\Facades\Storage;
 
 class ScanDirectory implements ShouldQueue
 {
@@ -22,7 +20,6 @@ class ScanDirectory implements ShouldQueue
 
     protected $filename;
 
-
     /**
      * Create a new job instance.
      *
@@ -32,18 +29,16 @@ class ScanDirectory implements ShouldQueue
     {
         $this->filename = $filename;
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Job as string
      */
     public function __toString(): string
     {
-        return sprintf("ScanDir <%s>", $this->filename);
+        return sprintf('ScanDir <%s>', $this->filename);
 
-    }//end __toString()
-
+    }// end __toString()
 
     /**
      * Execute the job.
@@ -53,7 +48,7 @@ class ScanDirectory implements ShouldQueue
         $filename = $this->filename;
         Log::debug("[ScanDir] $filename");
 
-        $files   = Storage::disk('libris')->files($filename);
+        $files = Storage::disk('libris')->files($filename);
         $subdirs = Storage::disk('libris')->directories($filename);
 
         foreach ($files as $file) {
@@ -66,7 +61,6 @@ class ScanDirectory implements ShouldQueue
             $libris->dispatchIndexDir($directory);
         }
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

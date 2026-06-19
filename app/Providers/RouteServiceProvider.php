@@ -7,14 +7,12 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
-
     /**
      * The path to the "home" route for your application.
      *
      * @var string
      */
     public const HOME = '/home';
-
 
     /**
      * Define your route model bindings, pattern filters, etc.
@@ -24,8 +22,7 @@ class RouteServiceProvider extends ServiceProvider
 
         parent::boot();
 
-    }//end boot()
-
+    }// end boot()
 
     /**
      * Define the routes for the application.
@@ -36,8 +33,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapWebRoutes();
 
-    }//end map()
-
+    }// end map()
 
     /**
      * Define the "web" routes for the application.
@@ -49,8 +45,7 @@ class RouteServiceProvider extends ServiceProvider
         Route::middleware('web')
             ->group(base_path('routes/web.php'));
 
-    }//end mapWebRoutes()
-
+    }// end mapWebRoutes()
 
     /**
      * Define the "api" routes for the application.
@@ -63,7 +58,6 @@ class RouteServiceProvider extends ServiceProvider
             ->middleware('api')
             ->group(base_path('routes/api.php'));
 
-    }//end mapApiRoutes()
+    }// end mapApiRoutes()
 
-
-}//end class
+}// end class

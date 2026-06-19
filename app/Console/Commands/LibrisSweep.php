@@ -2,14 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Libris\LibrisInterface;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Console\Command;
 
 class LibrisSweep extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -30,7 +27,6 @@ class LibrisSweep extends Command
 
     protected $presentCache = [];
 
-
     /**
      * Create a new command instance.
      *
@@ -40,8 +36,7 @@ class LibrisSweep extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -52,10 +47,9 @@ class LibrisSweep extends Command
 
         $this->purgeDeletedPages();
 
-    }//end handle()
+    }// end handle()
 
-
-    private function purgeDeletedPages($docId=false)
+    private function purgeDeletedPages($docId = false)
     {
         $total = $this->libris->countAllPages($docId);
 
@@ -68,9 +62,8 @@ class LibrisSweep extends Command
         $this->libris->sweepPages($docId, $bar);
 
         $bar->finish();
-        $this->line(" - Complete");
+        $this->line(' - Complete');
 
-    }//end purgeDeletedPages()
+    }// end purgeDeletedPages()
 
-
-}//end class
+}// end class

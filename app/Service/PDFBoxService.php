@@ -3,21 +3,18 @@
 namespace App\Service;
 
 use App\Exceptions;
-use App\Service\ParserService;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class PDFBoxService extends ParserService
 {
+    private $pdfboxBin = '/usr/share/java/pdfbox.jar';
 
-    private $pdfboxBin = "/usr/share/java/pdfbox.jar";
+    private $tempFile = '';
 
-    private $tempFile = "";
-
-    private $pdkTemp = "";
+    private $pdkTemp = '';
 
     protected $pages;
-
 
     public function __construct($file)
     {
@@ -26,41 +23,39 @@ class PDFBoxService extends ParserService
         set_time_limit(120);
         ini_set('memory_limit', '2G');
 
-        $this->tempFile = tempnam(sys_get_temp_dir(), "pdfbox-");
-        $PDFContent     = Storage::disk('libris')->get($this->filename);
+        $this->tempFile = tempnam(sys_get_temp_dir(), 'pdfbox-');
+        $PDFContent = Storage::disk('libris')->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
 
-    }//end __construct()
-
+    }// end __construct()
 
     private function exec($cmd)
     {
         $descriptorspec = [
-            0 => ["pipe", "r"], // STDIN
-            1 => ["pipe", "w"], // STDOUT
-            2 => ["pipe", "w"], // STDERR
+            0 => ['pipe', 'r'], // STDIN
+            1 => ['pipe', 'w'], // STDOUT
+            2 => ['pipe', 'w'], // STDERR
         ];
         $cwd = getcwd();
         $env = null;
 
         $return = [
-            'STDOUT'       => '',
-            'STDERR'       => '',
+            'STDOUT' => '',
+            'STDERR' => '',
             'return_value' => 127,
         ];
 
         $proc = proc_open($cmd, $descriptorspec, $pipes, $cwd, $env);
         if (is_resource($proc)) {
             // Output test:
-            $return['STDOUT']       = stream_get_contents($pipes[1]);
-            $return['STDERR']       = stream_get_contents($pipes[2]);
+            $return['STDOUT'] = stream_get_contents($pipes[1]);
+            $return['STDERR'] = stream_get_contents($pipes[2]);
             $return['return_value'] = proc_close($proc);
         }
 
         return $return;
 
-    }//end exec()
-
+    }// end exec()
 
     public function run_pdfbox($command)
     {
@@ -76,15 +71,15 @@ class PDFBoxService extends ParserService
             Log::Error($this->filename);
             Log::Error($error);
             if (\Str::contains($error, 'You do not have permission')) {
-                Log::Info("Trying pdftk...");
-                $this->pdkTemp = tempnam(sys_get_temp_dir(), "pdftk-");
+                Log::Info('Trying pdftk...');
+                $this->pdkTemp = tempnam(sys_get_temp_dir(), 'pdftk-');
 
-                $pdftkExecTemplate = "pdftk %s input_pw output %s";
-                $pdftkCmd          = sprintf($pdftkExecTemplate, $this->tempFile, $this->pdkTemp);
+                $pdftkExecTemplate = 'pdftk %s input_pw output %s';
+                $pdftkCmd = sprintf($pdftkExecTemplate, $this->tempFile, $this->pdkTemp);
 
                 $pdftkResult = $this->exec($pdftkCmd);
                 if ($pdftkResult['return_value'] > 0) {
-                    Log::error("PDFTK Error Parsing PDF ".$this->filename);
+                    Log::error('PDFTK Error Parsing PDF '.$this->filename);
                     Log::Error($pdftkResult['STDOUT']);
                     Log::Error($pdftkResult['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
@@ -94,49 +89,48 @@ class PDFBoxService extends ParserService
                 $retryPDFBoxExec = $this->exec($cmd);
 
                 if ($retryPDFBoxExec['return_value'] > 0) {
-                    Log::error("PDFBox + PDFTK Error Parsing PDF ".$this->filename);
+                    Log::error('PDFBox + PDFTK Error Parsing PDF '.$this->filename);
                     Log::Error($retryPDFBoxExec['STDOUT']);
                     Log::Error($retryPDFBoxExec['STDERR']);
                     throw new Exceptions\LibrisParseFailed($error);
                 }
 
                 return $retryPDFBoxExec['STDOUT'];
-            }//end if
+            }// end if
 
-            Log::error("PDFBox Error Parsing PDF ".$this->filename);
+            Log::error('PDFBox Error Parsing PDF '.$this->filename);
             Log::Error($PDFBoxExecute['STDOUT']);
             Log::Error($PDFBoxExecute['STDERR']);
             throw new Exceptions\LibrisParseFailed($error);
-        }//end if
+        }// end if
 
         return $PDFBoxExecute['STDOUT'];
 
-    }//end run_pdfbox()
-
+    }// end run_pdfbox()
 
     public function parsePages()
     {
-        $output = $this->run_pdfbox("export:text -html -console");
+        $output = $this->run_pdfbox('export:text -html -console');
 
-        $page  = "";
+        $page = '';
         $pages = [];
 
         $separator = "\r\n";
-        $line      = strtok($output, $separator);
+        $line = strtok($output, $separator);
 
         while ($line !== false) {
-            if (substr($line, 0, 4) == "<div") {
+            if (substr($line, 0, 4) == '<div') {
                 $page = strip_tags($page);
                 $page = trim($page);
                 if ($page) {
                     $pages[] = $page;
                 }
 
-                $page = "";
+                $page = '';
             }
 
-            $page .= $line." ";
-            $line  = strtok($separator);
+            $page .= $line.' ';
+            $line = strtok($separator);
         }
 
         $this->pages = $pages;
@@ -145,8 +139,7 @@ class PDFBoxService extends ParserService
             return false;
         }
 
-    }//end parsePages()
-
+    }// end parsePages()
 
     public function generateDocThumbnail()
     {
@@ -154,7 +147,7 @@ class PDFBoxService extends ParserService
 
         $image = new \Imagick($this->tempFile.'[0]');
         Log::Info('[Imagick] Hello '.$this->tempFile);
-        $image->setFormat("png");
+        $image->setFormat('png');
         Log::Info('[Imagick] Format: '.$image->getFormat());
 
         $w = $image->getImageWidth();
@@ -170,12 +163,11 @@ class PDFBoxService extends ParserService
         // aspect ratio is maintained
         $image->thumbnailImage(200, 300, true);
 
-        Log::info("[generateDocThumbnail] Success");
+        Log::info('[generateDocThumbnail] Success');
 
         return $image;
 
-    }//end generateDocThumbnail()
-
+    }// end generateDocThumbnail()
 
     public function delTree($dir)
     {
@@ -190,8 +182,7 @@ class PDFBoxService extends ParserService
 
         return rmdir($dir);
 
-    }//end delTree()
-
+    }// end delTree()
 
     public function __destruct()
     {
@@ -203,7 +194,6 @@ class PDFBoxService extends ParserService
             $this->delTree($this->tempFile.'.dir');
         }
 
-    }//end __destruct()
+    }// end __destruct()
 
-
-}//end class
+}// end class

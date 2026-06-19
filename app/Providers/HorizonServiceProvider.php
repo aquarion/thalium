@@ -2,17 +2,13 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
-
-
     /**
      * Bootstrap any application services.
      */
@@ -25,8 +21,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
         // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
         // Horizon::night();
 
-    }//end boot()
-
+    }// end boot()
 
     /**
      * Register the Horizon gate.
@@ -42,7 +37,6 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             }
         );
 
-    }//end gate()
+    }// end gate()
 
-
-}//end class
+}// end class

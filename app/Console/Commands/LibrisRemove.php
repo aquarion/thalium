@@ -2,19 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-
 use App\Libris\LibrisInterface;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Elasticsearch;
-
-
-use App\Jobs\ScanFile;
+use Illuminate\Console\Command;
 
 class LibrisRemove extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -29,7 +22,6 @@ class LibrisRemove extends Command
      */
     protected $description = 'Remove a single file';
 
-
     /**
      * Create a new command instance.
      *
@@ -39,15 +31,13 @@ class LibrisRemove extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     public function debug($out)
     {
         $this->line($out);
 
-    }//end debug()
-
+    }// end debug()
 
     /**
      * Execute the console command.
@@ -57,18 +47,18 @@ class LibrisRemove extends Command
         $filename = $this->argument('filename');
         try {
             $result = $libris->fetchDocument($filename);
-            //dump($result);
+            // dump($result);
             $this->line("Found $filename");
             $result = $libris->deleteDocument($filename);
             $this->line("Removed $filename");
         } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
             $this->error("$filename not found in index");
+
             return 1;
         }
 
         return 0;
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class
