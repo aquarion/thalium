@@ -193,6 +193,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "${{ vars.node_version }}"
+          cache: npm
 
       - name: Install Node dependencies
         run: npm ci
