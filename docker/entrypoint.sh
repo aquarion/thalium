@@ -26,7 +26,7 @@ php artisan view:cache || {
     exit 1
 }
 
-if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     echo "[entrypoint] Running migrations..."
     php artisan migrate --force || {
         echo "[entrypoint] ERROR: migrate failed" >&2

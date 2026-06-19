@@ -13,25 +13,23 @@ RUN apk add --no-cache \
     git \
     unzip \
     curl \
-    jq \
     openjdk21-jre-headless \
     imagemagick \
-    imagemagick-dev \
     ghostscript \
     ghostscript-fonts \
+    && apk add --no-cache --virtual .build-deps \
+        imagemagick-dev \
     && install-php-extensions \
         imagick \
         redis \
         pcntl \
         opcache \
-        zip
+        zip \
+    && apk del .build-deps
 
-# PDFBox jar (version 3.x)
+# PDFBox jar (pinned version for reproducible builds)
 RUN mkdir -p /usr/share/java \
-    && PDFBOX_VERSION=$(curl -fs https://projects.apache.org/json/projects/pdfbox.json \
-         | jq -r '[.release[] | select(.revision | test("^3")) | .revision][0]') \
-    && echo "Installing PDFBox ${PDFBOX_VERSION}" \
-    && curl -fL "https://dlcdn.apache.org/pdfbox/${PDFBOX_VERSION}/pdfbox-app-${PDFBOX_VERSION}.jar" \
+    && curl -fL "https://dlcdn.apache.org/pdfbox/3.0.4/pdfbox-app-3.0.4.jar" \
          -o /usr/share/java/pdfbox.jar
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
