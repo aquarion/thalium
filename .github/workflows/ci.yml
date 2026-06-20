@@ -130,8 +130,13 @@ jobs:
               echo "ERROR: build assets not found in container"
               exit 1
             }
-            rm -rf public/build/assets && mkdir -p public/build \
-              && docker compose cp app:/var/www/html/public/build/assets public/build/
+            mkdir -p public/build
+            docker compose cp app:/var/www/html/public/build/assets public/build/assets.new || {
+              echo "ERROR: docker compose cp failed. Existing assets preserved."
+              exit 1
+            }
+            rm -rf public/build/assets
+            mv public/build/assets.new public/build/assets
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
               exit 1
@@ -184,8 +189,13 @@ jobs:
               echo "ERROR: build assets not found in container"
               exit 1
             }
-            rm -rf public/build/assets && mkdir -p public/build \
-              && docker compose cp app:/var/www/html/public/build/assets public/build/
+            mkdir -p public/build
+            docker compose cp app:/var/www/html/public/build/assets public/build/assets.new || {
+              echo "ERROR: docker compose cp failed. Existing assets preserved."
+              exit 1
+            }
+            rm -rf public/build/assets
+            mv public/build/assets.new public/build/assets
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
               exit 1

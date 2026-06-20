@@ -36,7 +36,9 @@ RUN for dir in /etc/ImageMagick-6 /etc/ImageMagick-7; do \
 # PDFBox jar (pinned version for reproducible builds)
 RUN mkdir -p /usr/share/java \
     && curl -fL "https://dlcdn.apache.org/pdfbox/3.0.4/pdfbox-app-3.0.4.jar" \
-         -o /usr/share/java/pdfbox.jar
+         -o /usr/share/java/pdfbox.jar \
+    && echo "f598c2e9ce0aee0a11e5a36a15cf06fe534212033fbc984a86ff4d2ff10a73b6c71ca61762d8b527f065a23ffb19e7011ac097865196d4f9490827133fae69cf  /usr/share/java/pdfbox.jar" \
+         | sha512sum -c -
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
 

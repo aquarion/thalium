@@ -83,18 +83,31 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          PR_STATE=$(gh pr view dependabot-updates --json state --jq '.state' 2>/dev/null || echo "NOT_FOUND")
+          PR_STATE=$(gh pr view dependabot-updates --json state --jq '.state')
           if [ "$PR_STATE" != "OPEN" ]; then
             echo "No open PR for dependabot-updates (state: $PR_STATE), creating one..."
             gh pr create --base main --head dependabot-updates \
               --title "chore: bump dependencies" \
               --body "Automated dependency updates"
           fi
-          PR_IS_DRAFT=$(gh pr view dependabot-updates --json isDraft --jq '.isDraft' 2>/dev/null || echo "false")
+          PR_IS_DRAFT=$(gh pr view dependabot-updates --json isDraft --jq '.isDraft')
           if [ "$PR_IS_DRAFT" = "true" ]; then
             gh pr ready dependabot-updates
           fi
-          sleep 15
+          echo "Waiting for CI checks to be queued..."
+          for i in $(seq 1 20); do
+            CHECK_COUNT=$(gh pr checks dependabot-updates --json name --jq 'length' 2>/dev/null || echo 0)
+            if [ "$CHECK_COUNT" -gt 0 ]; then
+              echo "Checks queued ($CHECK_COUNT found) after ${i} attempt(s)"
+              break
+            fi
+            if [ "$i" -eq 20 ]; then
+              echo "ERROR: No CI checks were queued after waiting. Refusing to merge."
+              exit 1
+            fi
+            echo "Attempt ${i}/20: no checks yet, waiting 10s..."
+            sleep 10
+          done
           gh pr checks dependabot-updates --watch --fail-fast
           gh pr merge dependabot-updates --merge
 
@@ -102,6 +115,7 @@ jobs:
     needs: [check-for-updates, merge-dependabot]
     if: |
       !failure() && !cancelled() &&
+      needs.merge-dependabot.result != 'skipped' &&
       (github.event_name == 'workflow_dispatch' || needs.check-for-updates.outputs.has_updates == 'true')
     permissions:
       contents: write

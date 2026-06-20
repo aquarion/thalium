@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+if [ ! -f artisan ]; then
+    echo "[entrypoint] ERROR: artisan not found in $(pwd). Wrong WORKDIR?" >&2
+    exit 1
+fi
+
 if [ -z "${APP_KEY}" ]; then
     echo "[entrypoint] ERROR: APP_KEY is not set." >&2
     exit 1
