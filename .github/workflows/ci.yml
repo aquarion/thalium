@@ -5,7 +5,7 @@ on:
     branches: [dependabot-updates]
   pull_request:
     branches: ["**"]
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -35,7 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.ref != 'refs/heads/dependabot-updates' &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) &&
+      !github.event.pull_request.draft
     permissions:
       contents: read
       packages: write
