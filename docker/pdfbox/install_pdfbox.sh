@@ -14,7 +14,7 @@ set -o pipefail # Return code of a pipeline is the right-most failure. 0 if none
 
 MAJOR_VERSION=3
 
-VERSION=`curl --fail -s -l https://projects.apache.org/json/projects/pdfbox.json | jq -r "[ .release[] | select(.revision|test(\"^$MAJOR_VERSION\")).revision ][0]"`
+VERSION=`curl --fail -s -l https://projects.apache.org/json/projects/pdfbox.json | jq -r "[ .release[] | select(.name == \"Apache PDFBox\" and (.revision|test(\"^$MAJOR_VERSION\"))).revision ][0]"`
 
 echo Installing version $VERSION
 URL=https://dlcdn.apache.org/pdfbox/$VERSION/pdfbox-app-$VERSION.jar
