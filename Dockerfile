@@ -1,7 +1,10 @@
-FROM node:22-alpine AS node-deps
+FROM node:22-alpine AS node-build
 WORKDIR /var/www/html
 COPY package.json package-lock.json ./
 RUN npm ci
+COPY . .
+ARG APP_ENV=production
+RUN npm run build
 
 FROM dunglas/frankenphp:1-php8.4-alpine
 WORKDIR /var/www/html
@@ -59,15 +62,12 @@ RUN mkdir -p \
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Node dependencies + Vite build
-COPY --from=node-deps /var/www/html/node_modules node_modules
 COPY . .
+COPY --from=node-build /var/www/html/public/build public/build
 RUN cp .env.example .env \
     && php artisan key:generate --force \
     && php artisan package:discover --ansi \
-    && APP_ENV=$APP_ENV npm run build \
-    && rm .env \
-    && rm -rf node_modules
+    && rm .env
 
 # Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache public \
