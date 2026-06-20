@@ -3,11 +3,12 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
-
     /**
      * A list of the inputs that are never flashed for validation exceptions.
      *
@@ -17,7 +18,6 @@ class Handler extends ExceptionHandler
         'password',
         'password_confirmation',
     ];
-
 
     /**
      * Report or log an exception.
@@ -30,22 +30,20 @@ class Handler extends ExceptionHandler
     {
         parent::report($exception);
 
-    }//end report()
-
+    }// end report()
 
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param  Request  $request
+     * @return Response
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function render($request, Throwable $exception)
     {
         return parent::render($request, $exception);
 
-    }//end render()
+    }// end render()
 
-
-}//end class
+}// end class

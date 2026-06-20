@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 
 class FlushRedis extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -21,7 +20,6 @@ class FlushRedis extends Command
      */
     protected $description = 'Command description';
 
-
     /**
      * Create a new command instance.
      *
@@ -31,8 +29,7 @@ class FlushRedis extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -41,7 +38,6 @@ class FlushRedis extends Command
     {
         return 0;
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

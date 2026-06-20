@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Providers\AppServiceProvider;
+use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use App\Providers\AppServiceProvider;
-use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
-use App\Models\User;
-use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,13 +33,11 @@ class RegisterController extends Controller implements HasMiddleware
      */
     protected $redirectTo = AppServiceProvider::HOME;
 
-
     public static function middleware(): array
     {
         return ['guest'];
 
-    }//end middleware()
-
+    }// end middleware()
 
     /**
      * Get a validator for an incoming registration request.
@@ -50,12 +47,12 @@ class RegisterController extends Controller implements HasMiddleware
         return Validator::make(
             $data,
             [
-                'name'     => [
+                'name' => [
                     'required',
                     'string',
                     'max:255',
                 ],
-                'email'    => [
+                'email' => [
                     'required',
                     'string',
                     'email',
@@ -71,8 +68,7 @@ class RegisterController extends Controller implements HasMiddleware
             ]
         );
 
-    }//end validator()
-
+    }// end validator()
 
     /**
      * Create a new user instance after a valid registration.
@@ -81,13 +77,12 @@ class RegisterController extends Controller implements HasMiddleware
     {
         return User::create(
             [
-                'name'     => $data['name'],
-                'email'    => $data['email'],
+                'name' => $data['name'],
+                'email' => $data['email'],
                 'password' => Hash::make($data['password']),
             ]
         );
 
-    }//end create()
+    }// end create()
 
-
-}//end class
+}// end class

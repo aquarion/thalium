@@ -3,47 +3,44 @@
 namespace App\Service\Indexer;
 
 use App\Interfaces\IndexerInterface;
-use \Elasticsearch as ElasticSearchClient;
-use Illuminate\Support\Facades\Log;
 use App\Service\ParserService;
+use Elasticsearch as ElasticSearchClient;
+use Illuminate\Support\Facades\Log;
 
 class ElasticSearch implements IndexerInterface
 {
-
-    public $elasticSearchIndex = "libris";
+    public $elasticSearchIndex = 'libris';
 
     private $pointInTime = false;
-
 
     /**
      * Create a new class instance.
      */
-    public function __construct() {} //end __construct()
-
+    public function __construct() {} // end __construct()
 
     public function indexDocument(ParserService $parser, $thumbnailURL)
     {
 
         $params = [
-            'index'   => $this->elasticSearchIndex,
-            'id'      => $parser->filename,
+            'index' => $this->elasticSearchIndex,
+            'id' => $parser->filename,
             'routing' => $parser->filename,
-            'body'    => [
-                "doc_type"      => "document",
-                'path'          => $parser->filename,
-                'system'        => $parser->system,
-                'tags'          => $parser->tags,
-                'thumbnail'     => $thumbnailURL,
-                'title'         => $parser->title,
+            'body' => [
+                'doc_type' => 'document',
+                'path' => $parser->filename,
+                'system' => $parser->system,
+                'tags' => $parser->tags,
+                'thumbnail' => $thumbnailURL,
+                'title' => $parser->title,
                 'last_modified' => $parser->lastModified,
-                "page_relation" => ["name" => "document"],
+                'page_relation' => ['name' => 'document'],
             ],
         ];
 
         Log::debug("[AddDoc] {$parser->filename} Indexing");
-        return ElasticSearchClient::index($params);
-    } //end indexDocument()
 
+        return ElasticSearchClient::index($params);
+    } // end indexDocument()
 
     public function indexPages(ParserService $parser)
     {
@@ -56,69 +53,65 @@ class ElasticSearch implements IndexerInterface
             set_time_limit(30);
 
             $params = [
-                'index'    => $this->elasticSearchIndex,
-                'id'       => $parser->filename . "/" . $pageNo,
-                'routing'  => $parser->filename,
+                'index' => $this->elasticSearchIndex,
+                'id' => $parser->filename.'/'.$pageNo,
+                'routing' => $parser->filename,
                 'pipeline' => 'attachment_pipeline',
-                'body'     => [
-                    "doc_type"      => "page",
-                    'data'          => base64_encode($text),
-                    'pageNo'        => $pageNo,
-                    'path'          => $parser->filename,
-                    'system'        => $parser->system,
-                    'tags'          => $parser->tags,
-                    'title'         => $parser->title,
-                    "page_relation" => [
-                        "name"   => "page",
-                        "parent" => $parser->filename,
+                'body' => [
+                    'doc_type' => 'page',
+                    'data' => base64_encode($text),
+                    'pageNo' => $pageNo,
+                    'path' => $parser->filename,
+                    'system' => $parser->system,
+                    'tags' => $parser->tags,
+                    'title' => $parser->title,
+                    'page_relation' => [
+                        'name' => 'page',
+                        'parent' => $parser->filename,
                     ],
                 ],
             ];
             ElasticSearchClient::index($params);
-        } //end foreach
+        } // end foreach
 
         Log::debug("[AddDoc] {$parser->filename} Added $pageCount Pages");
-    } //end indexPages()
-
+    } // end indexPages()
 
     public function updateDocument($id, $body)
     {
-        $params   = [
+        $params = [
             'index' => $this->elasticSearchIndex,
-            'id'    => $id,
-            'body'  => $body,
+            'id' => $id,
+            'body' => $body,
         ];
         $response = ElasticSearchClient::update($params);
-    } //end updateDocument()
-
+    } // end updateDocument()
 
     public function deleteDocument($docId)
     {
         // Now delete the document
         $params = [
             'index' => $this->elasticSearchIndex,
-            'id'    => $docId,
+            'id' => $docId,
         ];
 
         $this->deleteDocumentPages($docId);
         ElasticSearchClient::delete($params);
-    } //end deleteDocument()
-
+    } // end deleteDocument()
 
     public function deletePage($docId)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'id'    => $docId,
+            'id' => $docId,
         ];
 
         ElasticSearchClient::delete($params);
-    } //end deletePage()
-
+    } // end deletePage()
 
     public function deleteDocumentPages($docId = false)
     {
-        $size        = 100;
+        $size = 100;
         $searchAfter = false;
         $this->openPointInTime();
         while (true) {
@@ -133,14 +126,13 @@ class ElasticSearch implements IndexerInterface
                 $searchAfter = $page['sort'];
             }
         }
-    } //end deleteDocumentPages()
-
+    } // end deleteDocumentPages()
 
     public function fetchDocument($id)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'id'    => $id,
+            'id' => $id,
         ];
 
         try {
@@ -149,21 +141,20 @@ class ElasticSearch implements IndexerInterface
         } catch (ElasticSearchClient\Common\Exceptions\Missing404Exception $e) {
             return false;
         }
-    } //end fetchDocument()
-
+    } // end fetchDocument()
 
     public function fetchAllDocuments($tag = false, $size = 100, $searchAfter = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
+            'body' => [
+                'size' => $size,
                 'query' => [
                     'match' => ['doc_type' => 'document'],
                 ],
-                "sort"  => [
+                'sort' => [
                     [
-                        "path" => ["order" => "asc"],
+                        'path' => ['order' => 'asc'],
                     ],
                 ],
             ],
@@ -175,21 +166,20 @@ class ElasticSearch implements IndexerInterface
 
         if ($this->pointInTime) {
             $params['body']['pit'] = [
-                'id'         => $this->pointInTime,
+                'id' => $this->pointInTime,
                 'keep_alive' => '1m',
             ];
             unset($params['index']);
         }
 
         return ElasticSearchClient::search($params);
-    } //end fetchAllDocuments()
-
+    } // end fetchAllDocuments()
 
     public function countAllDocuments()
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match' => ['doc_type' => 'document'],
                 ],
@@ -197,14 +187,13 @@ class ElasticSearch implements IndexerInterface
         ];
 
         return ElasticSearchClient::count($params)['count'];
-    } //end countAllDocuments()
-
+    } // end countAllDocuments()
 
     public function countAllPages($docId = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'bool' => [
                         'filter' => [
@@ -223,15 +212,14 @@ class ElasticSearch implements IndexerInterface
         }
 
         return ElasticSearchClient::count($params)['count'];
-    } //end countAllPages()
-
+    } // end countAllPages()
 
     public function fetchAllPages($docId = false, $size = 100, $searchAfter = false)
     {
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
+            'body' => [
+                'size' => $size,
                 'query' => [
                     'bool' => [
                         'filter' => [
@@ -240,15 +228,15 @@ class ElasticSearch implements IndexerInterface
 
                     ],
                 ],
-                "sort"  => [
+                'sort' => [
                     [
-                        "path" => ["order" => "asc"],
+                        'path' => ['order' => 'asc'],
                     ],
                 ],
-                'aggs'  => [
+                'aggs' => [
                     'uniq_systems' => [
                         'composite' => [
-                            'size'    => 100,
+                            'size' => 100,
                             'sources' => [
                                 'systems' => ['terms' => ['field' => 'document']],
                             ],
@@ -266,7 +254,7 @@ class ElasticSearch implements IndexerInterface
 
         if ($this->pointInTime) {
             $params['body']['pit'] = [
-                'id'         => $this->pointInTime,
+                'id' => $this->pointInTime,
                 'keep_alive' => '1m',
             ];
             unset($params['index']);
@@ -279,38 +267,36 @@ class ElasticSearch implements IndexerInterface
         // dd($params);
 
         return ElasticSearchClient::search($params);
-    } //end fetchAllPages()
-
+    } // end fetchAllPages()
 
     public function setup()
     {
         $this->updateIndex();
-    } //end setup()
-
+    } // end setup()
 
     public function updateIndex()
     {
-        Log::info("Update/Create Index");
+        Log::info('Update/Create Index');
 
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                '_source'    => ['enabled' => true],
+            'body' => [
+                '_source' => ['enabled' => true],
 
                 'properties' => [
-                    'system'        => ['type' => 'keyword'],
-                    'tags'          => ['type' => 'keyword'],
-                    'filename'      => ['type' => 'keyword'],
-                    'path'          => ['type' => 'keyword'],
-                    'title'         => ['type' => 'keyword'],
-                    'content'       => ['type' => 'keyword'],
-                    'doc_type'      => ['type' => 'keyword'],
-                    'pageNo'        => ['type' => 'integer'],
-                    'thumbnail'     => ['type' => 'text'],
+                    'system' => ['type' => 'keyword'],
+                    'tags' => ['type' => 'keyword'],
+                    'filename' => ['type' => 'keyword'],
+                    'path' => ['type' => 'keyword'],
+                    'title' => ['type' => 'keyword'],
+                    'content' => ['type' => 'keyword'],
+                    'doc_type' => ['type' => 'keyword'],
+                    'pageNo' => ['type' => 'integer'],
+                    'thumbnail' => ['type' => 'text'],
 
                     'page_relation' => [
-                        "type"      => "join",
-                        "relations" => ["document" => "page"],
+                        'type' => 'join',
+                        'relations' => ['document' => 'page'],
                     ],
                 ],
             ],
@@ -329,24 +315,23 @@ class ElasticSearch implements IndexerInterface
 
             return ElasticSearchClient::indices()->putMapping($params);
         }
-    } //end updateIndex()
-
+    } // end updateIndex()
 
     public function deleteIndex()
     {
-        Log::warning("Deleting Index");
-        return ElasticSearchClient::indices()->delete(['index' => $this->elasticSearchIndex]);
-    } //end deleteIndex()
+        Log::warning('Deleting Index');
 
+        return ElasticSearchClient::indices()->delete(['index' => $this->elasticSearchIndex]);
+    } // end deleteIndex()
 
     private function updatePipeline()
     {
-        Log::info("Update Pipeline");
+        Log::info('Update Pipeline');
         $params = [
-            'id'   => 'attachment_pipeline',
+            'id' => 'attachment_pipeline',
             'body' => [
                 'description' => 'my attachment ingest processor',
-                'processors'  => [
+                'processors' => [
                     [
                         'attachment' => ['field' => 'data'],
                     ],
@@ -358,15 +343,14 @@ class ElasticSearch implements IndexerInterface
         ];
 
         $result = ElasticSearchClient::ingest()->putPipeline($params);
-    } //end updatePipeline()
-
+    } // end updatePipeline()
 
     private function createPipeline()
     {
 
         // If it's missing, create it.
         try {
-            Log::info("Create Pipeline");
+            Log::info('Create Pipeline');
             $params = ['id' => 'attachment_pipeline'];
 
             $hasPipeline = ElasticSearchClient::ingest()->getPipeline($params);
@@ -375,8 +359,7 @@ class ElasticSearch implements IndexerInterface
         } catch (ElasticSearchClient\Common\Exceptions\Missing404Exception $e) {
             $this->updatePipeline();
         }
-    } //end createPipeline()
-
+    } // end createPipeline()
 
     public function listSystems()
     {
@@ -389,23 +372,23 @@ class ElasticSearch implements IndexerInterface
         ];
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                "size" => 0,
+            'body' => [
+                'size' => 0,
                 'aggs' => [
                     'uniq_systems' => [
                         'composite' => [
-                            'size'    => 100,
+                            'size' => 100,
                             'sources' => [
                                 'systems' => ['terms' => ['field' => 'system']],
                             ],
                         ],
-                        'aggs'      => $filter,
+                        'aggs' => $filter,
                     ],
                 ],
             ],
         ];
 
-        $buckets  = [];
+        $buckets = [];
         $continue = true;
 
         while ($continue == true) {
@@ -422,21 +405,21 @@ class ElasticSearch implements IndexerInterface
         $return = [];
         foreach ($buckets as $bucket) {
             $system = $bucket['key']['systems'];
-            $count  = $bucket['only_documents']['doc_count'];
+            $count = $bucket['only_documents']['doc_count'];
 
             if ($count) {
                 $return[] = [
-                    'system'    => $system,
-                    'count'     => $count,
+                    'system' => $system,
+                    'count' => $count,
                     'thumbnail' => false,
                 ];
             }
         }
 
         Log::info($return);
-        return $return;
-    } //end listSystems()
 
+        return $return;
+    } // end listSystems()
 
     public function listDocuments($system, $page = 1, $size = 60, $tag = false)
     {
@@ -444,27 +427,27 @@ class ElasticSearch implements IndexerInterface
 
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => $size,
-                'from'  => $from,
-                'sort'  => [
+            'body' => [
+                'size' => $size,
+                'from' => $from,
+                'sort' => [
                     [
-                        "tags"  => [
-                            "missing" => "_first",
-                            "order"   => "asc",
+                        'tags' => [
+                            'missing' => '_first',
+                            'order' => 'asc',
                         ],
-                        "path"  => ["order" => "asc"],
-                        "title" => ["order" => "asc"],
+                        'path' => ['order' => 'asc'],
+                        'title' => ['order' => 'asc'],
                     ],
                 ],
                 'query' => [
                     'bool' => [
-                        'must'   => [
+                        'must' => [
                             0 => [
                                 'match' => [
                                     'system' => [
-                                        'query'    => $system,
-                                        "operator" => "and",
+                                        'query' => $system,
+                                        'operator' => 'and',
                                     ],
                                 ],
                             ],
@@ -478,11 +461,11 @@ class ElasticSearch implements IndexerInterface
             ],
         ];
 
-        $params['body']["aggs"] = [
-            "tags" => [
-                "terms" => [
-                    "field" => "tags",
-                    "size"  => 30,
+        $params['body']['aggs'] = [
+            'tags' => [
+                'terms' => [
+                    'field' => 'tags',
+                    'size' => 30,
                 ],
             ],
         ];
@@ -491,38 +474,37 @@ class ElasticSearch implements IndexerInterface
             $params['body']['query']['bool']['must'][] = [
                 'match' => [
                     'tags' => [
-                        'query'    => $tag,
-                        "operator" => "and",
+                        'query' => $tag,
+                        'operator' => 'and',
                     ],
                 ],
             ];
-        } else if ($tag === 0) {
+        } elseif ($tag === 0) {
             $params['body']['query']['bool']['filter'][] = [
-                'script' => ["script" => "doc['tags'].length == 0"],
+                'script' => ['script' => "doc['tags'].length == 0"],
             ];
         }
 
         $result = ElasticSearchClient::search($params);
 
-        return ($result);
-    } //end listDocuments()
-
+        return $result;
+    } // end listDocuments()
 
     public function tagsForSystem($system)
     {
 
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'  => 0,
+            'body' => [
+                'size' => 0,
                 'query' => [
                     'bool' => [
-                        'must'   => [
+                        'must' => [
                             0 => [
                                 'match' => [
                                     'system' => [
-                                        'query'    => $system,
-                                        "operator" => "and",
+                                        'query' => $system,
+                                        'operator' => 'and',
                                     ],
                                 ],
                             ],
@@ -536,11 +518,11 @@ class ElasticSearch implements IndexerInterface
             ],
         ];
 
-        $params['body']["aggs"] = [
-            "tags" => [
-                "terms" => [
-                    "field" => "tags",
-                    "size"  => 30,
+        $params['body']['aggs'] = [
+            'tags' => [
+                'terms' => [
+                    'field' => 'tags',
+                    'size' => 30,
                 ],
             ],
         ];
@@ -548,8 +530,7 @@ class ElasticSearch implements IndexerInterface
         $result = ElasticSearchClient::search($params);
 
         return $result['aggregations']['tags']['buckets'];
-    } //end tagsForSystem()
-
+    } // end tagsForSystem()
 
     public function searchPages($terms, $system, $document, $tag, $page = 1, $size = 60)
     {
@@ -559,10 +540,10 @@ class ElasticSearch implements IndexerInterface
 
         $params = [
             'index' => $this->elasticSearchIndex,
-            'body'  => [
-                'size'      => $size,
-                'from'      => $from,
-                'query'     => [
+            'body' => [
+                'size' => $size,
+                'from' => $from,
+                'query' => [
                     'bool' => [
                         'must' => [
                             'match_phrase' => [
@@ -571,9 +552,9 @@ class ElasticSearch implements IndexerInterface
                         ],
                     ],
                 ],
-                "highlight" => [
-                    "fields" => [
-                        "attachment.content" => new \stdClass(),
+                'highlight' => [
+                    'fields' => [
+                        'attachment.content' => new \stdClass,
                     ],
                 ],
             ],
@@ -597,23 +578,23 @@ class ElasticSearch implements IndexerInterface
             ];
         }
 
-        $params['body']["aggs"] = [
-            "parents" => [
-                "terms" => [
-                    "field" => "page_relation#document",
-                    "size"  => 30,
+        $params['body']['aggs'] = [
+            'parents' => [
+                'terms' => [
+                    'field' => 'page_relation#document',
+                    'size' => 30,
                 ],
             ],
-            "systems" => [
-                "terms" => [
-                    "field" => "system",
-                    "size"  => 30,
+            'systems' => [
+                'terms' => [
+                    'field' => 'system',
+                    'size' => 30,
                 ],
-                "aggs"  => [
-                    "tags" => [
-                        "terms" => [
-                            "field" => "tags",
-                            "size"  => 30,
+                'aggs' => [
+                    'tags' => [
+                        'terms' => [
+                            'field' => 'tags',
+                            'size' => 30,
                         ],
                     ],
                 ],
@@ -625,26 +606,23 @@ class ElasticSearch implements IndexerInterface
         Log::debug($result);
 
         return $result;
-    } //end searchPages()
-
+    } // end searchPages()
 
     public function openPointInTime()
     {
-        $params   = [
-            'index'      => $this->elasticSearchIndex,
+        $params = [
+            'index' => $this->elasticSearchIndex,
             'keep_alive' => '1m',
         ];
         $response = ElasticSearchClient::openPointInTime($params);
 
         $this->pointInTime = $response['id'];
-    } //end openPointInTime()
-
+    } // end openPointInTime()
 
     private function setPointInTime($id)
     {
         $this->pointInTime = $id;
-    } //end setPointInTime()
-
+    } // end setPointInTime()
 
     private function closePointInTime()
     {
@@ -654,8 +632,7 @@ class ElasticSearch implements IndexerInterface
         ];
         // $response = ElasticSearchClient::closePointInTime($params);
 
-    } //end closePointInTime()
-
+    } // end closePointInTime()
 
     public function getDocThumbnail($doc)
     {
@@ -664,37 +641,33 @@ class ElasticSearch implements IndexerInterface
         }
 
         return false;
-    } //end getDocThumbnail()
-
+    } // end getDocThumbnail()
 
     public function getLocalFilename($doc)
     {
         return $doc['_source']['path'];
-    } //end getLocalFilename()
-
+    } // end getLocalFilename()
 
     public function updateSingleField($document, $field, $value)
     {
 
         $params = [
             'index' => $document['_index'],
-            'id'    => $document['_id'],
-            'body'  => [
+            'id' => $document['_id'],
+            'body' => [
                 'doc' => [$field => $value],
             ],
         ];
 
         // Update doc at /my_index/_doc/my_id
         ElasticSearchClient::update($params);
-    } //end updateSingleField()
-
+    } // end updateSingleField()
 
     public function __destruct()
     {
         if ($this->pointInTime) {
             $this->closePointInTime();
         }
-    } //end __destruct()
+    } // end __destruct()
 
-
-}//end class
+}// end class

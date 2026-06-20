@@ -2,14 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Libris\LibrisInterface;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class LibrisPurge extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -31,9 +29,7 @@ class LibrisPurge extends Command
     /**
      * Get the next page of results
      */
-
-
-    private function nextPageOfDocs($size=100): array
+    private function nextPageOfDocs($size = 100): array
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
@@ -43,8 +39,7 @@ class LibrisPurge extends Command
 
         return $docs;
 
-    }//end nextPageOfDocs()
-
+    }// end nextPageOfDocs()
 
     /**
      * Create a new command instance.
@@ -55,8 +50,7 @@ class LibrisPurge extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -67,8 +61,7 @@ class LibrisPurge extends Command
 
         $this->purgeDeletedDocuments();
 
-    }//end handle()
-
+    }// end handle()
 
     private function purgeDeletedDocuments()
     {
@@ -81,7 +74,7 @@ class LibrisPurge extends Command
 
         $deletionList = [];
 
-        $this->line("Scanning Library:");
+        $this->line('Scanning Library:');
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
         $bar->setMessage('Start');
@@ -107,15 +100,16 @@ class LibrisPurge extends Command
         }
 
         $bar->finish();
-        $this->line(" ... done");
+        $this->line(' ... done');
 
         if (count($deletionList)) {
-            $this->line("Deleting Records:");
+            $this->line('Deleting Records:');
             foreach ($deletionList as $line) {
-                $this->line(" * ".$line);
+                $this->line(' * '.$line);
             }
         } else {
-            $this->line("Nothing to delete");
+            $this->line('Nothing to delete');
+
             return;
         }
 
@@ -124,16 +118,15 @@ class LibrisPurge extends Command
         $bar->setMessage('Start');
         $bar->start();
         foreach ($deletionList as $docId) {
-            $bar->setMessage($docId." - Delete Doc");
+            $bar->setMessage($docId.' - Delete Doc');
             $this->libris->deleteDocument($docId);
             $bar->advance();
         }
 
         $bar->finish();
 
-        $this->line(" - Complete");
+        $this->line(' - Complete');
 
-    }//end purgeDeletedDocuments()
+    }// end purgeDeletedDocuments()
 
-
-}//end class
+}// end class

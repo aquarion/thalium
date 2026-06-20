@@ -4,6 +4,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-class LibrisNotPDF extends Exception
-{
-}//end class
+class LibrisNotPDF extends Exception {}// end class

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -31,7 +30,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-
     /**
      * Get the attributes that should be cast.
      *
@@ -41,14 +39,12 @@ class User extends Authenticatable
     {
         return ['email_verified_at' => 'datetime'];
 
-    }//end casts()
-
+    }// end casts()
 
     protected function getIsAdminAttribute(): bool
     {
         return true;
 
-    }//end getIsAdminAttribute()
+    }// end getIsAdminAttribute()
 
-
-}//end class
+}// end class

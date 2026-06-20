@@ -2,19 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Libris\LibrisInterface;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-
-use App\Libris\LibrisInterface;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-
-
-use App\Jobs\ScanFile;
 
 class LibrisAdd extends Command implements PromptsForMissingInput
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -29,7 +23,6 @@ class LibrisAdd extends Command implements PromptsForMissingInput
      */
     protected $description = 'Index a single file';
 
-
     /**
      * Create a new command instance.
      *
@@ -39,8 +32,7 @@ class LibrisAdd extends Command implements PromptsForMissingInput
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -52,7 +44,7 @@ class LibrisAdd extends Command implements PromptsForMissingInput
         if (Storage::disk('libris')->directoryExists($filename)) {
             $this->info("Scanning directory $filename");
             $libris->dispatchIndexDir($filename);
-        } else if (Storage::disk('libris')->fileExists($filename)) {
+        } elseif (Storage::disk('libris')->fileExists($filename)) {
             $this->info("Scanning file $filename");
             $libris->addDocument($filename, $this);
         } else {
@@ -61,7 +53,6 @@ class LibrisAdd extends Command implements PromptsForMissingInput
 
         return 0;
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

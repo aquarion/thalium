@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\View\View;
 use App\Libris\LibrisInterface;
-use Illuminate\Support\Facades\Storage;
-use Psr\Http\Message\ServerRequestInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class DebugController extends Controller
 {
-
-
     public function thumbnail(LibrisInterface $libris, Request $request): View
     {
         $id = $request->query('id');
@@ -33,15 +30,14 @@ class DebugController extends Controller
         $output .= '<img src="data:image/png;base64,'.base64_encode(genericThumbnail($doc['_source']['title'])).'" style="border: 1px solid green;" title="Regenerated Thumbnail">';
 
         return view(
-            "debug",
+            'debug',
             [
                 'content' => $output,
-                'doc'     => $doc,
+                'doc' => $doc,
             ]
         );
 
-    }//end thumbnail()
-
+    }// end thumbnail()
 
     public function system(LibrisInterface $libris, Request $request): View
     {
@@ -57,14 +53,13 @@ class DebugController extends Controller
         // $output .= '<img src="data:image/png;base64,'.base64_encode(genericThumbnail($doc['_source']['title'])).'" style="border: 1px solid green;" title="Regenerated Thumbnail">';
 
         return view(
-            "debug",
+            'debug',
             [
                 'content' => $output,
-                'doc'     => false,
+                'doc' => false,
             ]
         );
 
-    }//end system()
+    }// end system()
 
-
-}//end class
+}// end class

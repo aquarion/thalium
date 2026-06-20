@@ -58,7 +58,7 @@
 
 </div>
 
-	Page {{ $page }} of {{ $pages }} 
+	Page {{ $page }} of {{ $pages }}
 
 
   {!!  $pagination->links() !!}
