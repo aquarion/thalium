@@ -43,10 +43,21 @@ RUN mkdir -p /usr/share/java \
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
 
+# Create all directories Laravel needs before any PHP/composer commands run
+RUN mkdir -p \
+    bootstrap/cache \
+    database/seeds \
+    database/factories \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    storage/app/public \
+    storage/app/thumbnails
+
 # PHP dependencies
 COPY composer.json composer.lock ./
-RUN mkdir -p database/seeds database/factories \
-    && composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 # Node dependencies + Vite build
 COPY --from=node-deps /var/www/html/node_modules node_modules
@@ -59,9 +70,7 @@ RUN cp .env.example .env \
     && rm -rf node_modules
 
 # Permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
-             storage/logs storage/app/public storage/app/thumbnails bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache public \
+RUN chown -R www-data:www-data storage bootstrap/cache public \
     && chmod -R 775 storage bootstrap/cache
 
 COPY docker/entrypoint.sh /entrypoint.sh
