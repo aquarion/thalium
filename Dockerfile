@@ -45,7 +45,8 @@ COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
 
 # PHP dependencies
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+RUN mkdir -p database/seeds database/factories \
+    && composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 # Node dependencies + Vite build
 COPY --from=node-deps /var/www/html/node_modules node_modules
