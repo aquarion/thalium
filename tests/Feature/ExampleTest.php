@@ -16,6 +16,6 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(302);
 
-        $response->assertRedirectToRoute("login");
+        $response->assertRedirectToRoute('login');
     }
 }

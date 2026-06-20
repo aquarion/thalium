@@ -1,2 +1,11 @@
-*
-!docker
+.git
+.github
+node_modules
+storage/app
+storage/logs
+storage/framework
+bootstrap/cache
+docker/Dockerfile
+.env
+.env.*
+!.env.example

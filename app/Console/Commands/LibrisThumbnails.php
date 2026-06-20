@@ -2,13 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-
 use App\Libris\LibrisInterface;
+use Illuminate\Console\Command;
 
 class LibrisThumbnails extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -32,7 +30,6 @@ class LibrisThumbnails extends Command
 
     protected $page = 1;
 
-
     /**
      * Create a new command instance.
      *
@@ -42,15 +39,12 @@ class LibrisThumbnails extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Get the next page of results
      */
-
-
-    private function nextPage($size=100): array
+    private function nextPage($size = 100): array
     {
         if ($this->option('system')) {
             $docs = $this->libris->docsBySystem($this->option('system'), $this->page);
@@ -61,8 +55,7 @@ class LibrisThumbnails extends Command
 
         return $docs;
 
-    }//end nextPage()
-
+    }// end nextPage()
 
     /**
      * Execute the console command.
@@ -71,21 +64,21 @@ class LibrisThumbnails extends Command
     {
         $this->libris = $libris;
 
-        $size   = 100;
+        $size = 100;
         $cursor = 0;
 
         $total = $this->libris->countAllDocuments();
 
-        $this->line("Generating thumbnails");
+        $this->line('Generating thumbnails');
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat(' %current%/%max% [%bar%] - %message%');
         $bar->setMessage('Start');
         $bar->start();
 
-        if ($this->option("regen-all")) {
-            $regen = "all";
-        } else if ($this->option("regen-generic")) {
-            $regen = "generic";
+        if ($this->option('regen-all')) {
+            $regen = 'all';
+        } elseif ($this->option('regen-generic')) {
+            $regen = 'generic';
         } else {
             $regen = false;
         }
@@ -108,14 +101,13 @@ class LibrisThumbnails extends Command
 
             $this->searchAfter = $doc['sort'];
             // dd($this->searchAfter);
-        }//end while
+        }// end while
 
         $bar->finish();
 
-        $this->line(".");
-        $this->line("Have a great day.");
+        $this->line('.');
+        $this->line('Have a great day.');
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

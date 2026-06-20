@@ -3,19 +3,19 @@
 use Imagick as Imagek;
 use ImagickDraw as ImagekDraw;
 
-if (!function_exists('wordWrapAnnotate')) {
+if (! function_exists('wordWrapAnnotate')) {
     // Sometimes helpers is being included twice
     function wordWrapAnnotate($image, $draw, $text, $maxWidth)
     {
         $text = trim($text);
 
-        $words      = preg_split('%\s%', $text, -1, PREG_SPLIT_NO_EMPTY);
-        $lines      = [];
-        $i          = 0;
+        $words = preg_split('%\s%', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $lines = [];
+        $i = 0;
         $lineHeight = 0;
 
         while (count($words) > 0) {
-            $metrics    = $image->queryFontMetrics($draw, implode(' ', array_slice($words, 0, ++$i)));
+            $metrics = $image->queryFontMetrics($draw, implode(' ', array_slice($words, 0, ++$i)));
             $lineHeight = max($metrics['textHeight'], $lineHeight);
 
             // check if we have found the word that exceeds the line width
@@ -26,8 +26,8 @@ if (!function_exists('wordWrapAnnotate')) {
                 }
 
                 $lines[] = implode(' ', array_slice($words, 0, --$i));
-                $words   = array_slice($words, $i);
-                $i       = 0;
+                $words = array_slice($words, $i);
+                $i = 0;
             }
         }
 
@@ -36,26 +36,24 @@ if (!function_exists('wordWrapAnnotate')) {
             $lineHeight,
         ];
 
-    }//end wordWrapAnnotate()
+    }// end wordWrapAnnotate()
 
+}// end if
 
-}//end if
-
-
-if (!function_exists('genericThumbnail')) {
+if (! function_exists('genericThumbnail')) {
     // Sometimes helpers is being included twice
     function genericThumbnail($text)
     {
         $height = 265;
-        $width  = 200;
+        $width = 200;
 
         // Create a new canvas object and a white image
-        $canvas = new \Imagick();
-        $canvas->setGravity(Imagick::GRAVITY_CENTER);
-        $canvas->newImage($width, $height, "#380744");
+        $canvas = new Imagek;
+        $canvas->setGravity(Imagek::GRAVITY_CENTER);
+        $canvas->newImage($width, $height, '#380744');
 
         // // Create imagickdraw object
-        $draw = new \ImagickDraw();
+        $draw = new ImagekDraw;
 
         // // Start a new pattern called "gradient"
         // $draw->pushPattern('gradient', 0, 0, 50, 50);
@@ -69,21 +67,21 @@ if (!function_exists('genericThumbnail')) {
         // // Use the pattern called "gradient" as the fill
         // $draw->setFillPatternURL('#gradient');
 
-        $draw->setGravity(Imagick::GRAVITY_CENTER);
+        $draw->setGravity(Imagek::GRAVITY_CENTER);
         $fontSize = 42;
 
         // // Set font size to 52
         $draw->setFontSize(32);
-        $draw->setFillColor("white");
+        $draw->setFillColor('white');
         $draw->setFontSize($fontSize);
         $draw->setFontWeight(800);
-        $draw->setFont(resource_path("genericThumbnail/Macondo-Regular.ttf"));
+        $draw->setFont(resource_path('genericThumbnail/Macondo-Regular.ttf'));
 
-        list($lines, $lineHeight) = wordWrapAnnotate($canvas, $draw, $text, 200);
+        [$lines, $lineHeight] = wordWrapAnnotate($canvas, $draw, $text, 200);
         for ($i = 0; $i < count($lines); $i++) {
             $y = ($i - (count($lines) / 2) + .5);
             // $image->annotateImage($draw, $xpos, $ypos + $i*$lineHeight, 0, $lines[$i]);
-            $size      = $fontSize;
+            $size = $fontSize;
             $textwidth = $canvas->queryFontMetrics($draw, $lines[$i])['textWidth'];
             while ($textwidth > ($width - 10) && $size > 2) {
                 $size--;
@@ -95,9 +93,9 @@ if (!function_exists('genericThumbnail')) {
         }
 
         // Let's read the images.
-        $icon = new Imagick();
+        $icon = new Imagek;
         if ($icon->readImage(resource_path('genericThumbnail/noun-book-of-spells.png')) === false) {
-            throw new Exception();
+            throw new Exception;
         }
 
         $iconBorder = 20;
@@ -108,7 +106,7 @@ if (!function_exists('genericThumbnail')) {
 
         // Annotate some text
 
-        $canvas->compositeImage($icon, Imagick::COMPOSITE_DEFAULT, $iconX, $iconY);
+        $canvas->compositeImage($icon, Imagek::COMPOSITE_DEFAULT, $iconX, $iconY);
 
         // Draw the ImagickDraw on to the canvas
         $canvas->drawImage($draw);
@@ -121,7 +119,6 @@ if (!function_exists('genericThumbnail')) {
 
         return $canvas;
 
-    }//end genericThumbnail()
+    }// end genericThumbnail()
 
-
-}//end if
+}// end if

@@ -33,7 +33,7 @@
     <script type="text/javascript">
       var adobeDCView = false;
 
-      document.addEventListener("adobe_dc_view_sdk.ready", function(){ 
+      document.addEventListener("adobe_dc_view_sdk.ready", function(){
         var adobeDCView = new AdobeDC.View({clientId: "{{ $adobe_client_id }}", divId: "pdf-view"});
         const previewFilePromise = adobeDCView.previewFile({
           content:{location: {url: "{!! $document_download !!}"}},

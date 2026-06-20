@@ -4,6 +4,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-class LibrisTooLarge extends Exception
-{
-}//end class
+class LibrisTooLarge extends Exception {}// end class

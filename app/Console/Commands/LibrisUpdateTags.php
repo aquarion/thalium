@@ -2,14 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Libris\LibrisInterface;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Console\Command;
 
 class LibrisUpdateTags extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -29,9 +26,7 @@ class LibrisUpdateTags extends Command
     /**
      * Get the next page of results
      */
-
-
-    private function nextPage($size=100): int
+    private function nextPage($size = 100): int
     {
         // if ($this->option('system')) {
         //     $docs = $this->libris->docsBySystem($this->option('system'), $page);
@@ -41,8 +36,7 @@ class LibrisUpdateTags extends Command
 
         return $docs;
 
-    }//end nextPage()
-
+    }// end nextPage()
 
     /**
      * Create a new command instance.
@@ -53,19 +47,18 @@ class LibrisUpdateTags extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
      */
     public function handle(LibrisInterface $libris): int
     {
-        $this->line("Updating tags, one sec...");
+        $this->line('Updating tags, one sec...');
 
         $this->libris = $libris;
 
-        $size   = 100;
+        $size = 100;
         $cursor = 0;
 
         $total = $this->libris->countAllDocuments();
@@ -91,7 +84,7 @@ class LibrisUpdateTags extends Command
                     // $this->info('From '. implode(',', $doc['_source']['tags']).' ('.count($parser->tags).') to '.implode(',', $parser->tags).' ('.count($parser->tags).') - No change!');
                 } else {
                     // $this->info('     '.$parser->filename.' - from '. implode(',', $doc['_source']['tags']).' ('.count($doc['_source']['tags']).') to '.implode(',', $parser->tags).' ('.count($parser->tags).') - Update!');
-                    $body   = [
+                    $body = [
                         'doc' => ['tags' => $parser->tags],
                     ];
                     $result = $libris->updateDocument($doc['_id'], $body);
@@ -101,12 +94,11 @@ class LibrisUpdateTags extends Command
 
                 $bar->advance();
             }
-        }//end while
+        }// end while
 
         $bar->finish();
-        $this->line("Have a great day.");
+        $this->line('Have a great day.');
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

@@ -2,15 +2,12 @@
 
 namespace App\Providers;
 
-use App\Libris\LibrisService;
 use App\Libris\LibrisInterface;
-
+use App\Libris\LibrisService;
 use Illuminate\Support\ServiceProvider;
 
 class LibrisServiceProvider extends ServiceProvider
 {
-
-
     /**
      * Register services.
      */
@@ -19,20 +16,14 @@ class LibrisServiceProvider extends ServiceProvider
         $this->app->singleton(
             LibrisInterface::class,
             function () {
-                return new LibrisService();
+                return new LibrisService;
             }
         );
 
-    }//end register()
-
+    }// end register()
 
     /**
      * Bootstrap services.
      */
-    public function boot(): void
-    {
-
-    }//end boot()
-
-
-}//end class
+    public function boot(): void {}// end boot()
+}// end class

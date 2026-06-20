@@ -2,13 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-
 use App\Libris\LibrisInterface;
+use Illuminate\Console\Command;
 
 class LibrisDelete extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -23,7 +21,6 @@ class LibrisDelete extends Command
      */
     protected $description = 'Delete Libris index and all document data';
 
-
     /**
      * Create a new command instance.
      *
@@ -33,8 +30,7 @@ class LibrisDelete extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -44,7 +40,6 @@ class LibrisDelete extends Command
         $this->info('Index deleted.');
         $libris->deleteIndex();
 
-    }//end handle()
+    }// end handle()
 
-
-}//end class
+}// end class

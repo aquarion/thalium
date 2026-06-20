@@ -3,15 +3,11 @@
 namespace App\Service;
 
 use App\Exceptions;
-
-use Elasticsearch;
-
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 abstract class ParserService
 {
-
     protected $file;
 
     protected $pages;
@@ -26,27 +22,25 @@ abstract class ParserService
 
     public $filename;
 
-
     abstract public function parsePages();
-
 
     public function generateTags()
     {
         $tags = explode('/', $this->filename);
         array_pop($tags);
+
         // remove the filename from the tags list
         return $tags;
-    } //end generateTags()
-
+    } // end generateTags()
 
     public function __construct($file)
     {
         if (Storage::disk('libris')->missing($file)) {
-            Log::error("[AddDoc] " . $this->filename . " in 'total existance failure' error");
-            throw new Exceptions\LibrisNotFound();
+            Log::error('[AddDoc] '.$this->filename." in 'total existance failure' error");
+            throw new Exceptions\LibrisNotFound;
         }
 
-        $this->filename     = $file;
+        $this->filename = $file;
         $this->lastModified = Storage::disk('libris')->lastModified($file);
 
         $this->tags = $this->generateTags();
@@ -57,30 +51,30 @@ abstract class ParserService
 
         $this->system = $system;
 
-        $boom = explode("/", $this->filename);
+        $boom = explode('/', $this->filename);
 
-        $title       = array_pop($boom);
-        $title       = preg_replace('!\.[^.]+$$!', '', $title);
-        $title       = preg_replace('!-|_!', ' ', $title);
+        $title = array_pop($boom);
+        $title = preg_replace('!\.[^.]+$$!', '', $title);
+        $title = preg_replace('!-|_!', ' ', $title);
         $this->title = $title;
 
-        $size   = Storage::disk('libris')->size($this->filename);
+        $size = Storage::disk('libris')->size($this->filename);
         $sizeMB = number_format($size / 1024);
 
         if ($size > (1024 * 1024 * 1024)) {
-            Log::error("[Parser] TOO LARGE: {$this->title} is " . $sizeMB . "Mb, too large to index");
-            throw new Exceptions\LibrisTooLarge();
+            Log::error("[Parser] TOO LARGE: {$this->title} is ".$sizeMB.'Mb, too large to index');
+            throw new Exceptions\LibrisTooLarge;
         } else {
-            Log::info("[Parser] {$this->title} is a " . $sizeMB . "Mb PDF");
+            Log::info("[Parser] {$this->title} is a ".$sizeMB.'Mb PDF');
         }
-    } //end __construct()
-
+    } // end __construct()
 
     public function generateDocThumbnail()
     {
         Log::info("[AddDoc] {$this->filename} Generating Thumbnail");
+
         return genericThumbnail($this->title);
-    } //end generateDocThumbnail()
+    } // end generateDocThumbnail()
 
     public function getPageCount()
     {
@@ -88,9 +82,10 @@ abstract class ParserService
             return count($this->pages);
         } else {
             Log::error("[Parser] No pages parsed for {$this->filename}");
+
             return 0;
         }
-    } //end getPageCount()
+    } // end getPageCount()
 
     public function getPages()
     {
@@ -98,9 +93,9 @@ abstract class ParserService
             return $this->pages;
         } else {
             Log::error("[Parser] No pages parsed for {$this->filename}");
+
             return [];
         }
-    } //end getPages()
+    } // end getPages()
 
-
-}//end class
+}// end class

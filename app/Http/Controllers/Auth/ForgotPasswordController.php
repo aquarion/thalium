@@ -19,4 +19,4 @@ class ForgotPasswordController extends Controller
     */
 
     use SendsPasswordResetEmails;
-}//end class
+}// end class

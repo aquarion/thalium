@@ -1,6 +1,5 @@
 <?php
 
-
 use Illuminate\Http\Request;
 
 return [
@@ -48,8 +47,7 @@ return [
      *
      * @link https://symfony.com/doc/current/deployment/proxies.html
      */
-    'headers' =>
-    Request::HEADER_X_FORWARDED_FOR |
+    'headers' => Request::HEADER_X_FORWARDED_FOR |
     Request::HEADER_X_FORWARDED_HOST |
     Request::HEADER_X_FORWARDED_PORT |
     Request::HEADER_X_FORWARDED_PROTO |

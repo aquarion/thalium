@@ -2,21 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-
+use App\Jobs\ScanDirectory;
 use App\Libris\LibrisInterface;
-
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-use App\Jobs\ScanDirectory;
-use App\Jobs\ScanFile;
-
 class LibrisUpdate extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -45,7 +40,6 @@ class LibrisUpdate extends Command
      */
     protected $bar;
 
-
     /**
      * Create a new command instance.
      *
@@ -55,8 +49,7 @@ class LibrisUpdate extends Command
     {
         parent::__construct();
 
-    }//end __construct()
-
+    }// end __construct()
 
     /**
      * Execute the console command.
@@ -67,12 +60,12 @@ class LibrisUpdate extends Command
 
         $root = $this->option('start');
 
-        $this->line("Kicking off a reindex for ".Storage::disk('libris')->path($root));
+        $this->line('Kicking off a reindex for '.Storage::disk('libris')->path($root));
 
         $indexer = $libris->getIndexer();
         $indexer->setup();
 
-        $dirCount  = 0;
+        $dirCount = 0;
         $fileCount = 0;
 
         if ($this->option('foreground')) {
@@ -81,8 +74,7 @@ class LibrisUpdate extends Command
             $this->backgroundUpdate();
         }
 
-    }//end handle()
-
+    }// end handle()
 
     public function backgroundUpdate()
     {
@@ -90,51 +82,50 @@ class LibrisUpdate extends Command
         $root = $this->option('start');
 
         $systems = Storage::disk('libris')->directories($root);
-        $files   = Storage::disk('libris')->files($root);
+        $files = Storage::disk('libris')->files($root);
 
-        $dirCount  = 0;
+        $dirCount = 0;
         $fileCount = 0;
 
-        $this->line("Directories:");
+        $this->line('Directories:');
         foreach ($systems as $system) {
             ScanDirectory::dispatch($system) && $dirCount++;
-            $this->line(" * ".$system);
+            $this->line(' * '.$system);
         }
 
         if ($files) {
-            $this->line("Files:");
+            $this->line('Files:');
             foreach ($files as $filename) {
                 $this->libris->dispatchIndexFile($filename) && $fileCount++;
-                $this->line(" * ".$system);
+                $this->line(' * '.$system);
             }
         }
 
         $this->line("Scanning $dirCount directories & $fileCount files");
 
-    }//end backgroundUpdate()
-
+    }// end backgroundUpdate()
 
     public function foregroundUpdate()
     {
         $root = $this->option('start');
         $this->scanDirectory($root);
 
-    }//end foregroundUpdate()
-
+    }// end foregroundUpdate()
 
     public function scanDirectory($dir)
     {
 
-        if (strpos($dir, ".") === 0 && $dir !== ".") {
+        if (strpos($dir, '.') === 0 && $dir !== '.') {
             Log::warning("[ScanDir] Ignoring Name: [{$dir}], hidden directory");
+
             return true;
         }
 
-        $files   = Storage::disk('libris')->files($dir);
+        $files = Storage::disk('libris')->files($dir);
         $subdirs = Storage::disk('libris')->directories($dir);
 
         // Use the Symfony base class for console output, because Laravel's interface doesn't support sections.
-        $output = new ConsoleOutput();
+        $output = new ConsoleOutput;
 
         $section = $output->section($dir);
 
@@ -158,7 +149,6 @@ class LibrisUpdate extends Command
         $bar->finish();
         $section->clear();
 
-    }//end scanDirectory()
+    }// end scanDirectory()
 
-
-}//end class
+}// end class
