@@ -315,8 +315,6 @@ class ElasticSearch implements IndexerInterface
 
             return ElasticSearchClient::indices()->putMapping($params);
         }
-
-        $this->createPipeline();
     } // end updateIndex()
 
     public function deleteIndex()
@@ -671,41 +669,5 @@ class ElasticSearch implements IndexerInterface
             $this->closePointInTime();
         }
     } // end __destruct()
-
-    public function sweepPages($bar)
-    {
-
-        $deleted = 0;
-        $filename = false;
-
-        $size = 100;
-        $searchAfter = false;
-        $this->openPointInTime();
-
-        while (true) {
-            $pages = $this->fetchAllPages($docId, $size, $searchAfter);
-            if (count($pages['hits']['hits']) == 0) {
-                break;
-            }
-
-            foreach ($pages['hits']['hits'] as $index => $page) {
-                $pageId = $page['_id'];
-                // if($filename != $page['_source']['path']) {
-                //     $bar->setMessage("[" . $deleted . "] " . $filename);
-                // }
-                $filename = $page['_source']['path'];
-                if ($this->isMissing($filename)) {
-                    $this->libris->deletePage($pageId);
-                    $bar->setMessage(' Deleted '.$pageId);
-                    $deleted++;
-                }
-
-                $bar->advance();
-
-                $searchAfter = $page['sort'];
-            }
-        } // end while
-
-    } // end sweepPages()
 
 }// end class

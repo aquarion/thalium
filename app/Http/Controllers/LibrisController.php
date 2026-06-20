@@ -102,7 +102,7 @@ class LibrisController extends Controller
         }
 
         if ($document) {
-            $appends['d'] = $documents;
+            $appends['d'] = $document;
         }
 
         if ($tag) {

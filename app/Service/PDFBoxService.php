@@ -154,8 +154,7 @@ class PDFBoxService extends ParserService
         $h = $image->getImageHeight();
         $image->trimImage(1);
 
-        if (($w > $h) > 1.1) {
-            // dd($w."/".$h." ".($w/$h));
+        if (($w / $h) > 1.1) {
             $image->cropImage(($w / 2), $h, ($w / 2), 0);
         }
 

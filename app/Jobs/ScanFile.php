@@ -67,7 +67,7 @@ class ScanFile implements ShouldQueue
             function () {
                 try {
                     $this->libris->scanFile($this->filename);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     Log::info('[Scanfile] Caught Exception');
                     $this->fail($e);
 

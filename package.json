@@ -5,9 +5,9 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "axios": "^1.16",
+        "axios": "^1.17",
         "bootstrap": "^5.3.8",
-        "concurrently": "^9.2.1",
+        "concurrently": "^10.0.3",
         "cross-env": "^10.1",
         "jquery": "^4.0",
         "jsoneditor": "^10.4.3",
@@ -16,8 +16,8 @@
         "popper.js": "^1.12",
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.99.0",
-        "sass-loader": "^16.0.8",
-        "vite": "^8.0.7"
+        "sass-loader": "^17.0.0",
+        "vite": "^8.0.16"
     },
     "dependencies": {
         "bootstrap-icons": "^1.13.1"

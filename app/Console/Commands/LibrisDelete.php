@@ -37,7 +37,8 @@ class LibrisDelete extends Command
      */
     public function handle(LibrisInterface $libris): void
     {
-        var_dump($libris->deleteIndex());
+        $this->info('Index deleted.');
+        $libris->deleteIndex();
 
     }// end handle()
 
