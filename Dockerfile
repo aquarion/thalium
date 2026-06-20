@@ -25,6 +25,8 @@ RUN apk add --no-cache \
         imagemagick-dev \
     && install-php-extensions \
         imagick \
+        pdo_mysql \
+        pdo_sqlite \
         redis \
         pcntl \
         opcache \
