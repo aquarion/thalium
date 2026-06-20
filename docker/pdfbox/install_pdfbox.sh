@@ -20,7 +20,7 @@ echo Installing version $VERSION
 URL=https://dlcdn.apache.org/pdfbox/$VERSION/pdfbox-app-$VERSION.jar
 echo Downloading from $URL
 
-curl --fail -q -L $URL > pdfbox.jar > /usr/share/java/pdfbox.jar
+curl --fail -q -L $URL -o /usr/share/java/pdfbox.jar
 # </CURL>
 
 # <MAVEN> Version that builds our own from Maven
