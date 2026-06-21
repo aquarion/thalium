@@ -151,6 +151,7 @@ jobs:
             mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
+              docker compose exec -T app php artisan migrate:status || true
               exit 1
             }
             docker compose exec -T app php artisan db:seed --force || {
@@ -219,5 +220,6 @@ jobs:
             mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
+              docker compose exec -T app php artisan migrate:status || true
               exit 1
             }
