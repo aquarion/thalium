@@ -661,42 +661,6 @@ class ElasticSearch implements IndexerInterface
         ElasticSearchClient::update($params);
     } // end updateSingleField()
 
-    public function sweepPages($bar)
-    {
-        $size = 100;
-        $searchAfter = false;
-        $documentCache = [];
-        $this->openPointInTime();
-
-        while (true) {
-            $pages = $this->fetchAllPages(false, $size, $searchAfter);
-            if (count($pages['hits']['hits']) == 0) {
-                break;
-            }
-
-            foreach ($pages['hits']['hits'] as $page) {
-                $pageId = $page['_id'];
-                $docId = $page['_source']['path'] ?? null;
-
-                if ($docId === null) {
-                    Log::warning("[SweepPages] Page {$pageId} has no 'path' in _source — skipping (possible orphan)");
-                } else {
-                    if (! array_key_exists($docId, $documentCache)) {
-                        $documentCache[$docId] = (bool) $this->fetchDocument($docId);
-                    }
-
-                    if (! $documentCache[$docId]) {
-                        $this->deletePage($pageId);
-                        $bar ? $bar->setMessage(' Deleted '.$pageId) : null;
-                    }
-                }
-
-                $bar ? $bar->advance() : null;
-                $searchAfter = $page['sort'];
-            }
-        }
-    } // end sweepPages()
-
     public function __destruct()
     {
         if ($this->pointInTime) {
