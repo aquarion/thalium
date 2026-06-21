@@ -72,8 +72,8 @@ RUN cp .env.example .env \
     && rm .env
 
 # Permissions
-RUN chown -R www-data:www-data storage bootstrap/cache public \
-    && chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache public database \
+    && chmod -R 775 storage bootstrap/cache database
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
