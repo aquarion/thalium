@@ -627,11 +627,9 @@ class ElasticSearch implements IndexerInterface
     private function closePointInTime()
     {
         $params = [
-            // 'index' => $this->elasticSearchIndex,
             'id' => $this->pointInTime,
         ];
-        // $response = ElasticSearchClient::closePointInTime($params);
-
+        ElasticSearchClient::closePointInTime($params);
     } // end closePointInTime()
 
     public function getDocThumbnail($doc)
@@ -680,7 +678,9 @@ class ElasticSearch implements IndexerInterface
                 $pageId = $page['_id'];
                 $docId = $page['_source']['path'] ?? null;
 
-                if ($docId !== null) {
+                if ($docId === null) {
+                    Log::warning("[SweepPages] Page {$pageId} has no 'path' in _source — skipping (possible orphan)");
+                } else {
                     if (! array_key_exists($docId, $documentCache)) {
                         $documentCache[$docId] = (bool) $this->fetchDocument($docId);
                     }

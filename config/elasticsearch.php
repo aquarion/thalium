@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
 use Monolog\Level;
 
 return [
@@ -93,8 +92,10 @@ return [
              */
             'logging' => true,
 
-            // Route ES transport logs through Laravel so they appear alongside app logs
-            'logObject' => Log::getLogger(),
+            // logObject cannot be set here — config:cache serialises this array via var_export()
+            // and a Logger instance (with closures/handlers) is not serialisable. Transport logs
+            // go to logPath instead; Handler.php adds host context to the Laravel log on failure.
+            'logObject' => null,
 
             'logPath' => storage_path('logs/elasticsearch.log'),
 
