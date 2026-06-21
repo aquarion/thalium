@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
 use Monolog\Level;
 
 return [
@@ -92,8 +93,8 @@ return [
              */
             'logging' => true,
 
-            // If you have an existing instance of Monolog you can use it here.
-            // 'logObject' => \Log::getMonolog(),
+            // Route ES transport logs through Laravel so they appear alongside app logs
+            'logObject' => Log::getLogger(),
 
             'logPath' => storage_path('logs/elasticsearch.log'),
 

@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
+use Elasticsearch\Common\Exceptions\NoNodesAvailableException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -28,6 +30,12 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $exception)
     {
+        if ($exception instanceof NoNodesAvailableException) {
+            $host = config('elasticsearch.connections.default.hosts.0.host', 'unknown');
+            $port = config('elasticsearch.connections.default.hosts.0.port', 9200);
+            Log::error("[ElasticSearch] Cannot connect to {$host}:{$port} — check storage/logs/elasticsearch.log for transport details");
+        }
+
         parent::report($exception);
 
     }// end report()
