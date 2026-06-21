@@ -153,6 +153,10 @@ jobs:
               echo "ERROR: Migration failed"
               exit 1
             }
+            docker compose exec -T app php artisan db:seed --force || {
+              echo "ERROR: Seeding failed"
+              exit 1
+            }
 
   deploy-production:
     needs: build-and-push
