@@ -15,8 +15,8 @@ on:
         required: true
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ inputs.tag || github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ inputs.tag == '' }}
 
 env:
   REGISTRY: ghcr.io
@@ -142,8 +142,13 @@ jobs:
               echo "ERROR: docker compose cp failed. Existing assets preserved."
               exit 1
             }
+            docker compose cp app:/var/www/html/public/build/manifest.json public/build/manifest.json.new || {
+              echo "ERROR: docker compose cp manifest.json failed. Existing assets preserved."
+              exit 1
+            }
             rm -rf public/build/assets
             mv public/build/assets.new public/build/assets
+            mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
               exit 1
@@ -201,8 +206,13 @@ jobs:
               echo "ERROR: docker compose cp failed. Existing assets preserved."
               exit 1
             }
+            docker compose cp app:/var/www/html/public/build/manifest.json public/build/manifest.json.new || {
+              echo "ERROR: docker compose cp manifest.json failed. Existing assets preserved."
+              exit 1
+            }
             rm -rf public/build/assets
             mv public/build/assets.new public/build/assets
+            mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
               exit 1
