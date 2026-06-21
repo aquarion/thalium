@@ -13,6 +13,7 @@ ARG APP_ENV=production
 
 # System dependencies
 RUN apk add --no-cache \
+    bash \
     git \
     unzip \
     curl \
@@ -42,8 +43,7 @@ RUN for dir in /etc/ImageMagick-6 /etc/ImageMagick-7; do \
 # PDFBox jar (latest 3.x via Apache projects API)
 COPY docker/pdfbox/install_pdfbox.sh /tmp/install_pdfbox.sh
 RUN mkdir -p /usr/share/java \
-    && chmod +x /tmp/install_pdfbox.sh \
-    && /tmp/install_pdfbox.sh \
+    && bash /tmp/install_pdfbox.sh \
     && rm /tmp/install_pdfbox.sh
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
