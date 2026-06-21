@@ -68,6 +68,7 @@ COPY . .
 COPY --from=node-build /var/www/html/public/build public/build
 RUN cp .env.example .env \
     && php artisan key:generate --force \
+    && composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
     && rm .env
 
