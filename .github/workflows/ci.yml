@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [dependabot-updates]
+    branches-ignore: [main]
   pull_request:
     branches: ["**"]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -34,9 +34,11 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     if: |
-      github.ref != 'refs/heads/dependabot-updates' &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) &&
-      !github.event.pull_request.draft
+      (github.event_name == 'pull_request' &&
+       !github.event.pull_request.draft &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      github.event_name == 'workflow_call' ||
+      github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
