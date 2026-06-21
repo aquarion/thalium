@@ -72,8 +72,15 @@ RUN cp .env.example .env \
     && rm .env
 
 # Permissions
-RUN chown -R www-data:www-data storage bootstrap/cache public database \
-    && chmod -R 775 storage bootstrap/cache database
+# database/ is chowned non-recursively so PHP files (migrations/seeds/factories)
+# stay root-owned and non-writable; only the dir + sqlite file need www-data access.
+RUN chown -R www-data:www-data storage bootstrap/cache public \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown www-data:www-data database \
+    && chmod 775 database \
+    && touch database/database.sqlite \
+    && chown www-data:www-data database/database.sqlite \
+    && chmod 664 database/database.sqlite
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
