@@ -127,10 +127,12 @@ jobs:
               fi
               if [ "$i" -eq 30 ]; then
                 echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final readiness check output ---"
+                docker compose exec -T app php artisan --version || true
                 docker compose logs --tail=50 app
                 exit 1
               fi
-              echo "Attempt ${i}/30: waiting..."
+              echo "Attempt ${i}/30: container not ready, waiting..."
               sleep 2
             done
             docker compose exec -T app test -d /var/www/html/public/build/assets || {
@@ -196,10 +198,12 @@ jobs:
               fi
               if [ "$i" -eq 30 ]; then
                 echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final readiness check output ---"
+                docker compose exec -T app php artisan --version || true
                 docker compose logs --tail=50 app
                 exit 1
               fi
-              echo "Attempt ${i}/30: waiting..."
+              echo "Attempt ${i}/30: container not ready, waiting..."
               sleep 2
             done
             docker compose exec -T app test -d /var/www/html/public/build/assets || {
