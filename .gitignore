@@ -23,6 +23,7 @@ docker/pdfbox/target
 public/css/
 public/js/
 storage/opensearch
+storage/meili_data
 *.bak
 .DS_Store
 test_data

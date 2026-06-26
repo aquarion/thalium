@@ -56,6 +56,14 @@ services:
         target: /usr/share/elasticsearch/config/certs
         volume: {}
     working_dir: /var/www/
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_ENV: '${MEILI_ENV:-development}'
+    volumes:
+      - ./storage/meili_data:/meili_data
 networks:
   default:
     name: thalium_default
