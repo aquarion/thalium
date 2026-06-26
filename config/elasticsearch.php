@@ -92,8 +92,10 @@ return [
              */
             'logging' => true,
 
-            // If you have an existing instance of Monolog you can use it here.
-            // 'logObject' => \Log::getMonolog(),
+            // logObject cannot be set here — config:cache serialises this array via var_export()
+            // and a Logger instance (with closures/handlers) is not serialisable. Transport logs
+            // go to logPath instead; Handler.php adds host context to the Laravel log on failure.
+            'logObject' => null,
 
             'logPath' => storage_path('logs/elasticsearch.log'),
 

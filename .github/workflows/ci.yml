@@ -1,11 +1,11 @@
-name: CI
+name: ci
 
 on:
   push:
     branches: [dependabot-updates]
   pull_request:
     branches: ["**"]
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -13,6 +13,10 @@ on:
         description: "Release tag to build and deploy"
         type: string
         required: true
+
+concurrency:
+  group: ci-${{ inputs.tag || github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ inputs.tag == '' }}
 
 env:
   REGISTRY: ghcr.io
@@ -34,8 +38,11 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     if: |
-      github.ref != 'refs/heads/dependabot-updates' &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      (github.event_name == 'pull_request' &&
+       !github.event.pull_request.draft &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      github.event_name == 'workflow_call' ||
+      github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -120,10 +127,12 @@ jobs:
               fi
               if [ "$i" -eq 30 ]; then
                 echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final readiness check output ---"
+                docker compose exec -T app php artisan --version || true
                 docker compose logs --tail=50 app
                 exit 1
               fi
-              echo "Attempt ${i}/30: waiting..."
+              echo "Attempt ${i}/30: container not ready, waiting..."
               sleep 2
             done
             docker compose exec -T app test -d /var/www/html/public/build/assets || {
@@ -135,10 +144,20 @@ jobs:
               echo "ERROR: docker compose cp failed. Existing assets preserved."
               exit 1
             }
+            docker compose cp app:/var/www/html/public/build/manifest.json public/build/manifest.json.new || {
+              echo "ERROR: docker compose cp manifest.json failed. Existing assets preserved."
+              exit 1
+            }
             rm -rf public/build/assets
             mv public/build/assets.new public/build/assets
+            mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
+              docker compose exec -T app php artisan migrate:status || true
+              exit 1
+            }
+            docker compose exec -T app php artisan db:seed --force || {
+              echo "ERROR: Seeding failed"
               exit 1
             }
 
@@ -179,10 +198,12 @@ jobs:
               fi
               if [ "$i" -eq 30 ]; then
                 echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final readiness check output ---"
+                docker compose exec -T app php artisan --version || true
                 docker compose logs --tail=50 app
                 exit 1
               fi
-              echo "Attempt ${i}/30: waiting..."
+              echo "Attempt ${i}/30: container not ready, waiting..."
               sleep 2
             done
             docker compose exec -T app test -d /var/www/html/public/build/assets || {
@@ -194,9 +215,15 @@ jobs:
               echo "ERROR: docker compose cp failed. Existing assets preserved."
               exit 1
             }
+            docker compose cp app:/var/www/html/public/build/manifest.json public/build/manifest.json.new || {
+              echo "ERROR: docker compose cp manifest.json failed. Existing assets preserved."
+              exit 1
+            }
             rm -rf public/build/assets
             mv public/build/assets.new public/build/assets
+            mv public/build/manifest.json.new public/build/manifest.json
             docker compose exec -T app php artisan migrate --force || {
               echo "ERROR: Migration failed"
+              docker compose exec -T app php artisan migrate:status || true
               exit 1
             }
