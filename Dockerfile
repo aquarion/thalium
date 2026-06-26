@@ -18,6 +18,7 @@ RUN apk add --no-cache \
     unzip \
     curl \
     jq \
+    gnupg \
     openjdk21-jre-headless \
     imagemagick \
     ghostscript \

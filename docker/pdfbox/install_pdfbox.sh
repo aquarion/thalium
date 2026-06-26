@@ -31,16 +31,38 @@ if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
 fi
 
 echo "Installing PDFBox version: ${VERSION}"
-URL="https://dlcdn.apache.org/pdfbox/${VERSION}/pdfbox-app-${VERSION}.jar"
-echo "Downloading from ${URL}"
 
-curl --fail -L "${URL}" -o /usr/share/java/pdfbox.jar
-curl --fail -L "${URL}.sha512" -o /tmp/pdfbox.jar.sha512
+CDN_BASE="https://dlcdn.apache.org/pdfbox/${VERSION}"
+CANONICAL_BASE="https://downloads.apache.org/pdfbox/${VERSION}"
+JAR_FILE="pdfbox-app-${VERSION}.jar"
+JAR_PATH="/usr/share/java/pdfbox.jar"
 
+echo "Downloading JAR from CDN..."
+curl --fail -L "${CDN_BASE}/${JAR_FILE}" -o "${JAR_PATH}"
+
+echo "Verifying SHA-512 checksum..."
+curl --fail -L "${CDN_BASE}/${JAR_FILE}.sha512" -o /tmp/pdfbox.jar.sha512
 EXPECTED_HASH=$(cat /tmp/pdfbox.jar.sha512)
-echo "${EXPECTED_HASH}  /usr/share/java/pdfbox.jar" | sha512sum -c - || {
+echo "${EXPECTED_HASH}  ${JAR_PATH}" | sha512sum -c - || {
     echo "ERROR: SHA512 checksum verification failed — downloaded jar may be corrupt or tampered with." >&2
-    rm -f /usr/share/java/pdfbox.jar
+    rm -f "${JAR_PATH}"
     exit 1
 }
 rm -f /tmp/pdfbox.jar.sha512
+
+# PGP signature fetched from canonical Apache server (different trust root from CDN mirror above)
+echo "Verifying PGP signature from canonical Apache server..."
+curl --fail -L "${CANONICAL_BASE}/${JAR_FILE}.asc" -o /tmp/pdfbox.jar.asc
+curl --fail -L "https://downloads.apache.org/pdfbox/KEYS" -o /tmp/pdfbox-KEYS
+
+GNUPGHOME=$(mktemp -d)
+export GNUPGHOME
+gpg --import /tmp/pdfbox-KEYS 2>/dev/null
+gpg --verify /tmp/pdfbox.jar.asc "${JAR_PATH}" || {
+    echo "ERROR: PGP signature verification failed — jar may be tampered with." >&2
+    rm -f "${JAR_PATH}"
+    rm -rf "${GNUPGHOME}"
+    exit 1
+}
+rm -rf "${GNUPGHOME}" /tmp/pdfbox.jar.asc /tmp/pdfbox-KEYS
+echo "PGP verification passed."
