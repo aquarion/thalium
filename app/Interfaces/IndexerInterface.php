@@ -47,6 +47,4 @@ interface IndexerInterface
     public function getLocalFilename($doc);
 
     public function updateSingleField($document, $field, $value);
-
-    public function sweepPages($bar);
 }// end interface

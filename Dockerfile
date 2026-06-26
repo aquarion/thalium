@@ -1,7 +1,10 @@
-FROM node:22-alpine AS node-deps
+FROM node:22-alpine AS node-build
 WORKDIR /var/www/html
 COPY package.json package-lock.json ./
 RUN npm ci
+COPY . .
+ARG APP_ENV=production
+RUN npm run build
 
 FROM dunglas/frankenphp:1-php8.4-alpine
 WORKDIR /var/www/html
@@ -10,9 +13,11 @@ ARG APP_ENV=production
 
 # System dependencies
 RUN apk add --no-cache \
+    bash \
     git \
     unzip \
     curl \
+    jq \
     openjdk21-jre-headless \
     imagemagick \
     ghostscript \
@@ -21,6 +26,8 @@ RUN apk add --no-cache \
         imagemagick-dev \
     && install-php-extensions \
         imagick \
+        pdo_mysql \
+        pdo_sqlite \
         redis \
         pcntl \
         opcache \
@@ -33,34 +40,48 @@ RUN for dir in /etc/ImageMagick-6 /etc/ImageMagick-7; do \
       mkdir -p "$dir" && cp /tmp/imagemagick-policy.xml "$dir/policy.xml"; \
     done && rm /tmp/imagemagick-policy.xml
 
-# PDFBox jar (pinned version for reproducible builds)
+# PDFBox jar (latest 3.x via Apache projects API)
+COPY docker/pdfbox/install_pdfbox.sh /tmp/install_pdfbox.sh
 RUN mkdir -p /usr/share/java \
-    && curl -fL "https://dlcdn.apache.org/pdfbox/3.0.4/pdfbox-app-3.0.4.jar" \
-         -o /usr/share/java/pdfbox.jar \
-    && echo "f598c2e9ce0aee0a11e5a36a15cf06fe534212033fbc984a86ff4d2ff10a73b6c71ca61762d8b527f065a23ffb19e7011ac097865196d4f9490827133fae69cf  /usr/share/java/pdfbox.jar" \
-         | sha512sum -c -
+    && bash /tmp/install_pdfbox.sh \
+    && rm /tmp/install_pdfbox.sh
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
+
+# Create all directories Laravel needs before any PHP/composer commands run
+RUN mkdir -p \
+    bootstrap/cache \
+    database/seeds \
+    database/factories \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    storage/app/public \
+    storage/app/thumbnails
 
 # PHP dependencies
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Node dependencies + Vite build
-COPY --from=node-deps /var/www/html/node_modules node_modules
 COPY . .
+COPY --from=node-build /var/www/html/public/build public/build
 RUN cp .env.example .env \
     && php artisan key:generate --force \
+    && composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
-    && APP_ENV=$APP_ENV npm run build \
-    && rm .env \
-    && rm -rf node_modules
+    && rm .env
 
 # Permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
-             storage/logs storage/app/public storage/app/thumbnails bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache public \
-    && chmod -R 775 storage bootstrap/cache
+# database/ is chowned non-recursively so PHP files (migrations/seeds/factories)
+# stay root-owned and non-writable; only the dir + sqlite file need www-data access.
+RUN chown -R www-data:www-data storage bootstrap/cache public \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown www-data:www-data database \
+    && chmod 775 database \
+    && touch database/database.sqlite \
+    && chown www-data:www-data database/database.sqlite \
+    && chmod 664 database/database.sqlite
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

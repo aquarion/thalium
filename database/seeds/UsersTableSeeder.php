@@ -13,7 +13,8 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('users')->insert([
+        // TODO: replace hardcoded password with an env var (APP_SEED_PASSWORD)
+        DB::table('users')->insertOrIgnore([
             'name' => 'Aquarion',
             'email' => 'nicholas@aquarionics.com',
             'password' => Hash::make('toaster123'),

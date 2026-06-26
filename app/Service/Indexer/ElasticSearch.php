@@ -627,11 +627,9 @@ class ElasticSearch implements IndexerInterface
     private function closePointInTime()
     {
         $params = [
-            // 'index' => $this->elasticSearchIndex,
             'id' => $this->pointInTime,
         ];
-        // $response = ElasticSearchClient::closePointInTime($params);
-
+        ElasticSearchClient::closePointInTime($params);
     } // end closePointInTime()
 
     public function getDocThumbnail($doc)
