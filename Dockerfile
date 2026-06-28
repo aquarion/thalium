@@ -1,3 +1,5 @@
+FROM aquarion/pdfbox AS pdfbox-libs
+
 FROM node:22-alpine AS node-build
 WORKDIR /var/www/html
 COPY package.json package-lock.json ./
@@ -18,7 +20,6 @@ RUN apk add --no-cache \
     unzip \
     curl \
     jq \
-    gnupg \
     openjdk21-jre-headless \
     imagemagick \
     ghostscript \
@@ -41,11 +42,8 @@ RUN for dir in /etc/ImageMagick-6 /etc/ImageMagick-7; do \
       mkdir -p "$dir" && cp /tmp/imagemagick-policy.xml "$dir/policy.xml"; \
     done && rm /tmp/imagemagick-policy.xml
 
-# PDFBox jar (latest 3.x via Apache projects API)
-COPY docker/pdfbox/install_pdfbox.sh /tmp/install_pdfbox.sh
-RUN mkdir -p /usr/share/java \
-    && bash /tmp/install_pdfbox.sh \
-    && rm /tmp/install_pdfbox.sh
+# PDFBox jars (from aquarion/pdfbox image: PDFBox + image format plugins)
+COPY --from=pdfbox-libs /opt/pdfbox /usr/share/java/pdfbox
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
 
