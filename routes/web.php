@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-FacAuth::routes();
+FacAuth::routes(['register' => false]);
 
 Route::get('/auth/checkLogin', [Auth\CheckLoginController::class, 'checkLogin']);
 
