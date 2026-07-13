@@ -345,6 +345,8 @@ git commit -m "⚙️ Switch dependabot to weekly dependabot-updates branch flow
 
 PDFBox jar is downloaded at build time from the Apache CDN (matching the existing `docker/pdfbox/install_pdfbox.sh` pattern). The PDFBox binary path `/usr/share/java/pdfbox.jar` is hardcoded in `app/Service/PDFBoxService.php:13` — do not change it.
 
+**Superseded:** PDFBox is now sourced from the `aquarion/pdfbox` image via multi-stage build (see #1250). The JARs live under the directory `/usr/share/java/pdfbox`, not a single `pdfbox.jar` file, and `PDFBoxService` invokes them via `java -cp '/usr/share/java/pdfbox/*' org.apache.pdfbox.tools.PDFBox` rather than `java -jar`.
+
 The `DOCKER_PDF_LIBRARY` env var (used by the `libris` filesystem disk in `config/filesystems.php`) is set at runtime by Ansible — it is not baked into the image. In production, Ansible sets it to `/mnt/rpg`.
 
 - [ ] **Step 1: Create `docker/entrypoint.sh`**
