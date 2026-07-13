@@ -33,7 +33,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
 
     <!-- Bootstrap core CSS -->
-<link rel="stylesheet" href="/css/app.css">
+@vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
   </head>
   <body>
@@ -163,9 +163,6 @@
 
 
 </main><!-- /.container -->
-
-@vite(['resources/sass/app.scss', 'resources/js/app.js'])
-
 
 </body>
 </html>

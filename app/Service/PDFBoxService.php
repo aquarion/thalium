@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PDFBoxService extends ParserService
 {
-    private $pdfboxBin = '/usr/share/java/pdfbox.jar';
+    private $pdfboxBin = '/usr/share/java/pdfbox';
 
     private $tempFile = '';
 
@@ -59,7 +59,7 @@ class PDFBoxService extends ParserService
 
     public function run_pdfbox($command)
     {
-        $PDFBoxExecTemplate = '/usr/bin/java -jar %s %s "%s"';
+        $PDFBoxExecTemplate = "/usr/bin/java -cp '%s/*' org.apache.pdfbox.tools.PDFBox %s \"%s\"";
 
         $cmd = sprintf($PDFBoxExecTemplate, $this->pdfboxBin, $command, $this->tempFile);
         Log::Info($cmd);
