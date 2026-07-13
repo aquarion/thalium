@@ -34,14 +34,25 @@ echo "Installing PDFBox version: ${VERSION}"
 
 CDN_BASE="https://dlcdn.apache.org/pdfbox/${VERSION}"
 CANONICAL_BASE="https://downloads.apache.org/pdfbox/${VERSION}"
+ARCHIVE_BASE="https://archive.apache.org/dist/pdfbox/${VERSION}"
 JAR_FILE="pdfbox-app-${VERSION}.jar"
 JAR_PATH="/usr/share/java/pdfbox.jar"
 
+# dlcdn.apache.org / downloads.apache.org only mirror the current release and
+# purge older ones as soon as a new version ships, so a version resolved from
+# the projects API can 404 there right after release. archive.apache.org
+# retains every release permanently, so fall back to it in that case.
+fetch_with_fallback() {
+    local primary="$1" path="$2" dest="$3"
+    curl --fail -L "${primary}/${path}" -o "${dest}" \
+        || curl --fail -L "${ARCHIVE_BASE}/${path}" -o "${dest}"
+}
+
 echo "Downloading JAR from CDN..."
-curl --fail -L "${CDN_BASE}/${JAR_FILE}" -o "${JAR_PATH}"
+fetch_with_fallback "${CDN_BASE}" "${JAR_FILE}" "${JAR_PATH}"
 
 echo "Verifying SHA-512 checksum..."
-curl --fail -L "${CDN_BASE}/${JAR_FILE}.sha512" -o /tmp/pdfbox.jar.sha512
+fetch_with_fallback "${CDN_BASE}" "${JAR_FILE}.sha512" /tmp/pdfbox.jar.sha512
 EXPECTED_HASH=$(cat /tmp/pdfbox.jar.sha512)
 echo "${EXPECTED_HASH}  ${JAR_PATH}" | sha512sum -c - || {
     echo "ERROR: SHA512 checksum verification failed — downloaded jar may be corrupt or tampered with." >&2
@@ -52,7 +63,7 @@ rm -f /tmp/pdfbox.jar.sha512
 
 # PGP signature fetched from canonical Apache server (different trust root from CDN mirror above)
 echo "Verifying PGP signature from canonical Apache server..."
-curl --fail -L "${CANONICAL_BASE}/${JAR_FILE}.asc" -o /tmp/pdfbox.jar.asc
+fetch_with_fallback "${CANONICAL_BASE}" "${JAR_FILE}.asc" /tmp/pdfbox.jar.asc
 curl --fail -L "https://downloads.apache.org/pdfbox/KEYS" -o /tmp/pdfbox-KEYS
 
 GNUPGHOME=$(mktemp -d)
