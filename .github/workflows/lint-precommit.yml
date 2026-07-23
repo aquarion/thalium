@@ -21,7 +21,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "${{ vars.php_version }}"
-          extensions: redis, xml, cli
+          extensions: redis, xml, cli, opentelemetry
           tools: composer
 
       - name: Get composer cache directory
