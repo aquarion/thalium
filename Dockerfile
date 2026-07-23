@@ -34,6 +34,7 @@ RUN apk add --no-cache \
         pcntl \
         opcache \
         zip \
+        opentelemetry \
     && apk del .build-deps
 
 # ImageMagick policy to allow PDF processing
@@ -95,10 +96,13 @@ EXPOSE ${OCTANE_PORT}
 ARG APP_VERSION=dev
 ARG APP_PR_NUMBER=
 ARG APP_BRANCH=
+ARG APP_NAME=Thalium
 
 ENV APP_VERSION=$APP_VERSION
 ENV APP_PR_NUMBER=$APP_PR_NUMBER
 ENV APP_BRANCH=$APP_BRANCH
+
+ENV OTEL_RESOURCE_ATTRIBUTES="service.version=$APP_VERSION,service.environment=$APP_ENV,service.name=$APP_NAME,service.revision=$APP_PR_NUMBER,service.branch=$APP_BRANCH"
 
 LABEL org.opencontainers.image.version=$APP_VERSION \
       org.opencontainers.image.revision=$APP_PR_NUMBER \
