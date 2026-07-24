@@ -1,6 +1,6 @@
-FROM aquarion/pdfbox:3.0@sha256:7f33bc9048cd02a47d2d617506ff8f8b514cb7c586e5aeafa46850bf435eee51 AS pdfbox-libs
+FROM aquarion/pdfbox:3.0@sha256:3148a37b23689e884b28b8596bd18bc72dde76b5ff0d809b04e18a08a301cfc9 AS pdfbox-libs
 
-FROM node:22-alpine AS node-build
+FROM node:26-alpine AS node-build
 WORKDIR /var/www/html
 COPY package.json package-lock.json ./
 RUN npm ci
