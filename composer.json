@@ -14,7 +14,7 @@
         "laravel/octane": "^2.0",
         "laravel/tinker": "^3.0.0",
         "laravel/ui": "^4.6",
-        "mailerlite/laravel-elasticsearch": "^11.2",
+        "mailerlite/laravel-elasticsearch": "^12.0",
         "mobiledetect/mobiledetectlib": "^4.8",
         "nunomaduro/collision": "^8.6",
         "open-telemetry/exporter-otlp": "^1.4",
