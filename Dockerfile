@@ -1,4 +1,4 @@
-FROM aquarion/pdfbox:3.0@sha256:8f6aa2b6c8a108dc91bb7c18c53123dbacb52a537281f5d33d10fc4f9b52dae2 AS pdfbox-libs
+FROM aquarion/pdfbox:3.0@sha256:1914edabe63e8b5781761b105a175a0f08d8f65d964450371c3e66862fa11f7e AS pdfbox-libs
 
 FROM node:26-alpine AS node-build
 WORKDIR /var/www/html
