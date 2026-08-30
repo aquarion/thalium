@@ -5,19 +5,19 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "axios": "^1.18",
+        "axios": "^1.20",
         "bootstrap": "^5.3.8",
-        "concurrently": "^10.0.3",
+        "concurrently": "^10.0.5",
         "cross-env": "^10.1",
         "jquery": "^4.0",
         "jsoneditor": "^10.4.3",
-        "laravel-vite-plugin": "^3.1.3",
+        "laravel-vite-plugin": "^3.2.0",
         "lodash": ">=4.18.1",
         "popper.js": "^1.12",
         "resolve-url-loader": "^5.0.0",
-        "sass": "^1.101.0",
+        "sass": "^1.103.1",
         "sass-loader": "^17.0.0",
-        "vite": "^8.1.5"
+        "vite": "^8.2.2"
     },
     "dependencies": {
         "bootstrap-icons": "^1.13.1"
