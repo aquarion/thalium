@@ -7,7 +7,7 @@
     "devDependencies": {
         "axios": "^1.20",
         "bootstrap": "^5.3.8",
-        "concurrently": "^10.0.5",
+        "concurrently": "^10.0.6",
         "cross-env": "^10.1",
         "jquery": "^4.0",
         "jsoneditor": "^10.4.3",
@@ -17,9 +17,9 @@
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.105.1",
         "sass-loader": "^17.0.1",
-        "vite": "^8.3.2"
+        "vite": "^8.3.4"
     },
     "dependencies": {
-        "bootstrap-icons": "^1.13.1"
+        "bootstrap-icons": "^1.13.2"
     }
 }
