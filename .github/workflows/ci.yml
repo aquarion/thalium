@@ -15,7 +15,11 @@ on:
         required: true
 
 concurrency:
-  group: ci-${{ inputs.tag || github.head_ref || github.ref_name }}
+  # event_name keeps the push run on dependabot-updates and the pull_request
+  # run for its PR in separate groups. Both resolve the branch to
+  # "dependabot-updates", so with a shared group the PR run cancelled the push
+  # run, leaving cancelled required checks that block the weekly merge.
+  group: ci-${{ github.event_name }}-${{ inputs.tag || github.head_ref || github.ref_name }}
   cancel-in-progress: ${{ inputs.tag == '' }}
 
 env:
