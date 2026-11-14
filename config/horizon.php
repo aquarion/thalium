@@ -170,8 +170,12 @@ return [
                 'connection' => 'redis',
                 'queue' => ['default'],
                 'balance' => 'simple',
-                'processes' => 10,
+                // Kept low: ScanFile/ScanDirectory backlogs write to Elasticsearch,
+                // and 10 workers overwhelmed the cluster. Raise with care.
+                'processes' => 2,
                 'tries' => 1,
+                // Library scans (large PDFs) routinely exceed the 60s default.
+                'timeout' => 1800,
             ],
         ],
 
