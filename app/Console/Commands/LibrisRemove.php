@@ -45,17 +45,16 @@ class LibrisRemove extends Command
     public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
-        try {
-            $result = $libris->fetchDocument($filename);
-            // dump($result);
-            $this->line("Found $filename");
-            $result = $libris->deleteDocument($filename);
-            $this->line("Removed $filename");
-        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
+        $result = $libris->fetchDocument($filename);
+        if ($result === false) {
             $this->error("$filename not found in index");
 
             return 1;
         }
+
+        $this->line("Found $filename");
+        $libris->deleteDocument($filename);
+        $this->line("Removed $filename");
 
         return 0;
 
