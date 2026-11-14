@@ -39,6 +39,11 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     }
 fi
 
+if [ "$#" -gt 0 ]; then
+    echo "[entrypoint] Running: $*"
+    exec "$@"
+fi
+
 echo "[entrypoint] Starting Octane..."
 exec php artisan octane:start \
     --server="${OCTANE_SERVER:-frankenphp}" \
