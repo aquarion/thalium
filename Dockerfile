@@ -28,6 +28,7 @@ RUN apk add --no-cache \
         imagemagick-dev \
     && install-php-extensions \
         imagick \
+        intl \
         pdo_mysql \
         pdo_sqlite \
         redis \
@@ -91,6 +92,14 @@ RUN chmod +x /entrypoint.sh
 USER www-data
 
 ENV OCTANE_PORT=8000
+
+# The container user's HOME isn't writable; point PsySH (artisan tinker) and
+# other XDG-aware tools at a writable directory.
+ENV XDG_CONFIG_HOME=/tmp
+
+# Must exceed the Horizon worker timeout (1800s in config/horizon.php), or
+# long-running jobs get re-queued while still running.
+ENV REDIS_QUEUE_RETRY_AFTER=1860
 EXPOSE ${OCTANE_PORT}
 
 ARG APP_VERSION=dev
