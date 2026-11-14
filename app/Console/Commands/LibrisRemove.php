@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Libris\LibrisInterface;
-use Elasticsearch;
 use Illuminate\Console\Command;
 
 class LibrisRemove extends Command
