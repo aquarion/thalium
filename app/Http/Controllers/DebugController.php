@@ -16,6 +16,7 @@ class DebugController extends Controller
         // dump($id);
         // return view('sysindex', ['systems' => $libris->systems()]);
         $doc = $libris->fetchDocument($id);
+        abort_if(! $doc, 404, 'Document not found in index');
 
         Log::Info($doc);
         $output = "<h2>Stuff</h2>\n";

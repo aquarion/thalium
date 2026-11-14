@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-use Elasticsearch\Common\Exceptions\NoNodesAvailableException;
+use Elastic\Transport\Exception\NoNodeAvailableException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +30,7 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $exception)
     {
-        if ($exception instanceof NoNodesAvailableException) {
+        if ($exception instanceof NoNodeAvailableException) {
             $host = config('elasticsearch.connections.default.hosts.0.host', 'unknown');
             $port = config('elasticsearch.connections.default.hosts.0.port', 9200);
             $scheme = config('elasticsearch.connections.default.hosts.0.scheme', 'null(default http)');
