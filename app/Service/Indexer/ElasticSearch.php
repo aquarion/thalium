@@ -4,6 +4,7 @@ namespace App\Service\Indexer;
 
 use App\Interfaces\IndexerInterface;
 use App\Service\ParserService;
+use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elasticsearch as ElasticSearchClient;
 use Illuminate\Support\Facades\Log;
 
@@ -138,7 +139,11 @@ class ElasticSearch implements IndexerInterface
         try {
             // Get doc at /my_index/_doc/my_id
             return ElasticSearchClient::get($params);
-        } catch (ElasticSearchClient\Common\Exceptions\Missing404Exception $e) {
+        } catch (ClientResponseException $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+
             return false;
         }
     } // end fetchDocument()
@@ -305,7 +310,11 @@ class ElasticSearch implements IndexerInterface
         // If it's missing, create it.
         try {
             return ElasticSearchClient::indices()->putMapping($params);
-        } catch (ElasticSearchClient\Common\Exceptions\Missing404Exception $e) {
+        } catch (ClientResponseException $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+
             $indexparams = [
                 'index' => $this->elasticSearchIndex,
             ];
@@ -356,7 +365,11 @@ class ElasticSearch implements IndexerInterface
             $hasPipeline = ElasticSearchClient::ingest()->getPipeline($params);
 
             return;
-        } catch (ElasticSearchClient\Common\Exceptions\Missing404Exception $e) {
+        } catch (ClientResponseException $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+
             $this->updatePipeline();
         }
     } // end createPipeline()

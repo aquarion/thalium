@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Libris\LibrisInterface;
-use Elasticsearch;
+use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Illuminate\Console\Command;
 
 class LibrisRemove extends Command
@@ -45,17 +45,27 @@ class LibrisRemove extends Command
     public function handle(LibrisInterface $libris): int
     {
         $filename = $this->argument('filename');
-        try {
-            $result = $libris->fetchDocument($filename);
-            // dump($result);
-            $this->line("Found $filename");
-            $result = $libris->deleteDocument($filename);
-            $this->line("Removed $filename");
-        } catch (Elasticsearch\Common\Exceptions\Missing404Exception $e) {
+        if ($libris->fetchDocument($filename) === false) {
             $this->error("$filename not found in index");
 
             return 1;
         }
+
+        $this->line("Found $filename");
+
+        try {
+            $libris->deleteDocument($filename);
+        } catch (ClientResponseException $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+
+            $this->error("$filename not found in index");
+
+            return 1;
+        }
+
+        $this->line("Removed $filename");
 
         return 0;
 
