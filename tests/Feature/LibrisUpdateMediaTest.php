@@ -102,6 +102,23 @@ class LibrisUpdateMediaTest extends TestCase
             ->expectsOutputToContain('Added 0, updated 0, unchanged 3');
     }
 
+    public function test_force_rereads_unchanged_files_in_the_foreground(): void
+    {
+        Queue::fake();
+        Storage::disk('libris')->put('SysA/Album/raw.mp3', $this->mp3WithTags(['TIT2' => 'Real Title', 'TRCK' => '4']));
+        $item = (new MediaIngestService)->ingest('SysA/Album/raw.mp3');
+        MediaItem::where('id', $item->id)->update(['title' => 'stale', 'track_number' => null]);
+
+        $this->artisan('libris:update_media')->assertSuccessful();
+        $this->assertSame('stale', $item->fresh()->title);
+
+        $this->artisan('libris:update_media', ['--force' => true])
+            ->expectsOutputToContain('updated 1')
+            ->assertSuccessful();
+
+        $this->assertSame(['Real Title', 4], [$item->fresh()->title, $item->fresh()->track_number]);
+    }
+
     public function test_is_scheduled_hourly(): void
     {
         $this->artisan('schedule:list')->expectsOutputToContain('libris:update_media');

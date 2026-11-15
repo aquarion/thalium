@@ -39,9 +39,9 @@ class MediaIngestService
 
     /**
      * Create or refresh the row for one file. Null when the file is not
-     * ingestible or has gone; an unchanged mtime is a no-op.
+     * ingestible or has gone; an unchanged mtime is a no-op unless $force.
      */
-    public function ingest(string $path): ?MediaItem
+    public function ingest(string $path, bool $force = false): ?MediaItem
     {
         if (! $this->shouldIngest($path)) {
             return null;
@@ -59,7 +59,7 @@ class MediaIngestService
             $mtime = (int) $disk->lastModified($path);
             $existing = MediaItem::query()->where('path_hash', MediaItem::hashPath($path))->first();
 
-            if ($existing && (int) $existing->mtime === $mtime) {
+            if (! $force && $existing && (int) $existing->mtime === $mtime) {
                 return $existing;
             }
 
@@ -87,6 +87,7 @@ class MediaIngestService
             'height' => $metadata['height'] ?? null,
             'artist' => $metadata['artist'] ?? null,
             'album' => $metadata['album'] ?? null,
+            'track_number' => $metadata['track_number'] ?? null,
             'duration_seconds' => $metadata['duration_seconds'] ?? null,
             'thumbnail' => $kind === MediaKind::Art ? $this->makeThumbnail($parser, $path) : null,
         ]);

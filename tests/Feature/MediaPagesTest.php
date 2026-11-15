@@ -272,4 +272,86 @@ class MediaPagesTest extends TestCase
             ->assertSee('>Artist<', false)
             ->assertDontSee('>Album<', false);
     }
+
+    /** An href attribute as Blade renders it (ampersands escaped). */
+    private function href(string $url): string
+    {
+        return 'href="'.e($url).'"';
+    }
+
+    private function tracks(): void
+    {
+        $this->item('S/A/alpha.mp3', MediaKind::Music, 'S', ['A'], 'Alpha', ['artist' => 'Zed', 'track_number' => 3, 'duration_seconds' => 30]);
+        $this->item('S/A/bravo.mp3', MediaKind::Music, 'S', ['A'], 'Bravo', ['artist' => 'Yan', 'track_number' => 2, 'duration_seconds' => 90]);
+        $this->item('S/A/charlie.mp3', MediaKind::Music, 'S', ['A'], 'Charlie', ['artist' => 'Xi', 'track_number' => 1, 'duration_seconds' => 60]);
+        $this->item('S/A/zulu.mp3', MediaKind::Music, 'S', ['A'], 'Zulu', ['artist' => 'Wu']);
+    }
+
+    public function test_music_sorts_by_each_column_and_direction(): void
+    {
+        $this->login();
+        $this->tracks();
+
+        $order = [
+            // default is title ascending
+            '' => ['Alpha', 'Bravo', 'Charlie', 'Zulu'],
+            '?sort=title&dir=desc' => ['Zulu', 'Charlie', 'Bravo', 'Alpha'],
+            '?sort=track&dir=asc' => ['Charlie', 'Bravo', 'Alpha', 'Zulu'],
+            // artists Wu, Xi, Yan, Zed belong to Zulu, Charlie, Bravo, Alpha
+            '?sort=artist&dir=asc' => ['Zulu', 'Charlie', 'Bravo', 'Alpha'],
+            '?sort=length&dir=desc' => ['Bravo', 'Charlie', 'Alpha', 'Zulu'],
+        ];
+
+        foreach ($order as $query => $titles) {
+            $this->get('/system/S/music'.$query)->assertOk()->assertSeeInOrder($titles);
+        }
+    }
+
+    public function test_tracks_without_a_value_sort_last_in_both_directions(): void
+    {
+        $this->login();
+        $this->tracks();
+
+        $this->get('/system/S/music?sort=track&dir=asc')->assertSeeInOrder(['Charlie', 'Bravo', 'Alpha', 'Zulu']);
+        $this->get('/system/S/music?sort=track&dir=desc')->assertSeeInOrder(['Alpha', 'Bravo', 'Charlie', 'Zulu']);
+    }
+
+    public function test_unknown_sort_values_fall_back_to_title_order(): void
+    {
+        $this->login();
+        $this->tracks();
+
+        $this->get('/system/S/music?sort=password&dir=sideways')->assertOk()
+            ->assertSeeInOrder(['Alpha', 'Bravo', 'Charlie', 'Zulu']);
+        $this->get('/system/S/music?sort[]=x&dir[]=y')->assertOk();
+    }
+
+    public function test_column_headers_link_to_the_sorted_view_and_toggle_direction(): void
+    {
+        $this->login();
+        $this->tracks();
+
+        // Not sorted by track yet: its header offers ascending.
+        $this->get('/system/S/music')->assertOk()
+            ->assertSee($this->href(route('system.music', ['system' => 'S', 'sort' => 'track', 'dir' => 'asc'])).' data-section-link', false)
+            ->assertSee('>#<', false)
+            ->assertSee('aria-sort="ascending"', false);
+
+        // Already ascending: clicking again goes descending, and the header says so.
+        $this->get('/system/S/music?sort=track&dir=asc')->assertOk()
+            ->assertSee($this->href(route('system.music', ['system' => 'S', 'sort' => 'track', 'dir' => 'desc'])).' data-section-link', false);
+        $this->get('/system/S/music?sort=track&dir=desc')->assertOk()->assertSee('aria-sort="descending"', false);
+    }
+
+    public function test_sort_order_survives_changing_tag_and_the_track_column_needs_track_numbers(): void
+    {
+        $this->login();
+        $this->tracks();
+
+        $this->get('/system/S/music?sort=length&dir=desc')->assertOk()
+            ->assertSee($this->href(route('system.music', ['system' => 'S', 'tag' => 'A', 'sort' => 'length', 'dir' => 'desc'])), false);
+
+        $this->item('S/B/untracked.mp3', MediaKind::Music, 'T', ['B'], 'Untracked');
+        $this->get('/system/T/music')->assertOk()->assertSee('Untracked')->assertDontSee('>#<', false);
+    }
 }

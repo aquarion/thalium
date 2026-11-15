@@ -130,4 +130,32 @@ class MediaIngestTest extends TestCase
 
         $this->assertSame(['Sys/Deep/b.mp3', 'Sys/a.png'], $paths);
     }
+
+    public function test_ingest_stores_tags_and_track_number(): void
+    {
+        Storage::disk('libris')->put('Sys/Album/raw.mp3', $this->mp3WithTags([
+            'TIT2' => 'Deep Hack', 'TPE1' => 'The Band', 'TALB' => 'The Album', 'TRCK' => '3/17',
+        ]));
+
+        $item = $this->service->ingest('Sys/Album/raw.mp3');
+
+        $this->assertSame(
+            ['Deep Hack', 'The Band', 'The Album', 3],
+            [$item->title, $item->artist, $item->album, $item->track_number]
+        );
+    }
+
+    public function test_force_rereads_a_file_whose_mtime_has_not_changed(): void
+    {
+        Storage::disk('libris')->put('Sys/Album/raw.mp3', $this->mp3WithTags(['TIT2' => 'Real Title', 'TRCK' => '2']));
+        $item = $this->service->ingest('Sys/Album/raw.mp3');
+        MediaItem::where('id', $item->id)->update(['title' => 'stale', 'track_number' => null]);
+
+        $this->assertSame('stale', $this->service->ingest('Sys/Album/raw.mp3')->title);
+
+        $forced = $this->service->ingest('Sys/Album/raw.mp3', true);
+
+        $this->assertSame('Real Title', $forced->title);
+        $this->assertSame(2, $forced->track_number);
+    }
 }

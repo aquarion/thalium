@@ -39,6 +39,14 @@ class ParseAudioService extends ParserService implements MediaParserInterface
             }
         }
 
+        // ID3 keeps it as "3" or "3/12"; Vorbis comments call it "tracknumber".
+        $track = $this->firstTag($info, 'track_number')
+            ?? $this->firstTag($info, 'tracknumber')
+            ?? $this->firstTag($info, 'track');
+        if ($track !== null && (int) $track > 0) {
+            $metadata['track_number'] = min((int) $track, 65535);
+        }
+
         $playtime = $info['playtime_seconds'] ?? null;
         if ($playtime) {
             $metadata['duration_seconds'] = (int) round($playtime);

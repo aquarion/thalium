@@ -14,7 +14,7 @@ class LibrisUpdateMedia extends Command
      *
      * @var string
      */
-    protected $signature = 'libris:update_media {--foreground : Run in foreground } {--start=. : The directory to start at}';
+    protected $signature = 'libris:update_media {--foreground : Run in foreground } {--force : Re-read every file even if unchanged (runs in the foreground)} {--start=. : The directory to start at}';
 
     /**
      * The console command description.
@@ -32,8 +32,8 @@ class LibrisUpdateMedia extends Command
 
         $this->line('Updating media from '.Storage::disk('libris')->path($root));
 
-        if ($this->option('foreground')) {
-            $this->foregroundUpdate($media, $root);
+        if ($this->option('foreground') || $this->option('force')) {
+            $this->foregroundUpdate($media, $root, (bool) $this->option('force'));
         } else {
             $this->backgroundUpdate($media, $root);
         }
@@ -57,14 +57,14 @@ class LibrisUpdateMedia extends Command
 
     }// end backgroundUpdate()
 
-    private function foregroundUpdate(MediaIngestService $media, string $root): void
+    private function foregroundUpdate(MediaIngestService $media, string $root, bool $force): void
     {
         $added = 0;
         $updated = 0;
         $unchanged = 0;
 
         foreach ($media->paths($root) as $path) {
-            $item = $media->ingest($path);
+            $item = $media->ingest($path, $force);
 
             if ($item === null) {
                 continue;

@@ -76,4 +76,32 @@ class MediaParserTest extends TestCase
         $this->assertInstanceOf(ParseAudioService::class, MediaParserFactory::make('Sys/b.wav'));
         $this->assertNull(MediaParserFactory::make('Sys/c.pdf'));
     }
+
+    public function test_audio_parser_reads_id3_tags_including_track_number(): void
+    {
+        Storage::disk('libris')->put('Sys/Album/03 raw name.mp3', $this->mp3WithTags([
+            'TIT2' => 'Deep Hack',
+            'TPE1' => 'The Band',
+            'TALB' => 'Unhallowed Data Soundtrack',
+            'TRCK' => '3/17',
+        ]));
+
+        $metadata = (new ParseAudioService('Sys/Album/03 raw name.mp3'))->metadata();
+
+        $this->assertSame('Deep Hack', $metadata['title']);
+        $this->assertSame('The Band', $metadata['artist']);
+        $this->assertSame('Unhallowed Data Soundtrack', $metadata['album']);
+        $this->assertSame(3, $metadata['track_number']);
+    }
+
+    public function test_track_number_without_a_total_and_junk_values(): void
+    {
+        Storage::disk('libris')->put('Sys/Album/a.mp3', $this->mp3WithTags(['TIT2' => 'A', 'TRCK' => '7']));
+        Storage::disk('libris')->put('Sys/Album/b.mp3', $this->mp3WithTags(['TIT2' => 'B', 'TRCK' => 'abc']));
+        Storage::disk('libris')->put('Sys/Album/c.mp3', $this->mp3WithTags(['TIT2' => 'C', 'TRCK' => '0']));
+
+        $this->assertSame(7, (new ParseAudioService('Sys/Album/a.mp3'))->metadata()['track_number']);
+        $this->assertArrayNotHasKey('track_number', (new ParseAudioService('Sys/Album/b.mp3'))->metadata());
+        $this->assertArrayNotHasKey('track_number', (new ParseAudioService('Sys/Album/c.mp3'))->metadata());
+    }
 }

@@ -8,8 +8,8 @@ interface MediaParserInterface
 
     /**
      * Whatever metadata could be read from the file. Keys are only present when
-     * known: art gives width/height; music gives title, artist, album and
-     * duration_seconds. Unreadable files give [].
+     * known: art gives width/height; music gives title, artist, album,
+     * track_number and duration_seconds. Unreadable files give [].
      */
     public function metadata(): array;
 }// end interface

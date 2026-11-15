@@ -24,6 +24,7 @@ class MediaItem extends Model
         'thumbnail',
         'artist',
         'album',
+        'track_number',
         'duration_seconds',
     ];
 
