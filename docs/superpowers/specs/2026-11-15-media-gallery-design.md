@@ -1,7 +1,7 @@
 # Media gallery (art & music) — design
 
 Status: draft, awaiting approval
-Repos touched: `aquarion/thalium` (app), `aquarion/autopelago` (one nginx location for gated thumbnails)
+Repos touched: `aquarion/thalium` only. No `autopelago` change.
 
 ## Intent and why
 
@@ -34,7 +34,8 @@ The use is **browsing and playing mid-game**, not finding things. No search.
 ## Anti-goals
 
 - Playback that stops or glitches when the user clicks to another page.
-- Media URLs that work without a login session.
+- Full-size media files that work without a login session (thumbnails are
+  excepted, as for PDFs; see Constraints).
 - Coupling to the PDF index: the PDF gallery must be unaffected.
 
 ## Constraints
@@ -48,8 +49,10 @@ The use is **browsing and playing mid-game**, not finding things. No search.
   `auth_request /_authcheck` (cookie session → `/auth/checkLogin`), so media
   files are already gated and need no new nginx location. nginx range requests
   give audio seeking for free.
-- Existing quirk to not copy: `/_thumbnails/` currently has **no** `auth_request`.
-  Media thumbnails must be gated (see Serving).
+- Existing quirk, deliberately left alone: `/_thumbnails/` has **no**
+  `auth_request`, so PDF thumbnails (and, with this design, media thumbnails)
+  are reachable without a login by anyone who knows the URL. Gating it is a
+  separate piece of work, tracked in its own issue; it will cover media for free.
 - `autopelago` CLAUDE.md applies to the infra change: follow the existing
   `thalium.conf.j2` pattern; use `ansible_facts[...]` form if any facts are used;
   save full playbook output to a file when running it.
@@ -146,13 +149,9 @@ playback; that is acceptable. The queue is not persisted (no playlists).
 
 - Media files themselves: **no infra change.** Pages link to
   `{LIBRARY_URL}path`, i.e. the existing gated `/_libris/` location.
-- Thumbnails live under a dedicated directory (`storage/app/media-thumbnails`)
-  so they can be gated, rather than in the ungated `thumbnails` disk. That needs
-  one new location, `location /_media_thumbs/ { alias ...; auth_request /_authcheck; }`,
-  in `autopelago` (`thalium.conf.j2`, mirroring the `/_thumbnails/` alias path
-  but with the auth line) and in `thalium` (`etc/thalium.nginx.conf`). This is
-  the only `autopelago` change; it adds a location and removes or renames
-  nothing, so no cleanup tasks are needed.
+- Thumbnails reuse the existing `thumbnails` disk and `/_thumbnails/` location,
+  named `md5(path).png` like the PDF ones (media and PDF paths differ, so no
+  collisions). No `autopelago` or nginx change at all.
 
 ### Interaction with the PDF indexer
 
@@ -183,8 +182,8 @@ should make the PDF scan skip image/audio files quietly (a small check in
 ## My calls (not yet confirmed with you)
 
 - Hourly scan plus manual command.
-- Separate media thumbnail directory with auth, rather than reusing `thumbnails`
-  (the only infra change now that files share the `/_libris/` location).
+- Reuse `/_thumbnails/` (ungated, as for PDFs) rather than a gated directory;
+  gating thumbnails is a separate issue.
 - Quiet skip of image/audio files in the PDF scan to avoid log noise.
 - Image files that already sit in the PDF tree (maps, cover images) will start
   appearing as art. I think that's wanted; say if not.
