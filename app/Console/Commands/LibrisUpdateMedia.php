@@ -38,7 +38,13 @@ class LibrisUpdateMedia extends Command
             $this->backgroundUpdate($media, $root);
         }
 
-        $this->line('Removed '.$media->prune().' deleted files');
+        $removed = $media->prune();
+
+        $this->line(
+            $removed === null
+                ? 'Skipped pruning: the library looks empty or unavailable'
+                : "Removed $removed deleted files"
+        );
 
         return self::SUCCESS;
 

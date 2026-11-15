@@ -11,6 +11,8 @@ use League\Flysystem\FilesystemException;
 
 class MediaIngestService
 {
+    private const TEXT_LIMIT = 255;
+
     /**
      * An image/audio file inside a system directory, outside any hidden
      * (dot-prefixed) file or directory such as `.thalium/`.
@@ -80,13 +82,13 @@ class MediaIngestService
             'kind' => $kind,
             'system' => $parser->system,
             'tags' => array_values($parser->tags),
-            'title' => $metadata['title'] ?? $parser->title,
+            'title' => $this->clean($metadata['title'] ?? '') ?: $this->clean($parser->title),
             'mtime' => $mtime,
             'size' => $size,
             'width' => $metadata['width'] ?? null,
             'height' => $metadata['height'] ?? null,
-            'artist' => $metadata['artist'] ?? null,
-            'album' => $metadata['album'] ?? null,
+            'artist' => $this->clean($metadata['artist'] ?? null),
+            'album' => $this->clean($metadata['album'] ?? null),
             'track_number' => $metadata['track_number'] ?? null,
             'duration_seconds' => $metadata['duration_seconds'] ?? null,
             'thumbnail' => $kind === MediaKind::Art ? $this->makeThumbnail($parser, $path) : null,
@@ -140,10 +142,19 @@ class MediaIngestService
     }// end changedPaths()
 
     /**
-     * Delete rows (and thumbnails) whose file no longer exists.
+     * Delete rows (and thumbnails) whose file no longer exists. Returns null,
+     * deleting nothing, when the library root has no directories at all: that is
+     * an unmounted or emptied library, not one that lost all its media, and
+     * pruning would empty the gallery until the next run.
      */
-    public function prune(): int
+    public function prune(): ?int
     {
+        if (Storage::disk('libris')->directories('.') === []) {
+            Log::warning('[Media] The library has no directories; skipping prune');
+
+            return null;
+        }
+
         $removed = 0;
 
         MediaItem::query()->chunkById(200, function ($items) use (&$removed) {
@@ -161,6 +172,20 @@ class MediaIngestService
         return $removed;
 
     }// end prune()
+
+    /**
+     * Tag text goes into VARCHAR(255) columns: MySQL in strict mode rejects
+     * longer text and invalid UTF-8, which would abort the whole update.
+     */
+    private function clean(?string $text): ?string
+    {
+        if ($text === null) {
+            return null;
+        }
+
+        return mb_substr(str_replace("\0", '', mb_scrub($text, 'UTF-8')), 0, self::TEXT_LIMIT);
+
+    }// end clean()
 
     private function makeThumbnail(ParseImageService $parser, string $path): ?string
     {
