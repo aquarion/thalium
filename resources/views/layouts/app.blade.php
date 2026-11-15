@@ -164,5 +164,16 @@
 
 </main><!-- /.container -->
 
+@auth
+<div id="media-player" class="media-player" hidden>
+  <audio id="media-audio" preload="none"></audio>
+  <button type="button" id="media-prev" class="btn btn-sm btn-dark" aria-label="Previous track"><i class="bi bi-skip-backward-fill"></i></button>
+  <button type="button" id="media-toggle" class="btn btn-sm btn-dark" aria-label="Play or pause"><i class="bi bi-play-fill"></i></button>
+  <button type="button" id="media-next" class="btn btn-sm btn-dark" aria-label="Next track"><i class="bi bi-skip-forward-fill"></i></button>
+  <span id="media-title" class="media-title"></span>
+  <input type="range" id="media-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek">
+  <input type="range" id="media-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+</div>
+@endauth
 </body>
 </html>
