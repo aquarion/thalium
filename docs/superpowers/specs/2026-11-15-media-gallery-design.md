@@ -195,7 +195,7 @@ and gallery are otherwise unchanged.
 - Unit: path → system/tags derivation; classification by extension.
 - Feature (PHPUnit, existing `tests/` layout): `scanFile()` routing (PDF -> ES path,
   image/audio -> `media_items`, other -> unsupported) and `libris:update_media`
-  against a fixture directory (add / change / delete / prune); `/media` pages require auth; listing and
+  against a fixture directory (add / change / delete / prune); the art and music pages require auth, and the Documents/Art/Music nav renders on all three; listing and
   tag filtering.
 - nginx gating is verified manually (unauthenticated request to `/_libris/...`
   returns 401).
@@ -218,5 +218,5 @@ and gallery are otherwise unchanged.
   `libris:update` picks media up too.
 - Image files that already sit in the PDF tree (maps, cover images) will start
   appearing as art. I think that's wanted; say if not.
-- Sticky bottom bar player; playback ends when leaving `/media`.
+- Sticky bottom bar player; playback continues across a system's three tabs and ends when leaving the system pages.
 - Ignoring non-image/non-audio files silently.
