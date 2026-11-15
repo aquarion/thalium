@@ -106,24 +106,38 @@ convention shared with the PDF side (so a later reshuffle, e.g. splitting
 - Fix the "is a ...Mb PDF" log wording in the `ParserService` constructor, which
   would otherwise be wrong for media.
 
-### Scan (`media:scan`)
+### Scanning: `scanFile` routes by file type, plus `libris:update_media`
 
-- Walks the `libris` disk. Classifies by mime/extension: images (jpg, png, webp,
-  gif) → art; audio (mp3, flac, ogg, m4a, wav) → music; everything else
-  (including the PDFs, which the existing indexer owns) ignored.
+The existing `ScanDirectory` -> `ScanFile` job -> `LibrisService::scanFile()`
+pipeline already visits every file in the library, so it is where media gets
+picked up. (There is no method called `scanDocument`; I have taken `scanFile`
+as the one meant.)
+
+- `scanFile()` classifies each file and does the right thing for it:
+  PDF/text -> the existing Elasticsearch path, unchanged; **image or audio ->
+  media ingestion** (media parser -> upsert a `media_items` row, skipped if the
+  `mtime` hasn't changed); anything else -> today's "unsupported" warning.
+  No more log noise from media files, and no separate walker to maintain.
+- Media ingestion never touches Elasticsearch. `getParser()` stays as it is.
+- Classification: images (jpg, png, webp, gif) -> art; audio (mp3, flac, ogg,
+  m4a, wav) -> music.
 - Skips dotfiles **and dot-directories** (notably `.thalium/`, which holds the
   per-system thumbnails), matching the hidden-file rule in
-  `LibrisService::addDocument`.
-- Skips files sitting directly in the library root: they have no system
-  directory (the PDF parser would misread the filename as a system).
-- Upserts rows whose `mtime` changed; deletes rows (and their thumbnails) whose
-  file is gone. Reads image dimensions and generates thumbnails with Imagick;
-  reads audio tags with a tag-reading library (builder's choice; getID3 is the
-  obvious candidate).
-- Runs inline (no queue needed at this scale), scheduled hourly via the app
-  scheduler, and runnable by hand. Idempotent. Logs counts of added/updated/removed.
+  `LibrisService::addDocument`. Skips files directly in the library root: they
+  have no system directory.
 - A file that fails to parse still gets a row with filename-derived metadata
   rather than being dropped.
+- Image dimensions and thumbnails via Imagick; audio tags via a tag-reading
+  library (builder's choice; getID3 is the obvious candidate).
+
+**`libris:update_media`** (named in the `libris:` family, not `media:scan`)
+mirrors `libris:update`'s options (`--foreground`, `--start=.`). It walks the
+tree and dispatches `ScanFile` jobs for image/audio files only, skipping PDFs
+and text, and does not call the Elasticsearch `setup()`. Afterwards it deletes
+`media_items` rows (and their thumbnails) whose file no longer exists. It is
+idempotent, logs counts of added/updated/removed, runs on the app scheduler
+hourly, and can be run by hand. A full `libris:update` also ingests media,
+because it goes through the same `scanFile()`; it just doesn't prune.
 
 ### Pages
 
@@ -155,18 +169,16 @@ playback; that is acceptable. The queue is not persisted (no playlists).
 
 ### Interaction with the PDF indexer
 
-`ScanDirectory`/`ScanFile` walk the same tree and send every file to
-`LibrisService::getParser`. Images and audio currently end as a logged
-"No parser" `LibrisFileNotSupported` warning (caught in `scanFile`), so nothing
-breaks, but every media file would add log noise on each PDF scan. The builder
-should make the PDF scan skip image/audio files quietly (a small check in
-`dispatchIndexFile`). The PDF index and gallery are otherwise unchanged.
+Handled by the routing in `scanFile()` above: media files are no longer an
+"unsupported file" for the PDF scan, and PDFs/text are untouched. The PDF index
+and gallery are otherwise unchanged.
 
 ### Testing
 
 - Unit: path → system/tags derivation; classification by extension.
-- Feature (PHPUnit, existing `tests/` layout): `media:scan` against a fixture
-  directory (add / change / delete); `/media` pages require auth; listing and
+- Feature (PHPUnit, existing `tests/` layout): `scanFile()` routing (PDF -> ES path,
+  image/audio -> `media_items`, other -> unsupported) and `libris:update_media`
+  against a fixture directory (add / change / delete / prune); `/media` pages require auth; listing and
   tag filtering.
 - nginx gating is verified manually (unauthenticated request to `/_libris/...`
   returns 401).
@@ -181,10 +193,12 @@ should make the PDF scan skip image/audio files quietly (a small check in
 
 ## My calls (not yet confirmed with you)
 
-- Hourly scan plus manual command.
+- `libris:update_media`, hourly via the scheduler plus manual runs; pruning
+  happens only in that command.
 - Reuse `/_thumbnails/` (ungated, as for PDFs) rather than a gated directory;
   gating thumbnails is a separate issue.
-- Quiet skip of image/audio files in the PDF scan to avoid log noise.
+- `scanFile()` ingests media itself (rather than skipping it), so a full
+  `libris:update` picks media up too.
 - Image files that already sit in the PDF tree (maps, cover images) will start
   appearing as art. I think that's wanted; say if not.
 - Sticky bottom bar player; playback ends when leaving `/media`.
