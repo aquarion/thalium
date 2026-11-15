@@ -139,25 +139,42 @@ idempotent, logs counts of added/updated/removed, runs on the app scheduler
 hourly, and can be run by hand. A full `libris:update` also ingests media,
 because it goes through the same `scanFile()`; it just doesn't prune.
 
-### Pages
+### Pages and navigation
 
-- `/media` (nav entry "Media"): systems that have media, with counts of art and
-  music.
-- `/media/{system}`: two sections, **Art** and **Music**, each with a tag filter
-  (tags list with counts, same look as the PDF `systemGrid` view).
-- Art: thumbnail grid, click opens a lightbox with the full image (served from
-  `/_libris/`); next/previous within the current tag filter.
-- Music: track list (title, artist, duration); click plays.
-- All behind the existing `auth` middleware, like the PDF routes.
+Each system has three sections, reached by a **`[ Documents | Art | Music ]`
+nav** shown at the top of every one of its pages:
+
+- Documents: the existing PDF page, `/system/{system}` (both its grid and list
+  views).
+- Art: `/system/{system}/art`. Thumbnail grid, tag filter (tags with counts, same
+  look as the PDF `systemGrid` view), click opens a lightbox with the full image
+  (served from `/_libris/`) with next/previous within the current tag filter.
+- Music: `/system/{system}/music`. Tag filter and a track list (title, artist,
+  duration); click plays.
+- The nav is one shared partial (e.g. `partials/system-tabs.blade.php`) included
+  by the PDF views and the two new views, so the three always match. It shows a
+  count on each tab, keeps all three tabs visible, and dims one with zero items.
+  The current tab is highlighted. Switching tabs drops the `?tag=` filter, since
+  tags differ per section.
+- The existing `docsBySystem` controller action gains the art and music counts
+  to feed the partial; nothing else about the PDF page changes.
+- Routes are named alongside the existing `system.index`
+  (`system.art`, `system.music`), behind the same `auth` middleware.
+- There is no separate `/media` landing page and no extra navbar entry: the
+  home page's system list is the way in. To keep media-only systems reachable,
+  the home page's system list also includes systems that exist only in
+  `media_items` (their Documents tab is simply empty).
 
 ### Player
 
 A sticky bottom audio bar in the layout (HTML5 `<audio>`, play/pause, seek,
 volume, next/previous, a simple in-memory queue built from the clicked list).
-Gallery navigation inside `/media` is done by fetching page fragments and
-swapping content (history API), so the `<audio>` element is never torn down.
-Navigating out of `/media` to the PDF side is a normal page load and ends
-playback; that is acceptable. The queue is not persisted (no playlists).
+Navigation between a system's three tabs, and between tags within a tab, is done
+by fetching the page and swapping its content (history API), so the `<audio>`
+element is never torn down and music keeps playing while you flip to Documents
+or Art. Leaving the system pages (home, search, another system) is a normal page
+load and ends playback. PDFs already open in a new tab, so reading one does not
+interrupt it. The queue is not persisted (no playlists).
 
 ### Serving and infra (`autopelago`)
 
