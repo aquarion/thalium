@@ -65,7 +65,7 @@ abstract class ParserService
             Log::error("[Parser] TOO LARGE: {$this->title} is ".$sizeMB.'Mb, too large to index');
             throw new Exceptions\LibrisTooLarge;
         } else {
-            Log::info("[Parser] {$this->title} is a ".$sizeMB.'Mb PDF');
+            Log::info("[Parser] {$this->title} is a ".$sizeMB.'Mb file');
         }
     } // end __construct()
 
