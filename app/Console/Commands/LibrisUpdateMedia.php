@@ -48,12 +48,12 @@ class LibrisUpdateMedia extends Command
     {
         $dispatched = 0;
 
-        foreach ($media->paths($root) as $path) {
+        foreach ($media->changedPaths($root) as $path) {
             ScanFile::dispatch($path);
             $dispatched++;
         }
 
-        $this->line("Dispatched $dispatched media files");
+        $this->line("Dispatched $dispatched new or changed media files");
 
     }// end backgroundUpdate()
 

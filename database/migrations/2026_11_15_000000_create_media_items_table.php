@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('media_items', function (Blueprint $table) {
             $table->id();
-            $table->string('path', 1024)->unique();
+            // Not indexed itself: a unique index on VARCHAR(1024) is 4096 bytes under
+            // utf8mb4, over MySQL's 3072-byte key limit. Lookups go through path_hash.
+            $table->string('path', 1024);
+            $table->char('path_hash', 40)->unique();
             $table->string('kind', 16);
             $table->string('system');
             $table->json('tags');

@@ -12,6 +12,7 @@ class MediaItem extends Model
 {
     protected $fillable = [
         'path',
+        'path_hash',
         'kind',
         'system',
         'tags',
@@ -25,6 +26,23 @@ class MediaItem extends Model
         'album',
         'duration_seconds',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $item) {
+            $item->path_hash = static::hashPath($item->path);
+        });
+
+    }// end booted()
+
+    /**
+     * The unique key for a library path (see the migration).
+     */
+    public static function hashPath(string $path): string
+    {
+        return sha1($path);
+
+    }// end hashPath()
 
     protected function casts(): array
     {

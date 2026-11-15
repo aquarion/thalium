@@ -125,7 +125,9 @@ async function swapSection(url, push) {
 
 function initNavigation() {
     document.addEventListener("click", (event) => {
-        const link = event.target.closest("a[data-section-link]");
+        const link = event.target.closest(
+            "a[data-section-link], #system-section .pagination a",
+        );
         if (
             !link ||
             !isPlainLeftClick(event) ||

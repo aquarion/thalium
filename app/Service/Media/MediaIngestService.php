@@ -57,7 +57,7 @@ class MediaIngestService
             }
 
             $mtime = (int) $disk->lastModified($path);
-            $existing = MediaItem::query()->where('path', $path)->first();
+            $existing = MediaItem::query()->where('path_hash', MediaItem::hashPath($path))->first();
 
             if ($existing && (int) $existing->mtime === $mtime) {
                 return $existing;
@@ -110,6 +110,33 @@ class MediaIngestService
         }
 
     }// end paths()
+
+    /**
+     * Ingestible paths that have no row yet or whose mtime has moved on, so the
+     * hourly run doesn't queue a job for every unchanged file.
+     *
+     * @return \Generator<int,string>
+     */
+    public function changedPaths(string $root = '.'): \Generator
+    {
+        $known = MediaItem::query()->pluck('mtime', 'path_hash');
+        $disk = Storage::disk('libris');
+
+        foreach ($this->paths($root) as $path) {
+            try {
+                $mtime = (int) $disk->lastModified($path);
+            } catch (FilesystemException $e) {
+                continue;
+            }
+
+            $recorded = $known[MediaItem::hashPath($path)] ?? null;
+
+            if ($recorded === null || (int) $recorded !== $mtime) {
+                yield $path;
+            }
+        }
+
+    }// end changedPaths()
 
     /**
      * Delete rows (and thumbnails) whose file no longer exists.
