@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LibrisController;
+use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Auth as FacAuth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,8 @@ Route::get('/auth/checkLogin', [Auth\CheckLoginController::class, 'checkLogin'])
 Route::get('/', [LibrisController::class, 'home'])->name('home')->middleware('auth');
 
 Route::get('/system/{system}', [LibrisController::class, 'docsBySystem'])->name('system.index')->middleware('auth');
+Route::get('/system/{system}/art', [MediaController::class, 'art'])->name('system.art')->middleware('auth');
+Route::get('/system/{system}/music', [MediaController::class, 'music'])->name('system.music')->middleware('auth');
 Route::get('/document', [LibrisController::class, 'showDocument'])->name('document.iframe')->middleware('auth');
 Route::get('/systemList/{system}', [LibrisController::class, 'docsBySystemList'])->name('system.list')->middleware('auth');
 

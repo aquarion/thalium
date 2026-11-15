@@ -37,7 +37,7 @@ interface LibrisInterface
     //     $called_by = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT|DEBUG_BACKTRACE_IGNORE_ARGS,2)[1]['function'];
     // public function thumbnailDataURI($file)
     // public function dataURI($image)
-    // public function getSystemThumbnail($system)
+    public function getSystemThumbnail($system);
     // public function sweepPages($docId, $bar=false)
     // protected function fileIsMissing($docId)
     // public function getIndexer()

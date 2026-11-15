@@ -6,6 +6,8 @@ use App\Exceptions;
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanFile;
 use App\Service\Indexer\ElasticSearch;
+use App\Service\Media\MediaIngestService;
+use App\Service\Media\MediaKind;
 use App\Service\ParserService;
 use App\Service\ParseTextService;
 use App\Service\PDFBoxService;
@@ -153,6 +155,15 @@ class LibrisService implements LibrisInterface
     public function scanFile($filename)
     {
         Log::debug('[Scanfile] Got lock for '.$filename.' = '.md5($filename));
+
+        // Images and music are cached in media_items, never indexed in Elasticsearch.
+        if (MediaKind::fromPath($filename) !== null) {
+            app(MediaIngestService::class)->ingest($filename);
+            Log::info('[Scanfile] Finished media '.$filename);
+
+            return 0;
+        }
+
         try {
             $returnValue = $this->addDocument($filename);
             Log::info('[Scanfile] Finished '.$filename);

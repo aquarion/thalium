@@ -3,20 +3,22 @@
 
 
 @section('content')
-  <div class="starter-template" >
+  <div class="starter-template" id="system-section">
     <h1>{{ $system }}</h1>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item" aria-current="page"><a href="{{ route("home") }}">Systems</a></li>
     @if ($tag)
-      <li class="breadcrumb-item" aria-current="page"> <a href="{{ route("system.index", ['system' => $system ])}}">{{ $system }} </a></li>
+      <li class="breadcrumb-item" aria-current="page"> <a href="{{ route("system.index", ['system' => $system ])}}" data-section-link>{{ $system }} </a></li>
       <li class="breadcrumb-item active" aria-current="page"> Tag: {{ $tag }} </li>
     @else
       <li class="breadcrumb-item active" aria-current="page"> {{ $system }} </li>
     @endif
   </ol>
 </nav>
+
+@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts, 'tag' => $tag])
 
 
 @if (count($tagList) > 0)
@@ -27,7 +29,7 @@
 		    		'tag' => $tag['key'],
 		    		'system' => $system
 		    	])
-		    }}">
+		    }}" data-section-link>
 		    {{ $tag['key'] }}
 			 <span class="tag-count">({{ $tag['doc_count'] }})</span></a>
 		@endforeach
@@ -42,7 +44,7 @@
             <br/>
             <div class="doc-title">{{ $doc['name'] ? $doc['name'] : '[empty]' }}</a></div>
             @foreach ($doc['tags'] as $tag)
-            <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
+            <a class="badge text-bg-secondary text-decoration-none" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}" data-section-link>{{ urldecode($tag) }}</a>
             @endforeach
             <div class="btn-group" role="group" aria-label="Basic example">
               @if (App::environment(['local', 'staging']))

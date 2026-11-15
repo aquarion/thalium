@@ -96,3 +96,93 @@
   img.book-cover {
     max-width: 100%;
   }
+
+// Documents | Art | Music nav
+.system-tabs .disabled-tab {
+  opacity: 0.45;
+}
+
+.systems .tag.active {
+  font-weight: bold;
+  border-color: $purple;
+}
+
+.media-no-thumb {
+  display: block;
+  padding: 3em 0.5em;
+}
+
+.track-list .track-play {
+  width: 3em;
+}
+
+// Sticky audio player
+.media-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #212529;
+  color: #fff;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .media-title {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  input[type="range"] {
+    flex: 0 1 12rem;
+  }
+}
+
+body.has-player {
+  padding-bottom: 4rem;
+}
+
+// Art lightbox
+.media-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+
+  figure {
+    margin: 0;
+    text-align: center;
+  }
+
+  img {
+    max-width: 90vw;
+    max-height: 85vh;
+  }
+
+  button {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 3rem;
+    line-height: 1;
+    padding: 0 1rem;
+  }
+
+  .media-lightbox-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}

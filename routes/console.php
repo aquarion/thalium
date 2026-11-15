@@ -12,3 +12,4 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('libris:update')->daily()->onOneServer()->withoutOverlapping();
 Schedule::command('libris:purge_deleted')->daily()->onOneServer();
 Schedule::command('libris:sweep')->weekly()->onOneServer();
+Schedule::command('libris:update_media')->hourly()->onOneServer()->withoutOverlapping();

@@ -4,7 +4,7 @@
 
 
 @section('content')
-  <div class="starter-template" >
+  <div class="starter-template" id="system-section">
     <h1>{{ $system }}</h1>
 
 <nav aria-label="breadcrumb">
@@ -19,11 +19,13 @@
   </ol>
 </nav>
 
+@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts, 'tag' => $tag])
+
     <ul>
     @foreach ($docs as $doc)
 	    <li><a href="{{ $doc['download'] }}">{{ $doc['name'] ? $doc['name'] : '[empty]' }}</a>
         @foreach ($doc['tags'] as $tag)
-          <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}">{{ urldecode($tag) }}</a>
+          <a class="badge text-bg-secondary text-decoration-none" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}" data-section-link>{{ urldecode($tag) }}</a>
         @endforeach
       </li>
 	@endforeach
