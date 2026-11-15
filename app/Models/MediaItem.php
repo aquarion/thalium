@@ -56,6 +56,19 @@ class MediaItem extends Model
 
     }// end thumbnailUrl()
 
+    /**
+     * Track length as m:ss, or null when unknown.
+     */
+    public function durationLabel(): ?string
+    {
+        if ($this->duration_seconds === null) {
+            return null;
+        }
+
+        return sprintf('%d:%02d', intdiv($this->duration_seconds, 60), $this->duration_seconds % 60);
+
+    }// end durationLabel()
+
     public function scopeOfKind(Builder $query, MediaKind $kind): Builder
     {
         return $query->where('kind', $kind->value);

@@ -3,7 +3,7 @@
 
 
 @section('content')
-  <div class="starter-template" >
+  <div class="starter-template" id="system-section">
     <h1>{{ $system }}</h1>
 
 <nav aria-label="breadcrumb">
@@ -17,6 +17,8 @@
     @endif
   </ol>
 </nav>
+
+@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts])
 
 
 @if (count($tagList) > 0)

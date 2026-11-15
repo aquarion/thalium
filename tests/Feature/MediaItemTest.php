@@ -5,11 +5,19 @@ namespace Tests\Feature;
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MediaItemTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('libris');
+        Storage::fake('thumbnails');
+    }
 
     private function make(string $path, MediaKind $kind, string $system, array $tags = []): MediaItem
     {
@@ -53,5 +61,14 @@ class MediaItemTest extends TestCase
 
         $this->assertSame(['art' => 1, 'music' => 1], $systems['S']);
         $this->assertSame(['art' => 1, 'music' => 0], $systems['Other']);
+    }
+
+    public function test_duration_label(): void
+    {
+        $item = $this->make('S/a.mp3', MediaKind::Music, 'S');
+        $this->assertNull($item->durationLabel());
+
+        $item->duration_seconds = 75;
+        $this->assertSame('1:15', $item->durationLabel());
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Libris\LibrisInterface;
+use App\Models\MediaItem;
+use App\Service\Media\SystemSections;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +15,27 @@ class LibrisController extends Controller
 {
     public function home(LibrisInterface $libris): View
     {
-        return view('sysindex', ['systems' => $libris->systems()]);
+        $systems = $libris->systems();
+        $known = array_column($systems, 'system');
+        $appended = false;
+
+        // Systems that only have art or music still need a way in.
+        foreach (MediaItem::systemsWithMedia()->keys() as $system) {
+            if (! in_array($system, $known, true)) {
+                $systems[] = [
+                    'system' => $system,
+                    'count' => 0,
+                    'thumbnail' => $libris->getSystemThumbnail($system),
+                ];
+                $appended = true;
+            }
+        }
+
+        if ($appended) {
+            usort($systems, fn ($a, $b) => strcasecmp($a['system'], $b['system']));
+        }
+
+        return view('sysindex', ['systems' => $systems]);
 
     }// end home()
 
@@ -72,6 +94,7 @@ class LibrisController extends Controller
                 'system' => $system,
                 'tag' => $tag,
                 'tagList' => $tagList,
+                'counts' => app(SystemSections::class)->counts($system, $tag ? null : $total),
                 'docs' => $docresult,
                 'page' => $page,
                 'pages' => ceil($total / $perpage),
