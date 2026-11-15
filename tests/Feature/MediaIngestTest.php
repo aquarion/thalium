@@ -1,0 +1,133 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\MediaItem;
+use App\Service\Media\MediaIngestService;
+use App\Service\Media\MediaKind;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\MakesMediaFiles;
+use Tests\TestCase;
+
+class MediaIngestTest extends TestCase
+{
+    use MakesMediaFiles;
+    use RefreshDatabase;
+
+    private MediaIngestService $service;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('libris');
+        Storage::fake('thumbnails');
+        $this->service = new MediaIngestService;
+    }
+
+    public function test_ingest_creates_rows_with_derived_fields(): void
+    {
+        Storage::disk('libris')->put('Pathfinder 2e/Maps/City/a.png', $this->png(30, 20));
+        Storage::disk('libris')->put('Pathfinder 2e/Ambience/rain.WAV', $this->wav());
+
+        $art = $this->service->ingest('Pathfinder 2e/Maps/City/a.png');
+        $music = $this->service->ingest('Pathfinder 2e/Ambience/rain.WAV');
+
+        $this->assertSame(MediaKind::Art, $art->kind);
+        $this->assertSame('Pathfinder 2e', $art->system);
+        $this->assertSame(['Maps', 'City'], $art->tags);
+        $this->assertSame('a', $art->title);
+        $this->assertSame([30, 20], [$art->width, $art->height]);
+        $this->assertSame(MediaKind::Music, $music->kind);
+        $this->assertSame(1, $music->duration_seconds);
+        $this->assertSame(2, MediaItem::count());
+    }
+
+    public function test_ingest_makes_a_thumbnail_on_the_thumbnails_disk(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick not available');
+        }
+
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(30, 20));
+
+        $item = $this->service->ingest('Sys/Maps/a.png');
+
+        $this->assertSame(md5('Sys/Maps/a.png').'.png', $item->thumbnail);
+        Storage::disk('thumbnails')->assertExists($item->thumbnail);
+    }
+
+    public function test_unchanged_mtime_is_skipped_and_a_change_updates(): void
+    {
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(30, 20));
+        $first = $this->service->ingest('Sys/Maps/a.png');
+        MediaItem::where('id', $first->id)->update(['title' => 'edited by hand']);
+
+        $this->assertSame('edited by hand', $this->service->ingest('Sys/Maps/a.png')->title);
+
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(60, 40));
+        touch(Storage::disk('libris')->path('Sys/Maps/a.png'), time() + 100);
+        $updated = $this->service->ingest('Sys/Maps/a.png');
+
+        $this->assertSame($first->id, $updated->id);
+        $this->assertSame([60, 40], [$updated->width, $updated->height]);
+        $this->assertSame(1, MediaItem::count());
+    }
+
+    public function test_corrupt_files_still_get_a_row(): void
+    {
+        Storage::disk('libris')->put('Sys/Ambience/Broken_Track.mp3', '');
+        Storage::disk('libris')->put('Sys/Maps/broken.png', '');
+
+        $music = $this->service->ingest('Sys/Ambience/Broken_Track.mp3');
+        $art = $this->service->ingest('Sys/Maps/broken.png');
+
+        $this->assertSame('Broken Track', $music->title);
+        $this->assertNull($music->duration_seconds);
+        $this->assertNull($art->width);
+        $this->assertSame(2, MediaItem::count());
+    }
+
+    public function test_hidden_and_root_files_are_ignored(): void
+    {
+        foreach (['.thalium/x.png', 'Sys/.hidden.png', 'Sys/.cache/y.png', 'loose.png'] as $path) {
+            Storage::disk('libris')->put($path, $this->png(1, 1));
+            $this->assertNull($this->service->ingest($path), $path);
+        }
+
+        $this->assertSame(0, MediaItem::count());
+    }
+
+    public function test_ingest_returns_null_when_the_file_has_vanished(): void
+    {
+        $this->assertNull($this->service->ingest('Sys/Maps/gone.png'));
+        $this->assertSame(0, MediaItem::count());
+    }
+
+    public function test_prune_removes_rows_and_thumbnails_for_deleted_files(): void
+    {
+        Storage::disk('libris')->put('Sys/Maps/keep.png', $this->png(1, 1));
+        Storage::disk('libris')->put('Sys/Maps/drop.png', $this->png(1, 1));
+        $this->service->ingest('Sys/Maps/keep.png');
+        $drop = $this->service->ingest('Sys/Maps/drop.png');
+        $drop->update(['thumbnail' => 'drop-thumb.png']);
+        Storage::disk('thumbnails')->put('drop-thumb.png', 'x');
+        Storage::disk('libris')->delete('Sys/Maps/drop.png');
+
+        $this->assertSame(1, $this->service->prune());
+        $this->assertSame(['Sys/Maps/keep.png'], MediaItem::pluck('path')->all());
+        Storage::disk('thumbnails')->assertMissing('drop-thumb.png');
+    }
+
+    public function test_paths_yields_only_ingestible_files(): void
+    {
+        foreach (['Sys/a.png', 'Sys/Deep/b.mp3', 'Sys/c.pdf', '.thalium/d.png', 'e.png'] as $path) {
+            Storage::disk('libris')->put($path, 'x');
+        }
+
+        $paths = iterator_to_array($this->service->paths(), false);
+        sort($paths);
+
+        $this->assertSame(['Sys/Deep/b.mp3', 'Sys/a.png'], $paths);
+    }
+}

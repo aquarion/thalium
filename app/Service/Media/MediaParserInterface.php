@@ -12,5 +12,4 @@ interface MediaParserInterface
      * duration_seconds. Unreadable files give [].
      */
     public function metadata(): array;
-
 }// end interface
