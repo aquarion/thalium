@@ -73,7 +73,7 @@ class MediaPagesTest extends TestCase
     {
         $this->login();
         $this->item('S/Ambience/Rain #1.mp3', MediaKind::Music, 'S', ['Ambience'], 'Rain', [
-            'artist' => 'Weather', 'duration_seconds' => 75,
+            'artist' => 'Weather', 'album' => 'Storms', 'duration_seconds' => 75,
         ]);
 
         $this->get('/system/S/music')
@@ -81,6 +81,9 @@ class MediaPagesTest extends TestCase
             ->assertSee('data-track-url', false)
             ->assertSee('Rain%20%231.mp3', false)
             ->assertSee('Weather')
+            ->assertSee('Storms')
+            ->assertSee('>Artist<', false)
+            ->assertSee('>Album<', false)
             ->assertSee('1:15')
             // Bootstrap 5: `badge-secondary` is a v4 class and renders white-on-nothing.
             ->assertSee('class="badge text-bg-secondary text-decoration-none"', false)
@@ -249,5 +252,24 @@ class MediaPagesTest extends TestCase
         $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
 
         $this->get('/system/S/art?tag[]=Maps')->assertOk()->assertSee('A');
+    }
+
+    public function test_artist_and_album_columns_only_appear_when_tracks_have_them(): void
+    {
+        $this->login();
+        $this->item('S/Ambience/plain.mp3', MediaKind::Music, 'S', ['Ambience'], 'Plain');
+
+        $this->get('/system/S/music')->assertOk()
+            ->assertSee('Plain')
+            ->assertSee('>Title<', false)
+            ->assertSee('>Length<', false)
+            ->assertDontSee('>Artist<', false)
+            ->assertDontSee('>Album<', false);
+
+        $this->item('S/Ambience/tagged.mp3', MediaKind::Music, 'S', ['Ambience'], 'Tagged', ['artist' => 'Someone']);
+
+        $this->get('/system/S/music')->assertOk()
+            ->assertSee('>Artist<', false)
+            ->assertDontSee('>Album<', false);
     }
 }

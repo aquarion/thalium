@@ -44,7 +44,7 @@
             <br/>
             <div class="doc-title">{{ $doc['name'] ? $doc['name'] : '[empty]' }}</a></div>
             @foreach ($doc['tags'] as $tag)
-            <a class="badge badge-secondary" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}" data-section-link>{{ urldecode($tag) }}</a>
+            <a class="badge text-bg-secondary text-decoration-none" href="{{ route("system.index", ['system' => $system ])}}?tag={{ $tag }}" data-section-link>{{ urldecode($tag) }}</a>
             @endforeach
             <div class="btn-group" role="group" aria-label="Basic example">
               @if (App::environment(['local', 'staging']))
