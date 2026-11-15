@@ -28,7 +28,7 @@
                 {{ $item->title }}
                 @if ($item->artist)<span class="text-muted"> &mdash; {{ $item->artist }}</span>@endif
                 @foreach ($item->tags as $itemTag)
-                  <a class="badge text-bg-secondary" href="{{ route('system.music', ['system' => $system, 'tag' => $itemTag]) }}" data-section-link>{{ $itemTag }}</a>
+                  <a class="badge text-bg-secondary text-decoration-none" href="{{ route('system.music', ['system' => $system, 'tag' => $itemTag]) }}" data-section-link>{{ $itemTag }}</a>
                 @endforeach
               </td>
               <td class="text-end">{{ $item->durationLabel() }}</td>

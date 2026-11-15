@@ -83,7 +83,7 @@ class MediaPagesTest extends TestCase
             ->assertSee('Weather')
             ->assertSee('1:15')
             // Bootstrap 5: `badge-secondary` is a v4 class and renders white-on-nothing.
-            ->assertSee('class="badge text-bg-secondary"', false)
+            ->assertSee('class="badge text-bg-secondary text-decoration-none"', false)
             ->assertDontSee('badge-secondary', false);
     }
 
