@@ -111,7 +111,7 @@ Table `media_items` (one row per file):
 - `/media/{system}`: two sections, **Art** and **Music**, each with a tag filter
   (tags list with counts, same look as the PDF `systemGrid` view).
 - Art: thumbnail grid, click opens a lightbox with the full image (served from
-  `/_media/`); next/previous within the current tag filter.
+  `/_libris/`); next/previous within the current tag filter.
 - Music: track list (title, artist, duration); click plays.
 - All behind the existing `auth` middleware, like the PDF routes.
 
@@ -151,7 +151,7 @@ should make the PDF scan skip image/audio files quietly (a small check in
 - Feature (PHPUnit, existing `tests/` layout): `media:scan` against a fixture
   directory (add / change / delete); `/media` pages require auth; listing and
   tag filtering.
-- nginx gating is verified manually (unauthenticated request to `/_media/...`
+- nginx gating is verified manually (unauthenticated request to `/_libris/...`
   returns 401).
 
 ## Left to the builder
