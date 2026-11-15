@@ -81,7 +81,10 @@ class MediaPagesTest extends TestCase
             ->assertSee('data-track-url', false)
             ->assertSee('Rain%20%231.mp3', false)
             ->assertSee('Weather')
-            ->assertSee('1:15');
+            ->assertSee('1:15')
+            // Bootstrap 5: `badge-secondary` is a v4 class and renders white-on-nothing.
+            ->assertSee('class="badge text-bg-secondary"', false)
+            ->assertDontSee('badge-secondary', false);
     }
 
     public function test_empty_system_renders_with_an_empty_state(): void

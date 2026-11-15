@@ -28,7 +28,7 @@
             <div class="doc-title">{{ $item->title }}</div>
           </a>
           @foreach ($item->tags as $itemTag)
-            <a class="badge badge-secondary" href="{{ route('system.art', ['system' => $system, 'tag' => $itemTag]) }}" data-section-link>{{ $itemTag }}</a>
+            <a class="badge text-bg-secondary" href="{{ route('system.art', ['system' => $system, 'tag' => $itemTag]) }}" data-section-link>{{ $itemTag }}</a>
           @endforeach
         </div>
       @empty
