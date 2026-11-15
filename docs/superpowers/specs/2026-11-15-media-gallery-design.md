@@ -85,6 +85,24 @@ Table `media_items` (one row per file):
 - music: `artist`, `album`, `duration_seconds`
 - timestamps; indexes on `(kind, system)` and `path`.
 
+### Parsers (built on `ParserService`)
+
+`ParseImageService` and `ParseAudioService` extend the existing `ParserService`,
+inheriting its constructor: existence check, system/tags/title derivation from
+the path, mtime, size guard. This keeps one definition of the directory
+convention shared with the PDF side (so a later reshuffle, e.g. splitting
+`Maps` into its own system, only changes it in one place).
+
+- Image parser: reads dimensions, overrides `generateDocThumbnail()` with a real
+  Imagick thumbnail. Audio parser: reads ID3/duration. `parsePages()` returns
+  nothing (no text).
+- They are created by a **separate factory** used only by the media scan. They
+  must **not** be added to `LibrisService::getParser()`, which decides what the
+  PDF indexer sends to Elasticsearch; adding them there would put media in PDF
+  search and the PDF gallery.
+- Fix the "is a ...Mb PDF" log wording in the `ParserService` constructor, which
+  would otherwise be wrong for media.
+
 ### Scan (`media:scan`)
 
 - Walks the `libris` disk. Classifies by mime/extension: images (jpg, png, webp,
