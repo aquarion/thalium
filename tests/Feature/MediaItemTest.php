@@ -84,4 +84,15 @@ class MediaItemTest extends TestCase
         $this->assertTrue($unique->contains(['path_hash']));
         $this->assertFalse($unique->contains(['path']));
     }
+
+    public function test_counts_can_be_limited_to_a_tag(): void
+    {
+        $this->make('S/Maps/a.png', MediaKind::Art, 'S', ['Maps']);
+        $this->make('S/Dungeons/b.png', MediaKind::Art, 'S', ['Dungeons']);
+        $this->make('S/Maps/c.mp3', MediaKind::Music, 'S', ['Maps']);
+
+        $this->assertSame(['art' => 1, 'music' => 1], MediaItem::countsForSystem('S', 'Maps'));
+        $this->assertSame(['art' => 0, 'music' => 0], MediaItem::countsForSystem('S', 'Nope'));
+        $this->assertSame(['art' => 2, 'music' => 1], MediaItem::countsForSystem('S'));
+    }
 }

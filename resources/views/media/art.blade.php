@@ -13,7 +13,7 @@
       </ol>
     </nav>
 
-    @include('partials.system-tabs', ['system' => $system, 'active' => 'art', 'counts' => $counts])
+    @include('partials.system-tabs', ['system' => $system, 'active' => 'art', 'counts' => $counts, 'tag' => $tag])
     @include('media._tags', ['route' => 'system.art'])
 
     <div class="row">
@@ -32,7 +32,14 @@
           @endforeach
         </div>
       @empty
-        <p class="text-muted">No art in this section yet.</p>
+        <p class="text-muted">
+          @if ($tag)
+            No art tagged &ldquo;{{ $tag }}&rdquo;.
+            <a href="{{ route('system.art', ['system' => $system]) }}" data-section-link>Show all art</a>
+          @else
+            No art in this section yet.
+          @endif
+        </p>
       @endforelse
     </div>
 

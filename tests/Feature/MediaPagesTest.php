@@ -180,4 +180,71 @@ class MediaPagesTest extends TestCase
         $this->get('/system/S/art')->assertSee($link, false);
         $this->get('/system/S/music')->assertSee($link, false);
     }
+
+    public function test_tabs_carry_the_current_tag_to_every_section(): void
+    {
+        $this->login();
+        $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
+
+        $carried = [
+            route('system.index', ['system' => 'S', 'tag' => 'Maps']),
+            route('system.art', ['system' => 'S', 'tag' => 'Maps']),
+            route('system.music', ['system' => 'S', 'tag' => 'Maps']),
+        ];
+
+        foreach (['/system/S/art?tag=Maps', '/system/S/music?tag=Maps', '/system/S?tag=Maps'] as $url) {
+            $response = $this->get($url)->assertOk();
+            foreach ($carried as $href) {
+                $response->assertSee('href="'.$href.'"', false);
+            }
+        }
+
+        // Without a tag, the tabs stay plain.
+        $this->get('/system/S/art')->assertOk()
+            ->assertSee('href="'.route('system.music', ['system' => 'S']).'"', false)
+            ->assertDontSee('href="'.route('system.music', ['system' => 'S', 'tag' => 'Maps']).'"', false);
+    }
+
+    public function test_tab_counts_follow_the_carried_tag(): void
+    {
+        $this->login();
+        $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
+        $this->item('S/Dungeons/b.png', MediaKind::Art, 'S', ['Dungeons'], 'B');
+        $this->item('S/Maps/c.mp3', MediaKind::Music, 'S', ['Maps'], 'C');
+        $this->mock(LibrisInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('docsBySystem')
+                ->with('S', \Mockery::any(), \Mockery::any(), \Mockery::on(fn ($tag) => $tag === 'Maps'))
+                ->andReturn(['hits' => ['total' => ['value' => 7], 'hits' => []]]);
+            $mock->shouldReceive('docsBySystem')
+                ->with('S', \Mockery::any(), \Mockery::any(), \Mockery::on(fn ($tag) => $tag === false))
+                ->andReturn(['hits' => ['total' => ['value' => 350], 'hits' => []]]);
+        });
+
+        $filtered = $this->get('/system/S/art?tag=Maps')->assertOk();
+        $filtered->assertSee('Documents <span class="tag-count">(7)</span>', false)
+            ->assertSee('Art <span class="tag-count">(1)</span>', false)
+            ->assertSee('Music <span class="tag-count">(1)</span>', false);
+
+        $this->get('/system/S/art')->assertOk()
+            ->assertSee('Documents <span class="tag-count">(350)</span>', false)
+            ->assertSee('Art <span class="tag-count">(2)</span>', false);
+    }
+
+    public function test_empty_tag_filter_offers_a_way_back(): void
+    {
+        $this->login();
+        $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
+
+        $this->get('/system/S/music?tag=Maps')->assertOk()
+            ->assertSee('No music tagged', false)
+            ->assertSee('Show all music');
+    }
+
+    public function test_array_tag_is_ignored_rather_than_erroring(): void
+    {
+        $this->login();
+        $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
+
+        $this->get('/system/S/art?tag[]=Maps')->assertOk()->assertSee('A');
+    }
 }

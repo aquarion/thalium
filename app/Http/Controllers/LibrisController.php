@@ -94,7 +94,7 @@ class LibrisController extends Controller
                 'system' => $system,
                 'tag' => $tag,
                 'tagList' => $tagList,
-                'counts' => app(SystemSections::class)->counts($system),
+                'counts' => app(SystemSections::class)->counts($system, $tag ? (string) $tag : null),
                 'docs' => $docresult,
                 'page' => $page,
                 'pages' => ceil($total / $perpage),

@@ -1,9 +1,11 @@
-{{-- Documents | Art | Music nav for a system. Needs $system, $active (documents|art|music), $counts. --}}
+{{-- Documents | Art | Music nav for a system. Needs $system, $active (documents|art|music), $counts;
+     $tag (optional) is carried to every tab so the filter follows you. --}}
 @php
+  $query = ['system' => $system] + (! empty($tag) ? ['tag' => $tag] : []);
   $tabs = [
-    'documents' => ['Documents', route('system.index', ['system' => $system])],
-    'art' => ['Art', route('system.art', ['system' => $system])],
-    'music' => ['Music', route('system.music', ['system' => $system])],
+    'documents' => ['Documents', route('system.index', $query)],
+    'art' => ['Art', route('system.art', $query)],
+    'music' => ['Music', route('system.music', $query)],
   ];
 @endphp
 <ul class="nav nav-tabs system-tabs mb-3">

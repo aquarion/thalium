@@ -94,12 +94,15 @@ class MediaItem extends Model
     }// end scopeOfKind()
 
     /**
+     * Items per kind in a system, optionally only those carrying a tag.
+     *
      * @return array{art:int,music:int}
      */
-    public static function countsForSystem(string $system): array
+    public static function countsForSystem(string $system, ?string $tag = null): array
     {
         $counts = static::query()
             ->where('system', $system)
+            ->when($tag, fn ($query) => $query->whereJsonContains('tags', $tag))
             ->selectRaw('kind, count(*) as total')
             ->groupBy('kind')
             ->pluck('total', 'kind');

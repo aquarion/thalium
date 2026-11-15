@@ -31,6 +31,7 @@ class MediaController extends Controller
         string $system
     ): View {
         $tag = $request->query('tag');
+        $tag = is_string($tag) && $tag !== '' ? $tag : null;
 
         $query = MediaItem::query()->ofKind($kind)->where('system', $system)->orderBy('title');
 
@@ -43,7 +44,7 @@ class MediaController extends Controller
             'tag' => $tag,
             'tagList' => MediaItem::tagCounts($kind, $system),
             'items' => $query->paginate($perPage)->withQueryString(),
-            'counts' => $sections->counts($system),
+            'counts' => $sections->counts($system, $tag),
         ]);
 
     }// end section()

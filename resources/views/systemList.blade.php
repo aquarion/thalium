@@ -19,7 +19,7 @@
   </ol>
 </nav>
 
-@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts])
+@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts, 'tag' => $tag])
 
     <ul>
     @foreach ($docs as $doc)

@@ -18,7 +18,7 @@
   </ol>
 </nav>
 
-@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts])
+@include('partials.system-tabs', ['system' => $system, 'active' => 'documents', 'counts' => $counts, 'tag' => $tag])
 
 
 @if (count($tagList) > 0)

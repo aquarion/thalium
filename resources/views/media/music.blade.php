@@ -13,7 +13,7 @@
       </ol>
     </nav>
 
-    @include('partials.system-tabs', ['system' => $system, 'active' => 'music', 'counts' => $counts])
+    @include('partials.system-tabs', ['system' => $system, 'active' => 'music', 'counts' => $counts, 'tag' => $tag])
     @include('media._tags', ['route' => 'system.music'])
 
     @if ($items->count() > 0)
@@ -37,7 +37,14 @@
         </tbody>
       </table>
     @else
-      <p class="text-muted">No music in this section yet.</p>
+      <p class="text-muted">
+        @if ($tag)
+          No music tagged &ldquo;{{ $tag }}&rdquo;.
+          <a href="{{ route('system.music', ['system' => $system]) }}" data-section-link>Show all music</a>
+        @else
+          No music in this section yet.
+        @endif
+      </p>
     @endif
 
     {{ $items->links() }}
