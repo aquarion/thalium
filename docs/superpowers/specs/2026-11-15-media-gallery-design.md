@@ -1,7 +1,7 @@
 # Media gallery (art & music) — design
 
 Status: draft, awaiting approval
-Repos touched: `aquarion/thalium` (app), `aquarion/autopelago` (nginx/Ansible/mounts)
+Repos touched: `aquarion/thalium` (app), `aquarion/autopelago` (one nginx location for gated thumbnails)
 
 ## Intent and why
 
@@ -39,13 +39,15 @@ The use is **browsing and playing mid-game**, not finding things. No search.
 
 ## Constraints
 
-- **Separate media root**, not the PDF root: new env var `DOCKER_MEDIA_LIBRARY`
-  (container path, e.g. `/mnt/media`) and a new `media` filesystem disk,
-  alongside the existing `libris` and `thumbnails` disks.
-- **Static files are served by nginx**, never streamed by Laravel. Pages emit
-  `/_media/...` URLs. nginx gates them with `auth_request /_authcheck`, exactly
-  as `/_libris/` does today (cookie session → `/auth/checkLogin`). nginx range
-  requests give audio seeking for free.
+- **Same library, same filesystem, same system directories as the PDFs.** Art
+  and music sit beside the PDFs in `System/tag/.../file`. No new root, mount,
+  env var or disk: the scan uses the existing `libris` disk
+  (`DOCKER_PDF_LIBRARY`, `/mnt/rpg`). Only the *gallery* is separate.
+- **Static files are served by nginx**, never streamed by Laravel. The existing
+  `/_libris/` location already serves the whole library behind
+  `auth_request /_authcheck` (cookie session → `/auth/checkLogin`), so media
+  files are already gated and need no new nginx location. nginx range requests
+  give audio seeking for free.
 - Existing quirk to not copy: `/_thumbnails/` currently has **no** `auth_request`.
   Media thumbnails must be gated (see Serving).
 - `autopelago` CLAUDE.md applies to the infra change: follow the existing
@@ -74,7 +76,7 @@ manual).
 
 Table `media_items` (one row per file):
 
-- `id`, `path` (relative to media root, unique), `kind` (`art` | `music`)
+- `id`, `path` (relative to the library root, unique), `kind` (`art` | `music`)
 - `system` (derived exactly as `ParserService` does: first path segment,
   extension stripped, `-`/`_` → space), `tags` (JSON array of the remaining
   directory segments), `title` (filename-derived, or ID3 title for music)
@@ -85,9 +87,14 @@ Table `media_items` (one row per file):
 
 ### Scan (`media:scan`)
 
-- Walks the `media` disk. Classifies by mime/extension: images (jpg, png, webp,
-  gif) → art; audio (mp3, flac, ogg, m4a, wav) → music; everything else and
-  dotfiles ignored (same hidden-file rule as `LibrisService::addDocument`).
+- Walks the `libris` disk. Classifies by mime/extension: images (jpg, png, webp,
+  gif) → art; audio (mp3, flac, ogg, m4a, wav) → music; everything else
+  (including the PDFs, which the existing indexer owns) ignored.
+- Skips dotfiles **and dot-directories** (notably `.thalium/`, which holds the
+  per-system thumbnails), matching the hidden-file rule in
+  `LibrisService::addDocument`.
+- Skips files sitting directly in the library root: they have no system
+  directory (the PDF parser would misread the filename as a system).
 - Upserts rows whose `mtime` changed; deletes rows (and their thumbnails) whose
   file is gone. Reads image dimensions and generates thumbnails with Imagick;
   reads audio tags with a tag-reading library (builder's choice; getID3 is the
@@ -119,17 +126,24 @@ playback; that is acceptable. The queue is not persisted (no playlists).
 
 ### Serving and infra (`autopelago`)
 
-- `thalium.conf.j2`: add `location /_media/ { alias <host media path>/; auth_request /_authcheck; }`
-  and `location /_media_thumbs/` pointing at a media-thumbnail directory,
-  also with `auth_request`. Also add the same block to `etc/thalium.nginx.conf`
-  in `thalium`.
-- Host vars (`laravel_apps.yml`): `DOCKER_MEDIA_LIBRARY: /mnt/media` and the bind
-  mount from the host media directory; mirror in `docker-compose.yml` and
-  `.env.example` (`HOST_MEDIA_LIBRARY` / `DOCKER_MEDIA_LIBRARY`).
+- Media files themselves: **no infra change.** Pages link to
+  `{LIBRARY_URL}path`, i.e. the existing gated `/_libris/` location.
 - Thumbnails live under a dedicated directory (`storage/app/media-thumbnails`)
-  so they can be gated, rather than in the ungated `thumbnails` disk.
-- Adding nginx locations/mounts only; nothing is removed or renamed, so no
-  cleanup tasks are needed.
+  so they can be gated, rather than in the ungated `thumbnails` disk. That needs
+  one new location, `location /_media_thumbs/ { alias ...; auth_request /_authcheck; }`,
+  in `autopelago` (`thalium.conf.j2`, mirroring the `/_thumbnails/` alias path
+  but with the auth line) and in `thalium` (`etc/thalium.nginx.conf`). This is
+  the only `autopelago` change; it adds a location and removes or renames
+  nothing, so no cleanup tasks are needed.
+
+### Interaction with the PDF indexer
+
+`ScanDirectory`/`ScanFile` walk the same tree and send every file to
+`LibrisService::getParser`. Images and audio currently end as a logged
+"No parser" `LibrisFileNotSupported` warning (caught in `scanFile`), so nothing
+breaks, but every media file would add log noise on each PDF scan. The builder
+should make the PDF scan skip image/audio files quietly (a small check in
+`dispatchIndexFile`). The PDF index and gallery are otherwise unchanged.
 
 ### Testing
 
@@ -151,6 +165,10 @@ playback; that is acceptable. The queue is not persisted (no playlists).
 ## My calls (not yet confirmed with you)
 
 - Hourly scan plus manual command.
-- Separate media thumbnail directory with auth, rather than reusing `thumbnails`.
+- Separate media thumbnail directory with auth, rather than reusing `thumbnails`
+  (the only infra change now that files share the `/_libris/` location).
+- Quiet skip of image/audio files in the PDF scan to avoid log noise.
+- Image files that already sit in the PDF tree (maps, cover images) will start
+  appearing as art. I think that's wanted; say if not.
 - Sticky bottom bar player; playback ends when leaving `/media`.
 - Ignoring non-image/non-audio files silently.
