@@ -158,4 +158,44 @@ class MediaIngestTest extends TestCase
         $this->assertSame('Real Title', $forced->title);
         $this->assertSame(2, $forced->track_number);
     }
+
+    public function test_prune_refuses_to_delete_everything_when_the_library_looks_empty(): void
+    {
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(1, 1));
+        $this->service->ingest('Sys/Maps/a.png');
+
+        // An unmounted or emptied library root, not a library that lost its media.
+        Storage::disk('libris')->deleteDirectory('Sys');
+
+        $this->assertNull($this->service->prune());
+        $this->assertSame(1, MediaItem::count());
+    }
+
+    public function test_prune_still_works_when_other_systems_remain(): void
+    {
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(1, 1));
+        Storage::disk('libris')->put('Other/Maps/b.png', $this->png(1, 1));
+        $this->service->ingest('Sys/Maps/a.png');
+        $this->service->ingest('Other/Maps/b.png');
+        Storage::disk('libris')->delete('Sys/Maps/a.png');
+
+        $this->assertSame(1, $this->service->prune());
+        $this->assertSame(['Other/Maps/b.png'], MediaItem::pluck('path')->all());
+    }
+
+    public function test_over_long_tag_text_is_truncated_to_the_column_size(): void
+    {
+        // MySQL (strict) rejects text longer than VARCHAR(255); SQLite would not notice.
+        Storage::disk('libris')->put('Sys/Album/long.mp3', $this->mp3WithTags([
+            'TIT2' => str_repeat('t', 400),
+            'TPE1' => str_repeat('a', 400),
+            'TALB' => str_repeat('b', 400),
+        ]));
+
+        $item = $this->service->ingest('Sys/Album/long.mp3');
+
+        $this->assertSame(255, mb_strlen($item->title));
+        $this->assertSame(255, mb_strlen($item->artist));
+        $this->assertSame(255, mb_strlen($item->album));
+    }
 }

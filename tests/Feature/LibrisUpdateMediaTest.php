@@ -119,6 +119,20 @@ class LibrisUpdateMediaTest extends TestCase
         $this->assertSame(['Real Title', 4], [$item->fresh()->title, $item->fresh()->track_number]);
     }
 
+    public function test_pruning_is_skipped_with_a_warning_when_the_library_looks_empty(): void
+    {
+        MediaItem::create([
+            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->artisan('libris:update_media', ['--foreground' => true])
+            ->expectsOutputToContain('Skipped pruning')
+            ->assertSuccessful();
+
+        $this->assertSame(1, MediaItem::count());
+    }
+
     public function test_is_scheduled_hourly(): void
     {
         $this->artisan('schedule:list')->expectsOutputToContain('libris:update_media');
