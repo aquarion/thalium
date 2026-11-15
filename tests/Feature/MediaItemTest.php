@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -70,5 +71,17 @@ class MediaItemTest extends TestCase
 
         $item->duration_seconds = 75;
         $this->assertSame('1:15', $item->durationLabel());
+    }
+
+    public function test_path_is_keyed_by_hash_not_a_long_unique_string_index(): void
+    {
+        // A unique index on VARCHAR(1024) fails on MySQL/utf8mb4 (4096 bytes > the 3072 key limit).
+        $item = $this->make('S/Maps/a.png', MediaKind::Art, 'S', ['Maps']);
+
+        $this->assertSame(sha1('S/Maps/a.png'), $item->path_hash);
+
+        $unique = collect(Schema::getIndexes('media_items'))->where('unique', true)->pluck('columns');
+        $this->assertTrue($unique->contains(['path_hash']));
+        $this->assertFalse($unique->contains(['path']));
     }
 }

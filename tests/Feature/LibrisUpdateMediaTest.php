@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\ScanFile;
 use App\Models\MediaItem;
+use App\Service\Media\MediaIngestService;
 use App\Service\Media\MediaKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -56,6 +57,19 @@ class LibrisUpdateMediaTest extends TestCase
             ['ScanFile <SysA/Ambience/d.mp3>', 'ScanFile <SysA/Maps/a.png>', 'ScanFile <SysB/Maps/e.png>'],
             $this->pushedPaths()
         );
+    }
+
+    public function test_background_skips_files_that_are_already_up_to_date(): void
+    {
+        Queue::fake();
+        $this->putFiles();
+        $service = new MediaIngestService;
+        $service->ingest('SysA/Maps/a.png');
+        $service->ingest('SysB/Maps/e.png');
+
+        $this->artisan('libris:update_media')->assertSuccessful();
+
+        $this->assertSame(['ScanFile <SysA/Ambience/d.mp3>'], $this->pushedPaths());
     }
 
     public function test_start_option_limits_the_walk(): void

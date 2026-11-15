@@ -138,4 +138,46 @@ class MediaPagesTest extends TestCase
 
         $this->get('/')->assertOk()->assertSee('OnlyArt');
     }
+
+    public function test_documents_count_covers_every_document_not_just_untagged(): void
+    {
+        $this->login();
+        $this->mock(LibrisInterface::class, function (MockInterface $mock) {
+            // The PDF page itself lists untagged documents (tag === 0)...
+            $mock->shouldReceive('docsBySystem')
+                ->with('S', \Mockery::any(), \Mockery::any(), \Mockery::on(fn ($tag) => $tag === 0))
+                ->andReturn(['hits' => ['total' => ['value' => 5], 'hits' => []]]);
+            // ...but the tab count must ask for all of them (tag === false = no filter).
+            $mock->shouldReceive('docsBySystem')
+                ->with('S', \Mockery::any(), \Mockery::any(), \Mockery::on(fn ($tag) => $tag === false))
+                ->andReturn(['hits' => ['total' => ['value' => 350], 'hits' => []]]);
+            $mock->shouldReceive('tagsForSystem')->andReturn([]);
+        });
+
+        $this->get('/system/S')->assertOk()->assertSee('(350)');
+        $this->get('/system/S/art')->assertOk()->assertSee('(350)');
+    }
+
+    public function test_in_system_links_are_swapped_in_page_so_music_keeps_playing(): void
+    {
+        $this->login();
+        $this->mock(LibrisInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('docsBySystem')->andReturn(['hits' => ['total' => ['value' => 3], 'hits' => []]]);
+            $mock->shouldReceive('tagsForSystem')->andReturn([['key' => 'Core', 'doc_count' => 3]]);
+        });
+        $this->item('S/a.png', MediaKind::Art, 'S', ['Maps'], 'A');
+
+        // Documents tag chips
+        $html = $this->get('/system/S')->assertOk()->getContent();
+        preg_match_all('/<a class="tag"[^>]*>/', $html, $chips);
+        $this->assertNotEmpty($chips[0]);
+        foreach ($chips[0] as $chip) {
+            $this->assertStringContainsString('data-section-link', $chip);
+        }
+
+        // The breadcrumb link back to the system, on the new pages
+        $link = 'href="'.route('system.index', ['system' => 'S']).'" data-section-link';
+        $this->get('/system/S/art')->assertSee($link, false);
+        $this->get('/system/S/music')->assertSee($link, false);
+    }
 }
