@@ -191,7 +191,13 @@ class MediaIngestService
     {
         try {
             $name = md5($path).'.png';
-            Storage::disk('thumbnails')->put($name, $parser->generateDocThumbnail()->getImageBlob());
+
+            // put() returns false rather than throwing unless the disk sets `throw`.
+            if (! Storage::disk('thumbnails')->put($name, $parser->generateDocThumbnail()->getImageBlob())) {
+                Log::warning("[Media] Could not write the thumbnail for $path");
+
+                return null;
+            }
 
             return $name;
         } catch (\Throwable $e) {

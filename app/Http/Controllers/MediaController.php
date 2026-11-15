@@ -60,10 +60,12 @@ class MediaController extends Controller
 
         $query->orderByRaw("$column IS NULL")->orderBy($column, $dir);
 
+        // Ties fall back to album/track/title and finally the id, so every listing has a
+        // total order: paging over repeated titles can't repeat or skip rows on MySQL.
         $tieBreakers = match ($sort) {
-            'artist' => ['album', 'track_number', 'title'],
-            'album' => ['track_number', 'title'],
-            default => ['title'],
+            'artist' => ['album', 'track_number', 'title', 'id'],
+            'album' => ['track_number', 'title', 'id'],
+            default => ['title', 'id'],
         };
 
         foreach ($tieBreakers as $tieBreaker) {
@@ -91,7 +93,7 @@ class MediaController extends Controller
             $query->whereJsonContains('tags', $tag);
         }
 
-        $order ? $order($query) : $query->orderBy('title');
+        $order ? $order($query) : $query->orderBy('title')->orderBy('id');
 
         return view($view, [
             'system' => $system,

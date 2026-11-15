@@ -40,11 +40,14 @@ class LibrisUpdateMedia extends Command
 
         $removed = $media->prune();
 
-        $this->line(
-            $removed === null
-                ? 'Skipped pruning: the library looks empty or unavailable'
-                : "Removed $removed deleted files"
-        );
+        if ($removed === null) {
+            // Non-zero so the hourly scheduler flags an unmounted or emptied library.
+            $this->error('Skipped pruning: the library looks empty or unavailable');
+
+            return self::FAILURE;
+        }
+
+        $this->line("Removed $removed deleted files");
 
         return self::SUCCESS;
 

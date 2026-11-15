@@ -25,9 +25,14 @@ class ParseAudioService extends ParserService implements MediaParserInterface
         try {
             $info = (new \getID3)->analyze(Storage::disk('libris')->path($this->filename));
         } catch (\Throwable $e) {
-            Log::warning("[Parser] Could not read audio tags for {$this->filename}: ".$e->getMessage());
+            Log::warning("[Parser] Could not read audio tags for {$this->filename}: ".$e->getMessage(), ['exception' => $e]);
 
             return [];
+        }
+
+        // getID3 reports most unreadable or corrupt files here instead of throwing.
+        if (! empty($info['error'])) {
+            Log::warning("[Parser] getID3 could not fully read {$this->filename}: ".implode('; ', (array) $info['error']));
         }
 
         $metadata = [];
