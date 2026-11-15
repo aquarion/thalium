@@ -40,6 +40,11 @@ class ParseImageService extends ParserService implements MediaParserInterface
     public function generateDocThumbnail()
     {
         $image = new \Imagick;
+
+        // Huge battle maps can exceed ImageMagick's memory limits if decoded in full
+        // ("cache resources exhausted"). For JPEGs, have libjpeg downscale while
+        // decoding; the hint is ignored for other formats.
+        $image->setOption('jpeg:size', '800x800');
         $image->readImage(Storage::disk('libris')->path($this->filename).'[0]');
         $image->thumbnailImage(400, 400, true);
         $image->setImageFormat('png');

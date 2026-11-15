@@ -104,4 +104,22 @@ class MediaParserTest extends TestCase
         $this->assertArrayNotHasKey('track_number', (new ParseAudioService('Sys/Album/b.mp3'))->metadata());
         $this->assertArrayNotHasKey('track_number', (new ParseAudioService('Sys/Album/c.mp3'))->metadata());
     }
+
+    public function test_large_jpeg_thumbnail_is_bounded(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick not available');
+        }
+
+        $image = imagecreatetruecolor(3000, 2000);
+        ob_start();
+        imagejpeg($image);
+        Storage::disk('libris')->put('Sys/Maps/big.jpg', ob_get_clean());
+
+        $thumbnail = (new ParseImageService('Sys/Maps/big.jpg'))->generateDocThumbnail();
+
+        $this->assertSame(400, $thumbnail->getImageWidth());
+        $this->assertContains($thumbnail->getImageHeight(), [266, 267]);
+        $this->assertSame('PNG', $thumbnail->getImageFormat());
+    }
 }
