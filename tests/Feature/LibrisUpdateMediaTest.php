@@ -128,7 +128,7 @@ class LibrisUpdateMediaTest extends TestCase
 
         $this->artisan('libris:update_media', ['--foreground' => true])
             ->expectsOutputToContain('Skipped pruning')
-            ->assertSuccessful();
+            ->assertFailed(); // so the hourly scheduler flags an unmounted library
 
         $this->assertSame(1, MediaItem::count());
     }

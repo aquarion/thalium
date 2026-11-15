@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\MediaItem;
 use App\Service\Media\MediaIngestService;
 use App\Service\Media\MediaKind;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesMediaFiles;
@@ -197,5 +198,24 @@ class MediaIngestTest extends TestCase
         $this->assertSame(255, mb_strlen($item->title));
         $this->assertSame(255, mb_strlen($item->artist));
         $this->assertSame(255, mb_strlen($item->album));
+    }
+
+    public function test_a_failed_thumbnail_write_is_not_recorded(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick not available');
+        }
+
+        // With the default `throw => false`, a failed put() returns false instead of throwing.
+        $broken = \Mockery::mock(Filesystem::class);
+        $broken->shouldReceive('put')->andReturn(false);
+        Storage::set('thumbnails', $broken);
+
+        Storage::disk('libris')->put('Sys/Maps/a.png', $this->png(30, 20));
+
+        $item = $this->service->ingest('Sys/Maps/a.png');
+
+        $this->assertNotNull($item);
+        $this->assertNull($item->thumbnail);
     }
 }

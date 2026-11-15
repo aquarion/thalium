@@ -7,6 +7,7 @@ use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -353,5 +354,39 @@ class MediaPagesTest extends TestCase
 
         $this->item('S/B/untracked.mp3', MediaKind::Music, 'T', ['B'], 'Untracked');
         $this->get('/system/T/music')->assertOk()->assertSee('Untracked')->assertDontSee('>#<', false);
+    }
+
+    /** The paginated item query's ORDER BY clause for a request. */
+    private function itemOrderBy(string $url): string
+    {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->get($url)->assertOk();
+
+        foreach (DB::getQueryLog() as $entry) {
+            if (str_contains($entry['query'], 'from "media_items"') && str_contains($entry['query'], ' limit ')) {
+                preg_match('/order by (.*?) limit/i', $entry['query'], $match);
+
+                return $match[1] ?? '';
+            }
+        }
+
+        return '';
+    }
+
+    public function test_listings_have_a_total_order_so_paging_is_stable(): void
+    {
+        // Titles come from filenames and often repeat; without a unique last key,
+        // MySQL may repeat or skip rows across pages.
+        $this->login();
+        $this->tracks();
+        $this->item('S/Maps/a.png', MediaKind::Art, 'S', ['Maps'], 'A'); // an empty page skips the items query
+
+        foreach (['/system/S/art', '/system/S/music', '/system/S/music?sort=artist', '/system/S/music?sort=length&dir=desc'] as $url) {
+            $orderBy = $this->itemOrderBy($url);
+
+            $this->assertNotSame('', $orderBy, $url);
+            $this->assertStringEndsWith('"id" asc', trim($orderBy), $url);
+        }
     }
 }

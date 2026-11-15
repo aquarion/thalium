@@ -6,6 +6,7 @@ use App\Service\Media\MediaKind;
 use App\Service\Media\MediaParserFactory;
 use App\Service\Media\ParseAudioService;
 use App\Service\Media\ParseImageService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesMediaFiles;
 use Tests\TestCase;
@@ -121,5 +122,18 @@ class MediaParserTest extends TestCase
         $this->assertSame(400, $thumbnail->getImageWidth());
         $this->assertContains($thumbnail->getImageHeight(), [266, 267]);
         $this->assertSame('PNG', $thumbnail->getImageFormat());
+    }
+
+    public function test_unreadable_audio_is_logged_with_the_path_and_getid3_error(): void
+    {
+        // getID3 reports most corrupt files through $info['error'] instead of throwing.
+        Storage::disk('libris')->put('Sys/Album/junk.mp3', str_repeat('not audio ', 2000));
+        Log::spy();
+
+        $this->assertSame([], (new ParseAudioService('Sys/Album/junk.mp3'))->metadata());
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn ($message) => str_contains($message, 'Sys/Album/junk.mp3'))
+            ->atLeast()->once();
     }
 }
