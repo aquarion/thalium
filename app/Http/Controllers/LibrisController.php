@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Libris\LibrisInterface;
 use App\Models\MediaItem;
 use App\Service\Media\SystemSections;
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
@@ -115,6 +116,12 @@ class LibrisController extends Controller
         $page = $request->query('page', 1);
 
         $result = $libris->searchPages($query, $system, $document, $tag, $page, $perpage);
+
+        // The v8 Elasticsearch client returns a Response object, which can't
+        // be referenced into below; work on a plain array instead.
+        if ($result instanceof Elasticsearch) {
+            $result = $result->asArray();
+        }
 
         $total = $result['hits']['total']['value'];
 

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Libris\LibrisInterface;
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Illuminate\Console\Command;
 
 class LibrisThumbnails extends Command
@@ -47,13 +48,14 @@ class LibrisThumbnails extends Command
     private function nextPage($size = 100): array
     {
         if ($this->option('system')) {
-            $docs = $this->libris->docsBySystem($this->option('system'), $this->page);
+            $docs = $this->libris->docsBySystem($this->option('system'), $this->page, $size, false);
             $this->page++;
         } else {
             $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
         }
 
-        return $docs;
+        // The v8 Elasticsearch client returns a Response object, not an array.
+        return $docs instanceof Elasticsearch ? $docs->asArray() : $docs;
 
     }// end nextPage()
 
