@@ -35,10 +35,12 @@ class LibrisDelete extends Command
     /**
      * Execute the console command.
      */
-    public function handle(LibrisInterface $libris): void
+    public function handle(LibrisInterface $libris): int
     {
-        $this->info('Index deleted.');
         $libris->deleteIndex();
+        $this->info('Index deleted.');
+
+        return self::SUCCESS;
 
     }// end handle()
 

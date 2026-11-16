@@ -49,9 +49,11 @@ class LibrisAdd extends Command implements PromptsForMissingInput
             $libris->addDocument($filename, $this);
         } else {
             $this->error(Storage::disk('libris')->path($filename).' not found on disk');
+
+            return self::FAILURE;
         }
 
-        return 0;
+        return self::SUCCESS;
 
     }// end handle()
 
