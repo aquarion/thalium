@@ -4,15 +4,23 @@ Thalium is a thing for making my RPG PDFs searchable.
 
 # Making it go
 
-## Docker
+## Local development (Laravel Sail)
 
-In theory, `docker-compose up` should just work.
+```sh
+cp .env.example .env            # sets Sail hostnames for mysql/redis/elasticsearch/mailpit
+composer install                # needs vendor/ so Sail can build its image
+vendor/bin/sail build           # first run only (builds the PHP 8.4 + Java/PDFBox image)
+vendor/bin/sail up -d
+vendor/bin/sail artisan key:generate
+vendor/bin/sail artisan migrate
+vendor/bin/sail artisan test
+```
 
-Then ` docker-compose exec app composer install` should then install the things.
-
-Then `docker-compose exec app artisan migrate` will put the database things in place
-
-and `docker-compose exec app artisan migrate`
+The stack is `compose.yaml`: app, MySQL, Redis, Elasticsearch, Mailpit. The app
+container also runs the Vite dev server (port 5173), installing `node_modules`
+on first start. Set
+`HOST_PDF_LIBRARY` in `.env` to mount a PDF library at `/mnt/rpg`. Production
+and staging are deployed from the `autopelago` repo, not from this checkout.
 
 # Media gallery (art & music)
 
