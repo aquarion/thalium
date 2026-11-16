@@ -59,7 +59,8 @@ class PDFBoxService extends ParserService
 
     public function run_pdfbox($command)
     {
-        $PDFBoxExecTemplate = "/usr/bin/java -cp '%s/*' org.apache.pdfbox.tools.PDFBox %s \"%s\"";
+        // PDFBox 3's CLI requires -i for the input file; a bare path prints usage and exits 0 with no output
+        $PDFBoxExecTemplate = "/usr/bin/java -cp '%s/*' org.apache.pdfbox.tools.PDFBox %s -i=\"%s\"";
 
         $cmd = sprintf($PDFBoxExecTemplate, $this->pdfboxBin, $command, $this->tempFile);
         Log::Info($cmd);
@@ -135,9 +136,8 @@ class PDFBoxService extends ParserService
 
         $this->pages = $pages;
 
-        if (count($this->pages) == 0) {
-            return false;
-        }
+        // LibrisService::indexDocument() treats a falsy result as "no searchable content"
+        return count($this->pages) > 0;
 
     }// end parsePages()
 
