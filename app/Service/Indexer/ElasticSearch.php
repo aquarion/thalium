@@ -370,6 +370,13 @@ class ElasticSearch implements IndexerInterface
 
             return;
         } catch (ClientResponseException $e) {
+            if ($e->getCode() === 403) {
+                // The app's ES role has no cluster privileges for pipelines; libris:index:create sets it up with admin credentials
+                Log::warning('No permission to check attachment_pipeline; assuming it exists');
+
+                return;
+            }
+
             if ($e->getCode() !== 404) {
                 throw $e;
             }
