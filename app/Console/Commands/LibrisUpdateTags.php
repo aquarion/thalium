@@ -101,6 +101,8 @@ class LibrisUpdateTags extends Command
         $bar->finish();
         $this->line('Have a great day.');
 
+        return self::SUCCESS;
+
     }// end handle()
 
 }// end class
