@@ -32,6 +32,8 @@ interface IndexerInterface
 
     public function updateIndex();
 
+    public function updatePipeline();
+
     public function deleteIndex();
 
     public function listSystems();

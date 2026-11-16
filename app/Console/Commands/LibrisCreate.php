@@ -37,8 +37,9 @@ class LibrisCreate extends Command
      */
     public function handle(LibrisInterface $libris): int
     {
-        $libris->updateIndex();
-        $libris->updatePipeline();
+        $indexer = $libris->getIndexer();
+        $indexer->updateIndex();
+        $indexer->updatePipeline();
         $this->info('Successfully created/updated index and pipelines');
 
         return 0;

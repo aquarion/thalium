@@ -280,6 +280,7 @@ class ElasticSearch implements IndexerInterface
     public function setup()
     {
         $this->updateIndex();
+        $this->createPipeline();
     } // end setup()
 
     public function updateIndex()
@@ -336,7 +337,7 @@ class ElasticSearch implements IndexerInterface
         return ElasticSearchClient::indices()->delete(['index' => $this->elasticSearchIndex]);
     } // end deleteIndex()
 
-    private function updatePipeline()
+    public function updatePipeline()
     {
         Log::info('Update Pipeline');
         $params = [
@@ -642,8 +643,9 @@ class ElasticSearch implements IndexerInterface
 
     private function closePointInTime()
     {
+        // The client only sends the PIT id from 'body'; a top-level 'id' is dropped and ES answers 400
         $params = [
-            'id' => $this->pointInTime,
+            'body' => ['id' => $this->pointInTime],
         ];
         ElasticSearchClient::closePointInTime($params);
     } // end closePointInTime()
