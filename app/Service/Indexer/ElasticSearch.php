@@ -211,7 +211,8 @@ class ElasticSearch implements IndexerInterface
         ];
 
         if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
+            // Add to the doc_type=page filter, don't replace it: the document record shares this path
+            $params['body']['query']['bool']['filter'][] = [
                 'match' => ['path' => $docId],
             ];
         }
@@ -252,7 +253,9 @@ class ElasticSearch implements IndexerInterface
         ];
 
         if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
+            // Add to the doc_type=page filter, don't replace it: otherwise the document record
+            // itself matches and deleteDocumentPages() deletes it, so deleteDocument() 404s.
+            $params['body']['query']['bool']['filter'][] = [
                 'match' => ['path' => $docId],
             ];
         }
