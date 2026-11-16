@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\PrunesMedia;
 use App\Jobs\ScanFile;
 use App\Service\Media\MediaIngestService;
 use Illuminate\Console\Command;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 class LibrisUpdateMedia extends Command
 {
+    use PrunesMedia;
+
     /**
      * The name and signature of the console command.
      *
@@ -38,18 +41,7 @@ class LibrisUpdateMedia extends Command
             $this->backgroundUpdate($media, $root);
         }
 
-        $removed = $media->prune();
-
-        if ($removed === null) {
-            // Non-zero so the hourly scheduler flags an unmounted or emptied library.
-            $this->error('Skipped pruning: the library looks empty or unavailable');
-
-            return self::FAILURE;
-        }
-
-        $this->line("Removed $removed deleted files");
-
-        return self::SUCCESS;
+        return $this->pruneMedia($media);
 
     }// end handle()
 

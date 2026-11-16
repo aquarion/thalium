@@ -33,6 +33,6 @@ directory below it is a tag. Each system gets `Documents | Art | Music` tabs.
   (such as `.thalium/`), are ignored.
 - `artisan libris:update_media` (hourly via the scheduler) adds new files,
   refreshes changed ones and removes rows for deleted ones. It takes
-  `--foreground` and `--start=<dir>` like `libris:update`. A full
-  `libris:update` also picks up new media but does not prune.
+  `--foreground` and `--start=<dir>` like `libris:update`, which does everything
+  `update_media` does: it picks up new media and prunes deleted files too.
 - Media is cached in the `media_items` table and never goes into Elasticsearch.
