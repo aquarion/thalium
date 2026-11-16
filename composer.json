@@ -28,6 +28,7 @@
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.0",
+        "laravel/sail": "^1.70",
         "mockery/mockery": "^1.6",
         "phpunit/phpunit": "^13.4.5",
         "spatie/laravel-ignition": "^2.9"
@@ -35,7 +36,11 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
     },
     "extra": {
         "laravel": {

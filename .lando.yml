@@ -1,4 +1,0 @@
-name: thalium
-recipe: laravel
-config:
-  webroot: public
