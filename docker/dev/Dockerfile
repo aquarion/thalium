@@ -16,4 +16,9 @@ RUN apt-get update \
 # Allow ImageMagick to read PDFs (same policy as the production image)
 COPY --from=app-docker imagemagic_policy.xml /etc/ImageMagick-6/policy.xml
 
+# Run the Vite dev server alongside php under Sail's supervisord. Sail starts
+# supervisord with -c on supervisord.conf, which has no [include], so add one.
+COPY vite.conf /etc/supervisor/conf.d/vite.conf
+RUN printf '\n[include]\nfiles = /etc/supervisor/conf.d/vite.conf\n' >> /etc/supervisor/conf.d/supervisord.conf
+
 COPY --from=pdfbox-libs /opt/pdfbox /usr/share/java/pdfbox

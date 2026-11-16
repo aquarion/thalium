@@ -16,7 +16,9 @@ vendor/bin/sail artisan migrate
 vendor/bin/sail artisan test
 ```
 
-The stack is `compose.yaml`: app, MySQL, Redis, Elasticsearch, Mailpit. Set
+The stack is `compose.yaml`: app, MySQL, Redis, Elasticsearch, Mailpit. The app
+container also runs the Vite dev server (port 5173), installing `node_modules`
+on first start. Set
 `HOST_PDF_LIBRARY` in `.env` to mount a PDF library at `/mnt/rpg`. Production
 and staging are deployed from the `autopelago` repo, not from this checkout.
 
