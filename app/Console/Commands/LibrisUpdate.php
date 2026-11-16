@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\PrunesMedia;
 use App\Jobs\ScanDirectory;
 use App\Libris\LibrisInterface;
+use App\Service\Media\MediaIngestService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +14,8 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 class LibrisUpdate extends Command
 {
+    use PrunesMedia;
+
     /**
      * The name and signature of the console command.
      *
@@ -54,7 +58,7 @@ class LibrisUpdate extends Command
     /**
      * Execute the console command.
      */
-    public function handle(LibrisInterface $libris): void
+    public function handle(LibrisInterface $libris, MediaIngestService $media): int
     {
         $this->libris = $libris;
 
@@ -73,6 +77,9 @@ class LibrisUpdate extends Command
         } else {
             $this->backgroundUpdate();
         }
+
+        // The scan picks up new and changed media; pruning is the rest of libris:update_media.
+        return $this->pruneMedia($media);
 
     }// end handle()
 

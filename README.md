@@ -7,7 +7,7 @@ Thalium is a thing for making my RPG PDFs searchable.
 ## Local development (Laravel Sail)
 
 ```sh
-cp .env.example .env            # sets Sail hostnames for mysql/redis/elasticsearch/mailpit
+cp .env.example .env            # sets Sail hostnames for mariadb/redis/elasticsearch/mailpit
 composer install                # needs vendor/ so Sail can build its image
 vendor/bin/sail build           # first run only (builds the PHP 8.4 + Java/PDFBox image)
 vendor/bin/sail up -d
@@ -16,7 +16,7 @@ vendor/bin/sail artisan migrate
 vendor/bin/sail artisan test
 ```
 
-The stack is `compose.yaml`: app, MySQL, Redis, Elasticsearch, Mailpit. The app
+The stack is `compose.yaml`: app, MariaDB, Redis, Elasticsearch, Mailpit. The app
 container also runs the Vite dev server (port 5173), installing `node_modules`
 on first start. Set
 `HOST_PDF_LIBRARY` in `.env` to mount a PDF library at `/mnt/rpg`. Production
@@ -33,6 +33,6 @@ directory below it is a tag. Each system gets `Documents | Art | Music` tabs.
   (such as `.thalium/`), are ignored.
 - `artisan libris:update_media` (hourly via the scheduler) adds new files,
   refreshes changed ones and removes rows for deleted ones. It takes
-  `--foreground` and `--start=<dir>` like `libris:update`. A full
-  `libris:update` also picks up new media but does not prune.
+  `--foreground` and `--start=<dir>` like `libris:update`, which does everything
+  `update_media` does: it picks up new media and prunes deleted files too.
 - Media is cached in the `media_items` table and never goes into Elasticsearch.

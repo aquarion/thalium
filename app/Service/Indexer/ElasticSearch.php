@@ -2,10 +2,10 @@
 
 namespace App\Service\Indexer;
 
+use App\Facades\Elasticsearch as ElasticSearchClient;
 use App\Interfaces\IndexerInterface;
 use App\Service\ParserService;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
-use Elasticsearch as ElasticSearchClient;
 use Illuminate\Support\Facades\Log;
 
 class ElasticSearch implements IndexerInterface
@@ -211,7 +211,8 @@ class ElasticSearch implements IndexerInterface
         ];
 
         if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
+            // Add to the doc_type=page filter, don't replace it: the document record shares this path
+            $params['body']['query']['bool']['filter'][] = [
                 'match' => ['path' => $docId],
             ];
         }
@@ -252,7 +253,9 @@ class ElasticSearch implements IndexerInterface
         ];
 
         if ($docId) {
-            $params['body']['query']['bool']['filter'] = [
+            // Add to the doc_type=page filter, don't replace it: otherwise the document record
+            // itself matches and deleteDocumentPages() deletes it, so deleteDocument() 404s.
+            $params['body']['query']['bool']['filter'][] = [
                 'match' => ['path' => $docId],
             ];
         }
@@ -277,6 +280,7 @@ class ElasticSearch implements IndexerInterface
     public function setup()
     {
         $this->updateIndex();
+        $this->createPipeline();
     } // end setup()
 
     public function updateIndex()
@@ -333,7 +337,7 @@ class ElasticSearch implements IndexerInterface
         return ElasticSearchClient::indices()->delete(['index' => $this->elasticSearchIndex]);
     } // end deleteIndex()
 
-    private function updatePipeline()
+    public function updatePipeline()
     {
         Log::info('Update Pipeline');
         $params = [
@@ -639,8 +643,9 @@ class ElasticSearch implements IndexerInterface
 
     private function closePointInTime()
     {
+        // The client only sends the PIT id from 'body'; a top-level 'id' is dropped and ES answers 400
         $params = [
-            'id' => $this->pointInTime,
+            'body' => ['id' => $this->pointInTime],
         ];
         ElasticSearchClient::closePointInTime($params);
     } // end closePointInTime()

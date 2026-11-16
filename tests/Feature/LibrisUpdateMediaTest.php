@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Jobs\ScanFile;
+use App\Libris\LibrisInterface;
 use App\Models\MediaItem;
 use App\Service\Media\MediaIngestService;
 use App\Service\Media\MediaKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\Concerns\MakesMediaFiles;
 use Tests\TestCase;
 
@@ -129,6 +131,46 @@ class LibrisUpdateMediaTest extends TestCase
         $this->artisan('libris:update_media', ['--foreground' => true])
             ->expectsOutputToContain('Skipped pruning')
             ->assertFailed(); // so the hourly scheduler flags an unmounted library
+
+        $this->assertSame(1, MediaItem::count());
+    }
+
+    private function fakeLibris(): void
+    {
+        $indexer = Mockery::mock();
+        $indexer->shouldReceive('setup')->once();
+        $this->mock(LibrisInterface::class)->shouldReceive('getIndexer')->andReturn($indexer);
+    }
+
+    public function test_libris_update_also_prunes_deleted_media(): void
+    {
+        Queue::fake();
+        $this->fakeLibris();
+        $this->putFiles();
+        MediaItem::create([
+            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->artisan('libris:update')
+            ->expectsOutputToContain('Removed 1 deleted files')
+            ->assertSuccessful();
+
+        $this->assertSame(0, MediaItem::count());
+    }
+
+    public function test_libris_update_fails_without_pruning_when_the_library_looks_empty(): void
+    {
+        Queue::fake();
+        $this->fakeLibris();
+        MediaItem::create([
+            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->artisan('libris:update')
+            ->expectsOutputToContain('Skipped pruning')
+            ->assertFailed(); // so the daily scheduler flags an unmounted library
 
         $this->assertSame(1, MediaItem::count());
     }

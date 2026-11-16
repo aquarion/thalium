@@ -92,7 +92,9 @@ class LibrisPurge extends Command
                 $filename = $doc['_source']['path'];
                 $bar->setMessage($filename);
                 if (Storage::disk('libris')->missing($filename)) {
-                    $deletionList[] = $doc['_id'];
+                    // The path, not _id: the client url-encodes ids ("a b" is stored as "a+b"),
+                    // and deleteDocument() matches the document's pages by path.
+                    $deletionList[] = $filename;
                 }
 
                 $this->searchAfter = $doc['sort'];
