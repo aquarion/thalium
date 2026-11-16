@@ -2,10 +2,10 @@
 
 namespace App\Service\Indexer;
 
+use App\Facades\Elasticsearch as ElasticSearchClient;
 use App\Interfaces\IndexerInterface;
 use App\Service\ParserService;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
-use Elasticsearch as ElasticSearchClient;
 use Illuminate\Support\Facades\Log;
 
 class ElasticSearch implements IndexerInterface
