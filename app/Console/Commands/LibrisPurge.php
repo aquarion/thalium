@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Libris\LibrisInterface;
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -37,7 +38,8 @@ class LibrisPurge extends Command
         $docs = $this->libris->fetchAllDocuments(false, $size, $this->searchAfter);
         // }
 
-        return $docs;
+        // The v8 Elasticsearch client returns a Response object, not an array.
+        return $docs instanceof Elasticsearch ? $docs->asArray() : $docs;
 
     }// end nextPageOfDocs()
 
