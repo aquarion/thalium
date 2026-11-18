@@ -27,13 +27,13 @@ class MediaKindTest extends TestCase
         $this->assertSame('map', MediaKind::Map->value);
     }
 
-    public function test_fromPath_never_returns_map(): void
+    public function test_from_path_never_returns_map(): void
     {
         $this->assertNull(MediaKind::fromPath('a.pdf'));
         $this->assertSame(MediaKind::Art, MediaKind::fromPath('a.jpg'));
     }
 
-    public function test_isPdf_and_isImage_are_case_insensitive(): void
+    public function test_is_pdf_and_is_image_are_case_insensitive(): void
     {
         $this->assertTrue(MediaKind::isPdf('S/A.PDF'));
         $this->assertFalse(MediaKind::isPdf('S/a.jpg'));

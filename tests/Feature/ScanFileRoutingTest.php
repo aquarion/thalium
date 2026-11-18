@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Interfaces\IndexerInterface;
 use App\Libris\LibrisService;
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
 use App\Service\Media\MediaSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
 use Tests\Concerns\MakesMediaFiles;
 use Tests\TestCase;
 
@@ -52,7 +54,7 @@ class ScanFileRoutingTest extends TestCase
         $this->assertSame(0, MediaItem::count());
     }
 
-    private function serviceWithIndexer(\Mockery\MockInterface $indexer): LibrisService
+    private function serviceWithIndexer(MockInterface $indexer): LibrisService
     {
         $service = new LibrisService;
         $property = new \ReflectionProperty($service, 'indexer');
@@ -64,7 +66,7 @@ class ScanFileRoutingTest extends TestCase
     public function test_map_pdf_is_ingested_and_removed_from_elasticsearch(): void
     {
         Storage::disk('libris')->put('Sys/Maps/city.pdf', '%PDF-1.4');
-        $indexer = \Mockery::mock(\App\Interfaces\IndexerInterface::class);
+        $indexer = \Mockery::mock(IndexerInterface::class);
         $indexer->shouldReceive('fetchDocument')->with('Sys/Maps/city.pdf')->once()->andReturn(['_id' => 'doc-1']);
         $indexer->shouldReceive('deleteDocument')->with('doc-1')->once();
         $indexer->shouldNotReceive('indexDocument');
@@ -78,7 +80,7 @@ class ScanFileRoutingTest extends TestCase
     public function test_map_pdf_not_yet_indexed_is_just_ingested(): void
     {
         Storage::disk('libris')->put('Sys/Maps/city.pdf', '%PDF-1.4');
-        $indexer = \Mockery::mock(\App\Interfaces\IndexerInterface::class);
+        $indexer = \Mockery::mock(IndexerInterface::class);
         $indexer->shouldReceive('fetchDocument')->andReturn(false);
         $indexer->shouldNotReceive('deleteDocument');
 

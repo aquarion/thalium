@@ -61,7 +61,7 @@ class MediaClassifierTest extends TestCase
         $this->assertNull(MediaClassifier::classify($source, $path));
     }
 
-    public function test_isMapPath_is_true_only_for_library_pdfs_and_images_in_maps_folders(): void
+    public function test_is_map_path_is_true_only_for_library_pdfs_and_images_in_maps_folders(): void
     {
         $this->assertTrue(MediaClassifier::isMapPath('S/Maps/a.pdf'));
         $this->assertTrue(MediaClassifier::isMapPath('S/x/maps/a.png'));

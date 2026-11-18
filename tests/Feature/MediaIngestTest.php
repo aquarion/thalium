@@ -270,7 +270,7 @@ class MediaIngestTest extends TestCase
         $this->assertSame(2, MediaItem::count());
     }
 
-    public function test_changedPaths_yields_a_reclassified_row_whose_mtime_is_unchanged(): void
+    public function test_changed_paths_yields_a_reclassified_row_whose_mtime_is_unchanged(): void
     {
         Storage::disk('libris')->put('S/Maps/a.png', $this->png(1, 1));
         MediaItem::create([

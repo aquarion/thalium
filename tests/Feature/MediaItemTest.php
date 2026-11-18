@@ -146,7 +146,7 @@ class MediaItemTest extends TestCase
         ]);
     }
 
-    public function test_forSystem_matches_collection_case_insensitively_only_for_the_maps_source(): void
+    public function test_for_system_matches_collection_case_insensitively_only_for_the_maps_source(): void
     {
         $this->map('S/Maps/a.png', 'S', null);
         $this->map('blades in the dark/b.png', null, 'blades in the dark', [], MediaSource::Maps);
@@ -172,7 +172,7 @@ class MediaItemTest extends TestCase
         $this->assertSame(['City' => 2], MediaItem::tagCounts(MediaKind::Map, 'S'));
     }
 
-    public function test_systemsWithMedia_ignores_null_system(): void
+    public function test_systems_with_media_ignores_null_system(): void
     {
         $this->make('S/Pictures/a.png', MediaKind::Art, 'S');
         $this->map('BattleMats/c.png', null, 'BattleMats', [], MediaSource::Maps);
@@ -181,7 +181,7 @@ class MediaItemTest extends TestCase
         $this->assertSame(['art' => 1, 'music' => 0, 'map' => 0], MediaItem::systemsWithMedia()['S']);
     }
 
-    public function test_mapGroups_groups_by_system_or_collection_and_filters_by_tag(): void
+    public function test_map_groups_groups_by_system_or_collection_and_filters_by_tag(): void
     {
         $this->map('Z/Maps/z.png', 'Z', null, ['Day'], MediaSource::Library, 'Zed');
         $this->map('A/a.png', null, 'A', ['Night'], MediaSource::Maps, 'Alpha');
