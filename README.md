@@ -36,3 +36,10 @@ directory below it is a tag. Each system gets `Documents | Art | Music` tabs.
   `--foreground` and `--start=<dir>` like `libris:update`, which does everything
   `update_media` does: it picks up new media and prunes deleted files too.
 - Media is cached in the `media_items` table and never goes into Elasticsearch.
+
+## Maps
+
+Images and PDFs inside a directory named `Maps` (any case, below the system
+directory) are maps: they show in the system's **Maps** tab instead of Art or
+Documents. The `RPG/Maps` tree beside `Systems` is the second source; mount it
+with `HOST_MAPS_LIBRARY` and set `MAPS_LIBRARY` (left unset, it is skipped).

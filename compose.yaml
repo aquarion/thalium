@@ -23,6 +23,7 @@ services:
         volumes:
             - '.:/var/www/html'
             - '${HOST_PDF_LIBRARY:-./storage/library}:${DOCKER_PDF_LIBRARY:-/mnt/rpg}'
+            - '${HOST_MAPS_LIBRARY:-./storage/maps}:${DOCKER_MAPS_LIBRARY:-/mnt/maps}'
         networks:
             - sail
         depends_on:

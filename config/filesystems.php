@@ -12,6 +12,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'maps' => [
+            'driver' => 'local',
+            'root' => env('MAPS_LIBRARY'),
+            'url' => env('APP_URL').'/_maps',
+            'visibility' => 'public',
+        ],
+
         'thumbnails' => [
             'driver' => 'local',
             'root' => storage_path('app/thumbnails'),
