@@ -26,6 +26,28 @@ class MediaController extends Controller
 
     }// end art()
 
+    public function maps(Request $request, SystemSections $sections, string $system): View
+    {
+        return $this->section($request, $sections, MediaKind::Map, 'media.maps', 60, $system);
+
+    }// end maps()
+
+    /**
+     * Every map, from every system and from the maps tree, grouped by system (or collection).
+     */
+    public function mapsIndex(Request $request): View
+    {
+        $tag = $request->query('tag');
+        $tag = is_string($tag) && $tag !== '' ? $tag : null;
+
+        return view('media.maps-index', [
+            'tag' => $tag,
+            'tagList' => MediaItem::mapTagCounts(),
+            'groups' => MediaItem::mapGroups($tag),
+        ]);
+
+    }// end mapsIndex()
+
     public function music(Request $request, SystemSections $sections, string $system): View
     {
         $sort = $request->query('sort');
@@ -87,7 +109,14 @@ class MediaController extends Controller
         $tag = $request->query('tag');
         $tag = is_string($tag) && $tag !== '' ? $tag : null;
 
-        $query = MediaItem::query()->ofKind($kind)->where('system', $system);
+        $query = MediaItem::query()->ofKind($kind);
+
+        // Maps also include the maps-tree collection that carries the system's name.
+        if ($kind === MediaKind::Map) {
+            $query->forSystem($system);
+        } else {
+            $query->where('system', $system);
+        }
 
         if ($tag) {
             $query->whereJsonContains('tags', $tag);

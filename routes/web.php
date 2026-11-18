@@ -32,6 +32,8 @@ Route::get('/', [LibrisController::class, 'home'])->name('home')->middleware('au
 Route::get('/system/{system}', [LibrisController::class, 'docsBySystem'])->name('system.index')->middleware('auth');
 Route::get('/system/{system}/art', [MediaController::class, 'art'])->name('system.art')->middleware('auth');
 Route::get('/system/{system}/music', [MediaController::class, 'music'])->name('system.music')->middleware('auth');
+Route::get('/system/{system}/maps', [MediaController::class, 'maps'])->name('system.maps')->middleware('auth');
+Route::get('/maps', [MediaController::class, 'mapsIndex'])->name('maps.index')->middleware('auth');
 Route::get('/document', [LibrisController::class, 'showDocument'])->name('document.iframe')->middleware('auth');
 Route::get('/systemList/{system}', [LibrisController::class, 'docsBySystemList'])->name('system.list')->middleware('auth');
 

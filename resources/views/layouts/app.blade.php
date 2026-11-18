@@ -54,6 +54,9 @@
       <li class="nav-item active">
         <a class="nav-link" href="/">Home <span class="visually-hidden">(current)</span></a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ route('maps.index') }}">Maps</a>
+      </li>
       <li class="nav-item active">
         <a class="nav-link" href="/horizon">Horizon</span></a>
       </li>

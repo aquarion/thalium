@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Libris\LibrisInterface;
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -104,16 +105,18 @@ class MediaPagesTest extends TestCase
         $html = view('partials.system-tabs', [
             'system' => 'S',
             'active' => 'art',
-            'counts' => ['documents' => 0, 'art' => 3, 'music' => 2],
+            'counts' => ['documents' => 0, 'art' => 3, 'music' => 2, 'maps' => 0],
         ])->render();
 
-        preg_match_all('/<a class="([^"]*)" href="([^"]*)"[^>]*>\s*(Documents|Art|Music)/', $html, $m, PREG_SET_ORDER);
+        preg_match_all('/<a class="([^"]*)" href="([^"]*)"[^>]*>\s*(Documents|Art|Music|Maps)/', $html, $m, PREG_SET_ORDER);
         $tabs = [];
         foreach ($m as $match) {
             $tabs[$match[3]] = ['class' => $match[1], 'href' => $match[2]];
         }
 
-        $this->assertSame(['Documents', 'Art', 'Music'], array_keys($tabs));
+        $this->assertSame(['Documents', 'Art', 'Music', 'Maps'], array_keys($tabs));
+        $this->assertSame(route('system.maps', ['system' => 'S']), $tabs['Maps']['href']);
+        $this->assertStringContainsString('disabled-tab', $tabs['Maps']['class']);
         $this->assertSame(route('system.index', ['system' => 'S']), $tabs['Documents']['href']);
         $this->assertSame(route('system.art', ['system' => 'S']), $tabs['Art']['href']);
         $this->assertSame(route('system.music', ['system' => 'S']), $tabs['Music']['href']);
@@ -388,5 +391,110 @@ class MediaPagesTest extends TestCase
             $this->assertNotSame('', $orderBy, $url);
             $this->assertStringEndsWith('"id" asc', trim($orderBy), $url);
         }
+    }
+
+    private function map(string $path, ?string $system, ?string $collection, array $tags, string $title, MediaSource $source = MediaSource::Library, array $extra = []): MediaItem
+    {
+        return MediaItem::create(array_merge([
+            'path' => $path, 'source' => $source, 'kind' => MediaKind::Map, 'system' => $system,
+            'collection' => $collection, 'tags' => $tags, 'title' => $title, 'mtime' => 1, 'size' => 1,
+        ], $extra));
+    }
+
+    public function test_guests_are_redirected_for_the_maps_pages(): void
+    {
+        $this->get('/system/S/maps')->assertRedirect(route('login'));
+        $this->get('/maps')->assertRedirect(route('login'));
+    }
+
+    public function test_system_maps_page_lists_maps_and_filters_by_tag(): void
+    {
+        $this->login();
+        $this->map('S/Maps/City/a.png', 'S', null, ['City'], 'Alpha', MediaSource::Library, ['thumbnail' => 'alpha.png']);
+        $this->map('S/Maps/b.png', 'S', null, ['Dungeon'], 'Beta');
+
+        $this->get('/system/S/maps')
+            ->assertOk()
+            ->assertSee('Alpha')
+            ->assertSee('Beta')
+            ->assertSee('alpha.png')
+            ->assertSee('data-lightbox', false);
+
+        $this->get('/system/S/maps?tag=City')->assertOk()->assertSee('Alpha')->assertDontSee('Beta');
+    }
+
+    public function test_system_maps_page_includes_matching_collection_maps_only(): void
+    {
+        $this->login();
+        $this->map('S/Maps/a.png', 'S', null, [], 'FromSystem');
+        $this->map('S/b.png', null, 'S', [], 'FromTree', MediaSource::Maps);
+        $this->map('BattleMats/c.png', null, 'BattleMats', [], 'Agnostic', MediaSource::Maps);
+
+        $this->get('/system/S/maps')
+            ->assertOk()
+            ->assertSee('FromSystem')
+            ->assertSee('FromTree')
+            ->assertDontSee('Agnostic');
+    }
+
+    public function test_empty_system_maps_page_has_an_empty_state(): void
+    {
+        $this->login();
+
+        $this->get('/system/Nope/maps')->assertOk()->assertSee('No maps in this section yet.');
+    }
+
+    public function test_map_pdf_card_links_to_the_file_in_a_new_tab_not_the_lightbox(): void
+    {
+        $this->login();
+        $this->map('S/Maps/Keep Out.pdf', 'S', null, [], 'Keep Out');
+
+        $html = $this->get('/system/S/maps')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Keep%20Out.pdf', $html);
+        $this->assertStringContainsString('target="_blank"', $html);
+        $this->assertStringNotContainsString('data-lightbox', $html);
+    }
+
+    public function test_root_maps_page_groups_by_system_and_collection(): void
+    {
+        $this->login();
+        $this->map('S/Maps/a.png', 'S', null, ['City'], 'InSystem');
+        $this->map('BattleMats/b.png', null, 'BattleMats', ['Day'], 'InCollection', MediaSource::Maps);
+
+        $this->get('/maps')
+            ->assertOk()
+            ->assertSeeInOrder(['BattleMats', 'InCollection', 'S', 'InSystem'])
+            ->assertSee('City')
+            ->assertSee('Day');
+
+        $this->get('/maps?tag=Day')->assertOk()->assertSee('InCollection')->assertDontSee('InSystem');
+    }
+
+    public function test_root_maps_page_has_an_empty_state(): void
+    {
+        $this->login();
+
+        $this->get('/maps')->assertOk()->assertSee('No maps yet.');
+    }
+
+    public function test_navbar_links_to_the_maps_page(): void
+    {
+        $this->login();
+
+        $this->get('/maps')->assertOk()->assertSee(route('maps.index'), false);
+    }
+
+    public function test_art_and_documents_counts_exclude_maps(): void
+    {
+        $this->login();
+        $this->item('S/a.png', MediaKind::Art, 'S', [], 'A');
+        $this->map('S/Maps/m.png', 'S', null, [], 'M');
+
+        $this->get('/system/S')
+            ->assertOk()
+            ->assertSee('Art <span class="tag-count">(1)</span>', false)
+            ->assertSee('Maps <span class="tag-count">(1)</span>', false);
+        $this->get('/system/S/art')->assertOk()->assertSee('A')->assertDontSee('>M<', false);
     }
 }
