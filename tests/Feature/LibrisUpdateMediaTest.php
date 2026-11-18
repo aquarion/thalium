@@ -185,6 +185,7 @@ class LibrisUpdateMediaTest extends TestCase
     {
         Storage::fake('maps');
         config(['filesystems.disks.maps.root' => Storage::disk('maps')->path('')]);
+        Storage::disk('libris')->put('Sys/Pictures/keep.png', $this->png(1, 1));
         Storage::disk('maps')->put('BattleMats/Day/a.png', $this->png(1, 1));
         Storage::disk('maps')->put('BattleMats/b.zip', 'x');
 
@@ -192,7 +193,7 @@ class LibrisUpdateMediaTest extends TestCase
 
         $item = MediaItem::where('path', 'BattleMats/Day/a.png')->first();
         $this->assertSame(MediaSource::Maps, $item->source);
-        $this->assertSame(1, MediaItem::count());
+        $this->assertSame(2, MediaItem::count());
     }
 
     public function test_update_media_skips_an_unconfigured_maps_source(): void

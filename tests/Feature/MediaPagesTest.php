@@ -23,6 +23,7 @@ class MediaPagesTest extends TestCase
         $this->withoutVite();
         Storage::fake('libris');
         Storage::fake('thumbnails');
+        Storage::fake('maps');
 
         $this->mock(LibrisInterface::class, function (MockInterface $mock) {
             $mock->shouldReceive('docsBySystem')->andReturn(['hits' => ['total' => ['value' => 5], 'hits' => []]]);

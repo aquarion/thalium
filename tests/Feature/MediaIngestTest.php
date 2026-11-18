@@ -293,7 +293,7 @@ class MediaIngestTest extends TestCase
         Storage::disk('maps')->put('Coll/b.png', $this->png(1, 1));
         $this->service->ingest('Sys/Pictures/a.png');
         $this->service->ingest('Coll/b.png', false, MediaSource::Maps);
-        Storage::disk('maps')->delete('Coll/b.png');
+        Storage::disk('maps')->deleteDirectory('Coll');
 
         $this->assertNull($this->service->prune(MediaSource::Maps), 'an emptied maps root is not pruned');
         $this->assertSame(2, MediaItem::count());
