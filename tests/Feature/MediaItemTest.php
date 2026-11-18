@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -94,5 +95,46 @@ class MediaItemTest extends TestCase
         $this->assertSame(['art' => 1, 'music' => 1], MediaItem::countsForSystem('S', 'Maps'));
         $this->assertSame(['art' => 0, 'music' => 0], MediaItem::countsForSystem('S', 'Nope'));
         $this->assertSame(['art' => 2, 'music' => 1], MediaItem::countsForSystem('S'));
+    }
+
+    public function test_same_path_in_both_sources_makes_two_rows(): void
+    {
+        foreach ([MediaSource::Library, MediaSource::Maps] as $source) {
+            MediaItem::create([
+                'path' => 'A/x.png', 'kind' => MediaKind::Map, 'source' => $source, 'system' => null,
+                'collection' => 'A', 'tags' => [], 'title' => 'x', 'mtime' => 1, 'size' => 1,
+            ]);
+        }
+
+        $this->assertSame(2, MediaItem::count());
+    }
+
+    public function test_library_hash_is_unchanged(): void
+    {
+        $this->assertSame(sha1('A/x.png'), MediaItem::hashPath('A/x.png'));
+        $this->assertNotSame(sha1('A/x.png'), MediaItem::hashPath('A/x.png', MediaSource::Maps));
+    }
+
+    public function test_maps_url_uses_the_maps_disk(): void
+    {
+        Storage::fake('maps');
+        $item = MediaItem::create([
+            'path' => 'Battle Mats/a.png', 'kind' => MediaKind::Map, 'source' => MediaSource::Maps,
+            'collection' => 'Battle Mats', 'tags' => [], 'title' => 'a', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->assertStringContainsString('Battle%20Mats/a.png', $item->url());
+        $this->assertSame(MediaSource::Maps, $item->fresh()->source);
+    }
+
+    public function test_system_can_be_null_and_source_defaults_to_library(): void
+    {
+        $item = MediaItem::create([
+            'path' => 'Z/a.png', 'kind' => MediaKind::Map, 'collection' => 'Z', 'tags' => [],
+            'title' => 'a', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->assertNull($item->fresh()->system);
+        $this->assertSame(MediaSource::Library, $item->fresh()->source);
     }
 }

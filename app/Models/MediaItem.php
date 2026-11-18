@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -13,8 +14,10 @@ class MediaItem extends Model
     protected $fillable = [
         'path',
         'path_hash',
+        'source',
         'kind',
         'system',
+        'collection',
         'tags',
         'title',
         'mtime',
@@ -31,17 +34,19 @@ class MediaItem extends Model
     protected static function booted(): void
     {
         static::saving(function (self $item) {
-            $item->path_hash = static::hashPath($item->path);
+            $item->path_hash = static::hashPath($item->path, $item->source ?? MediaSource::Library);
         });
 
     }// end booted()
 
     /**
-     * The unique key for a library path (see the migration).
+     * The unique key for a path in a source (see the migration). Library keys are
+     * the bare path hash, as they always were; the maps tree is hashed apart so the
+     * same relative path in both libraries makes two rows.
      */
-    public static function hashPath(string $path): string
+    public static function hashPath(string $path, MediaSource $source = MediaSource::Library): string
     {
-        return sha1($path);
+        return $source === MediaSource::Library ? sha1($path) : sha1($source->value."\0".$path);
 
     }// end hashPath()
 
@@ -50,6 +55,7 @@ class MediaItem extends Model
         return [
             'tags' => 'array',
             'kind' => MediaKind::class,
+            'source' => MediaSource::class,
         ];
 
     }// end casts()
@@ -60,8 +66,9 @@ class MediaItem extends Model
     public function url(): string
     {
         $segments = array_map('rawurlencode', explode('/', $this->path));
+        $disk = ($this->source ?? MediaSource::Library)->disk();
 
-        return rtrim(Storage::disk('libris')->url(''), '/').'/'.implode('/', $segments);
+        return rtrim(Storage::disk($disk)->url(''), '/').'/'.implode('/', $segments);
 
     }// end url()
 
