@@ -1,6 +1,6 @@
 # Maps tab and Maps page — design
 
-Status: draft, awaiting approval
+Status: approved; implemented in this branch
 Repos touched: `aquarion/thalium` (app) and `aquarion/autopelago` (mount + nginx).
 
 ## Intent and why
