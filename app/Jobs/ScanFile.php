@@ -25,6 +25,9 @@ class ScanFile implements ShouldQueue
 
     protected $filename;
 
+    /** `library` or `maps`: which disk the filename is relative to. */
+    protected string $source;
+
     protected $libris;
 
     /**
@@ -39,9 +42,10 @@ class ScanFile implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($filename)
+    public function __construct($filename, string $source = 'library')
     {
         $this->filename = $filename;
+        $this->source = $source;
 
     }// end __construct()
 
@@ -66,7 +70,7 @@ class ScanFile implements ShouldQueue
         Redis::funnel('ScanFile')->limit(5)->then(
             function () {
                 try {
-                    $this->libris->scanFile($this->filename);
+                    $this->libris->scanFile($this->filename, $this->source);
                 } catch (\Exception $e) {
                     Log::info('[Scanfile] Caught Exception');
                     $this->fail($e);
@@ -99,7 +103,7 @@ class ScanFile implements ShouldQueue
 
     public function uniqueId()
     {
-        return md5($this->filename);
+        return md5($this->source === 'library' ? $this->filename : $this->source.':'.$this->filename);
 
     }// end uniqueId()
 

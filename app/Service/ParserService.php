@@ -22,6 +22,9 @@ abstract class ParserService
 
     public $filename;
 
+    /** The filesystem disk the file lives on. */
+    protected string $disk = 'libris';
+
     abstract public function parsePages();
 
     public function generateTags()
@@ -33,15 +36,17 @@ abstract class ParserService
         return $tags;
     } // end generateTags()
 
-    public function __construct($file)
+    public function __construct($file, string $disk = 'libris')
     {
-        if (Storage::disk('libris')->missing($file)) {
+        $this->disk = $disk;
+
+        if (Storage::disk($this->disk)->missing($file)) {
             Log::error('[AddDoc] '.$this->filename." in 'total existance failure' error");
             throw new Exceptions\LibrisNotFound;
         }
 
         $this->filename = $file;
-        $this->lastModified = Storage::disk('libris')->lastModified($file);
+        $this->lastModified = Storage::disk($this->disk)->lastModified($file);
 
         $this->tags = $this->generateTags();
 
@@ -58,7 +63,7 @@ abstract class ParserService
         $title = preg_replace('!-|_!', ' ', $title);
         $this->title = $title;
 
-        $size = Storage::disk('libris')->size($this->filename);
+        $size = Storage::disk($this->disk)->size($this->filename);
         $sizeMB = number_format($size / 1024);
 
         if ($size > (1024 * 1024 * 1024)) {

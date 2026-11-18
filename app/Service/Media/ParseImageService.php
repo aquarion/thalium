@@ -22,7 +22,7 @@ class ParseImageService extends ParserService implements MediaParserInterface
 
     public function metadata(): array
     {
-        $size = @getimagesize(Storage::disk('libris')->path($this->filename));
+        $size = @getimagesize(Storage::disk($this->disk)->path($this->filename));
 
         if (! $size) {
             Log::warning("[Parser] Could not read image dimensions for {$this->filename}");
@@ -45,7 +45,7 @@ class ParseImageService extends ParserService implements MediaParserInterface
         // ("cache resources exhausted"). For JPEGs, have libjpeg downscale while
         // decoding; the hint is ignored for other formats.
         $image->setOption('jpeg:size', '800x800');
-        $image->readImage(Storage::disk('libris')->path($this->filename).'[0]');
+        $image->readImage(Storage::disk($this->disk)->path($this->filename).'[0]');
         $image->thumbnailImage(400, 400, true);
         $image->setImageFormat('png');
 
