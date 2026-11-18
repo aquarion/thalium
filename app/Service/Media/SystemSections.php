@@ -7,14 +7,14 @@ use App\Models\MediaItem;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Item counts for the Documents / Art / Music tabs of a system.
+ * Item counts for the Documents / Art / Music / Maps tabs of a system.
  */
 class SystemSections
 {
     public function __construct(private LibrisInterface $libris) {}// end __construct()
 
     /**
-     * @return array{documents:int,art:int,music:int}
+     * @return array{documents:int,art:int,music:int,maps:int}
      */
     public function counts(string $system, ?string $tag = null): array
     {
@@ -24,6 +24,7 @@ class SystemSections
             'documents' => $this->documentCount($system, $tag),
             'art' => $media['art'],
             'music' => $media['music'],
+            'maps' => $media['map'],
         ];
 
     }// end counts()
