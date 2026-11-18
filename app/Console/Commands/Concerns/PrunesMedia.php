@@ -31,7 +31,9 @@ trait PrunesMedia
             $removed = $media->prune($source);
 
             if ($removed !== null) {
-                $this->line("Removed $removed deleted {$source->value} files");
+                $this->line($source === MediaSource::Library
+                    ? "Removed $removed deleted files"
+                    : "Removed $removed deleted {$source->value} files");
             } elseif ($source === MediaSource::Library) {
                 $this->error('Skipped pruning: the library looks empty or unavailable');
                 $status = self::FAILURE;
