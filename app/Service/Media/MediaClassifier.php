@@ -58,11 +58,8 @@ class MediaClassifier
             fn (string $directory) => strtolower($directory) !== self::MAPS_DIRECTORY
         ));
 
-        if (count($withoutMaps) !== count($directories)) {
-            if (! MediaKind::isImage($path) && ! MediaKind::isPdf($path)) {
-                return null;
-            }
-
+        // Only images and PDFs are maps; anything else in a Maps folder (audio) files as usual.
+        if (count($withoutMaps) !== count($directories) && (MediaKind::isImage($path) || MediaKind::isPdf($path))) {
             return new MediaClassification(MediaKind::Map, $system, null, $withoutMaps);
         }
 

@@ -203,4 +203,12 @@ class MediaItemTest extends TestCase
 
         $this->assertNotContains('BattleMats', MediaItem::systemsWithMedia()->keys()->all());
     }
+
+    public function test_url_does_not_need_a_configured_maps_disk(): void
+    {
+        config(['filesystems.disks.maps.root' => null, 'filesystems.disks.maps.url' => 'https://x.test/_maps']);
+        $item = new MediaItem(['path' => 'BattleMats/a b.png', 'source' => MediaSource::Maps]);
+
+        $this->assertSame('https://x.test/_maps/BattleMats/a%20b.png', $item->url());
+    }
 }

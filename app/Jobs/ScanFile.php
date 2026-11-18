@@ -26,7 +26,7 @@ class ScanFile implements ShouldQueue
     protected $filename;
 
     /** `library` or `maps`: which disk the filename is relative to. */
-    protected string $source;
+    protected string $source = 'library';
 
     protected $libris;
 

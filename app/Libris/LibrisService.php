@@ -34,6 +34,11 @@ class LibrisService implements LibrisInterface
 
     public function addDocument($file, $log = false)
     {
+        // A map PDF is media, not a Document: never index it, however it got here.
+        if (MediaClassifier::isMapPath($file)) {
+            return $this->scanFile($file);
+        }
+
         $boom = explode('/', $file);
         $title = array_pop($boom);
         $this->title = $title;

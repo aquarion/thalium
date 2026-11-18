@@ -18,6 +18,7 @@ class MediaClassifierTest extends TestCase
         return [
             'deep maps folder, any case' => [$L, 'S/Dungeons/MAPS/Deep/a.pdf', MediaKind::Map, 'S', null, ['Dungeons', 'Deep']],
             'lowercase maps folder' => [$L, 'S/maps/a.png', MediaKind::Map, 'S', null, []],
+            'audio in a maps folder stays music' => [$L, 'S/Maps/rain.wav', MediaKind::Music, 'S', null, ['Maps']],
             'plain art' => [$L, 'S/Dungeons/a.png', MediaKind::Art, 'S', null, ['Dungeons']],
             'music' => [$L, 'S/Ambience/rain.wav', MediaKind::Music, 'S', null, ['Ambience']],
             'system normalised' => [$L, 'Blades_in-the Dark/Maps/a.jpg', MediaKind::Map, 'Blades in the Dark', null, []],

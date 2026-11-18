@@ -108,4 +108,16 @@ class ScanFileRoutingTest extends TestCase
         $this->assertSame(MediaSource::Maps, $item->source);
         $this->assertSame('BattleMats', $item->collection);
     }
+
+    public function test_adding_a_map_pdf_directly_does_not_index_it(): void
+    {
+        Storage::disk('libris')->put('Sys/Maps/city.pdf', '%PDF-1.4');
+        $indexer = \Mockery::mock(IndexerInterface::class);
+        $indexer->shouldReceive('fetchDocument')->andReturn(false);
+        $indexer->shouldNotReceive('indexDocument');
+
+        $this->serviceWithIndexer($indexer)->addDocument('Sys/Maps/city.pdf');
+
+        $this->assertSame(MediaKind::Map, MediaItem::where('path', 'Sys/Maps/city.pdf')->first()->kind);
+    }
 }

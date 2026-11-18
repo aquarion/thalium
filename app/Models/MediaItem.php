@@ -68,7 +68,9 @@ class MediaItem extends Model
         $segments = array_map('rawurlencode', explode('/', $this->path));
         $disk = ($this->source ?? MediaSource::Library)->disk();
 
-        return rtrim(Storage::disk($disk)->url(''), '/').'/'.implode('/', $segments);
+        // Built from config rather than the disk, so a maps disk that is not configured
+        // cannot take a page down when old maps rows are still listed.
+        return rtrim((string) config('filesystems.disks.'.$disk.'.url'), '/').'/'.implode('/', $segments);
 
     }// end url()
 
