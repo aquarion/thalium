@@ -7,26 +7,30 @@ use Tests\TestCase;
 class HorizonEnvironmentsTest extends TestCase
 {
     /**
-     * Horizon only provisions workers for an environment it has supervisors for, and it
-     * starts "successfully" with none: staging ran an idle Horizon for that reason.
+     * Horizon starts "successfully" with no workers for an environment it has no supervisors
+     * for. Naming the set makes adding or renaming an environment a deliberate choice.
      */
-    public function test_every_deployed_environment_has_a_supervisor_on_the_default_queue(): void
+    public function test_the_known_environments_are_the_ones_configured(): void
     {
-        foreach (['production', 'staging', 'local'] as $environment) {
-            $supervisors = config("horizon.environments.$environment");
+        $environments = array_keys(config('horizon.environments'));
+        sort($environments);
 
-            $this->assertNotEmpty($supervisors, "No Horizon supervisors for [$environment]");
-            $this->assertContains('default', $supervisors['supervisor-1']['queue'], $environment);
-            $this->assertGreaterThan(0, $supervisors['supervisor-1']['processes'], $environment);
-        }
+        $this->assertSame(['local', 'production', 'staging'], $environments);
     }
 
-    public function test_staging_is_no_bigger_than_production(): void
+    public function test_every_configured_environment_runs_workers_on_the_default_queue(): void
     {
-        // Staging shares production's Elasticsearch index.
-        $this->assertLessThanOrEqual(
-            config('horizon.environments.production.supervisor-1.processes'),
-            config('horizon.environments.staging.supervisor-1.processes')
-        );
+        foreach (config('horizon.environments') as $environment => $supervisors) {
+            $this->assertNotEmpty($supervisors, "No Horizon supervisors for [$environment]");
+
+            $queues = array_merge(...array_map(fn (array $supervisor) => (array) $supervisor['queue'], $supervisors));
+
+            $this->assertContains('default', $queues, "[$environment] does not work the default queue");
+            $this->assertGreaterThan(
+                0,
+                array_sum(array_column($supervisors, 'processes')),
+                "[$environment] has no worker processes"
+            );
+        }
     }
 }

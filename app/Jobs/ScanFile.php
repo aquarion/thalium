@@ -67,9 +67,12 @@ class ScanFile implements ShouldQueue
 
         Log::info('[Scanfile] Hello '.$this->filename);
 
-        // A worker outlives its jobs, and parsing a PDF (PDFBoxService) caps the whole process
-        // at 120 seconds of CPU. Left armed it kills the worker later, in its own loop. Horizon's
-        // job timeout is what supervises a job, so clear the cap before and after each one.
+        // A queue worker outlives its jobs, and PHP's time limit outlives the code that set it:
+        // PDFBoxService (so ParsePdfMapService too) arms 120s of execution time and
+        // ElasticSearch::indexPages() 30s. Left armed, the limit fires in whatever the worker
+        // runs next, such as its idle sleep. So clear it after every scan, and before the first
+        // in case other code in this worker left one. Horizon's job timeout supervises the job.
+        // (PDFBoxService's 2G memory_limit leaks the same way and is not reset here.)
         set_time_limit(0);
 
         try {
