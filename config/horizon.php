@@ -179,6 +179,20 @@ return [
             ],
         ],
 
+        // Horizon starts "successfully" with no workers for an environment it doesn't list, so
+        // staging (APP_ENV=staging) needs its own. One process: it shares production's
+        // Elasticsearch index, which 10 workers once overwhelmed.
+        'staging' => [
+            'supervisor-1' => [
+                'connection' => 'redis',
+                'queue' => ['default'],
+                'balance' => 'simple',
+                'processes' => 1,
+                'tries' => 1,
+                'timeout' => 1800,
+            ],
+        ],
+
         'local' => [
             'supervisor-1' => [
                 'connection' => 'redis',

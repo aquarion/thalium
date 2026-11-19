@@ -67,25 +67,37 @@ class ScanFile implements ShouldQueue
 
         Log::info('[Scanfile] Hello '.$this->filename);
 
-        Redis::funnel('ScanFile')->limit(5)->then(
-            function () {
-                try {
-                    $this->libris->scanFile($this->filename, $this->source);
-                } catch (\Exception $e) {
-                    Log::info('[Scanfile] Caught Exception');
-                    $this->fail($e);
+        // A queue worker outlives its jobs, and PHP's time limit outlives the code that set it:
+        // PDFBoxService (so ParsePdfMapService too) arms 120s of execution time and
+        // ElasticSearch::indexPages() 30s. Left armed, the limit fires in whatever the worker
+        // runs next, such as its idle sleep. So clear it after every scan, and before the first
+        // in case other code in this worker left one. Horizon's job timeout supervises the job.
+        // (PDFBoxService's 2G memory_limit leaks the same way and is not reset here.)
+        set_time_limit(0);
 
-                    return;
+        try {
+            Redis::funnel('ScanFile')->limit(5)->then(
+                function () {
+                    try {
+                        $this->libris->scanFile($this->filename, $this->source);
+                    } catch (\Exception $e) {
+                        Log::info('[Scanfile] Caught Exception');
+                        $this->fail($e);
+
+                        return;
+                    }
+                },
+                function () {
+                    $release = (60 + rand(0, 20));
+                    // Could not obtain lock...
+                    Log::debug('[Scanfile] '.$this->filename.' bounced '.$release);
+
+                    return $this->release($release);
                 }
-            },
-            function () {
-                $release = (60 + rand(0, 20));
-                // Could not obtain lock...
-                Log::debug('[Scanfile] '.$this->filename.' bounced '.$release);
-
-                return $this->release($release);
-            }
-        );
+            );
+        } finally {
+            set_time_limit(0);
+        }
 
         // Log::debug("[ScanFile] Bye ".$this->filename);
 
