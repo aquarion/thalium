@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\MediaItem;
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -47,8 +48,8 @@ class MediaItemTest extends TestCase
         $this->make('S/Ambience/c.mp3', MediaKind::Music, 'S', ['Ambience']);
         $this->make('Other/d.png', MediaKind::Art, 'Other');
 
-        $this->assertSame(['art' => 2, 'music' => 1], MediaItem::countsForSystem('S'));
-        $this->assertSame(['art' => 0, 'music' => 0], MediaItem::countsForSystem('Nope'));
+        $this->assertSame(['art' => 2, 'music' => 1, 'map' => 0], MediaItem::countsForSystem('S'));
+        $this->assertSame(['art' => 0, 'music' => 0, 'map' => 0], MediaItem::countsForSystem('Nope'));
         $this->assertSame(['City' => 1, 'Maps' => 2], MediaItem::tagCounts(MediaKind::Art, 'S'));
     }
 
@@ -60,8 +61,8 @@ class MediaItemTest extends TestCase
 
         $systems = MediaItem::systemsWithMedia();
 
-        $this->assertSame(['art' => 1, 'music' => 1], $systems['S']);
-        $this->assertSame(['art' => 1, 'music' => 0], $systems['Other']);
+        $this->assertSame(['art' => 1, 'music' => 1, 'map' => 0], $systems['S']);
+        $this->assertSame(['art' => 1, 'music' => 0, 'map' => 0], $systems['Other']);
     }
 
     public function test_duration_label(): void
@@ -91,8 +92,123 @@ class MediaItemTest extends TestCase
         $this->make('S/Dungeons/b.png', MediaKind::Art, 'S', ['Dungeons']);
         $this->make('S/Maps/c.mp3', MediaKind::Music, 'S', ['Maps']);
 
-        $this->assertSame(['art' => 1, 'music' => 1], MediaItem::countsForSystem('S', 'Maps'));
-        $this->assertSame(['art' => 0, 'music' => 0], MediaItem::countsForSystem('S', 'Nope'));
-        $this->assertSame(['art' => 2, 'music' => 1], MediaItem::countsForSystem('S'));
+        $this->assertSame(['art' => 1, 'music' => 1, 'map' => 0], MediaItem::countsForSystem('S', 'Maps'));
+        $this->assertSame(['art' => 0, 'music' => 0, 'map' => 0], MediaItem::countsForSystem('S', 'Nope'));
+        $this->assertSame(['art' => 2, 'music' => 1, 'map' => 0], MediaItem::countsForSystem('S'));
+    }
+
+    public function test_same_path_in_both_sources_makes_two_rows(): void
+    {
+        foreach ([MediaSource::Library, MediaSource::Maps] as $source) {
+            MediaItem::create([
+                'path' => 'A/x.png', 'kind' => MediaKind::Map, 'source' => $source, 'system' => null,
+                'collection' => 'A', 'tags' => [], 'title' => 'x', 'mtime' => 1, 'size' => 1,
+            ]);
+        }
+
+        $this->assertSame(2, MediaItem::count());
+    }
+
+    public function test_library_hash_is_unchanged(): void
+    {
+        $this->assertSame(sha1('A/x.png'), MediaItem::hashPath('A/x.png'));
+        $this->assertNotSame(sha1('A/x.png'), MediaItem::hashPath('A/x.png', MediaSource::Maps));
+    }
+
+    public function test_maps_url_uses_the_maps_disk(): void
+    {
+        Storage::fake('maps');
+        $item = MediaItem::create([
+            'path' => 'Battle Mats/a.png', 'kind' => MediaKind::Map, 'source' => MediaSource::Maps,
+            'collection' => 'Battle Mats', 'tags' => [], 'title' => 'a', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->assertStringContainsString('Battle%20Mats/a.png', $item->url());
+        $this->assertSame(MediaSource::Maps, $item->fresh()->source);
+    }
+
+    public function test_system_can_be_null_and_source_defaults_to_library(): void
+    {
+        $item = MediaItem::create([
+            'path' => 'Z/a.png', 'kind' => MediaKind::Map, 'collection' => 'Z', 'tags' => [],
+            'title' => 'a', 'mtime' => 1, 'size' => 1,
+        ]);
+
+        $this->assertNull($item->fresh()->system);
+        $this->assertSame(MediaSource::Library, $item->fresh()->source);
+    }
+
+    private function map(string $path, ?string $system, ?string $collection, array $tags = [], MediaSource $source = MediaSource::Library, string $title = 'm'): MediaItem
+    {
+        return MediaItem::create([
+            'path' => $path, 'source' => $source, 'kind' => MediaKind::Map, 'system' => $system,
+            'collection' => $collection, 'tags' => $tags, 'title' => $title, 'mtime' => 1, 'size' => 1,
+        ]);
+    }
+
+    public function test_for_system_matches_collection_case_insensitively_only_for_the_maps_source(): void
+    {
+        $this->map('S/Maps/a.png', 'S', null);
+        $this->map('blades in the dark/b.png', null, 'blades in the dark', [], MediaSource::Maps);
+        $this->map('BattleMats/c.png', null, 'BattleMats', [], MediaSource::Maps);
+        // A library row never matches on collection.
+        $this->map('Other/Maps/d.png', 'Other', 'Blades In The Dark');
+
+        $paths = MediaItem::query()->forSystem('Blades In The Dark')->pluck('path')->all();
+
+        $this->assertSame(['blades in the dark/b.png'], $paths);
+        $this->assertSame(['S/Maps/a.png'], MediaItem::query()->forSystem('S')->pluck('path')->all());
+    }
+
+    public function test_counts_include_maps_matched_by_collection(): void
+    {
+        $this->make('S/Pictures/a.png', MediaKind::Art, 'S');
+        $this->map('S/Maps/m.png', 'S', null, ['City']);
+        $this->map('S/b.png', null, 'S', ['City'], MediaSource::Maps);
+        $this->map('BattleMats/c.png', null, 'BattleMats', [], MediaSource::Maps);
+
+        $this->assertSame(['art' => 1, 'music' => 0, 'map' => 2], MediaItem::countsForSystem('S'));
+        $this->assertSame(['art' => 0, 'music' => 0, 'map' => 2], MediaItem::countsForSystem('S', 'City'));
+        $this->assertSame(['City' => 2], MediaItem::tagCounts(MediaKind::Map, 'S'));
+    }
+
+    public function test_systems_with_media_ignores_null_system(): void
+    {
+        $this->make('S/Pictures/a.png', MediaKind::Art, 'S');
+        $this->map('BattleMats/c.png', null, 'BattleMats', [], MediaSource::Maps);
+
+        $this->assertSame(['S'], MediaItem::systemsWithMedia()->keys()->all());
+        $this->assertSame(['art' => 1, 'music' => 0, 'map' => 0], MediaItem::systemsWithMedia()['S']);
+    }
+
+    public function test_map_groups_groups_by_system_or_collection_and_filters_by_tag(): void
+    {
+        $this->map('Z/Maps/z.png', 'Z', null, ['Day'], MediaSource::Library, 'Zed');
+        $this->map('A/a.png', null, 'A', ['Night'], MediaSource::Maps, 'Alpha');
+        $this->map('A/b.png', null, 'A', ['Day'], MediaSource::Maps, 'Bravo');
+        $this->make('Z/Pictures/art.png', MediaKind::Art, 'Z');
+
+        $groups = MediaItem::mapGroups();
+
+        $this->assertSame(['A', 'Z'], $groups->keys()->all());
+        $this->assertSame(['Alpha', 'Bravo'], $groups['A']->pluck('title')->all());
+        $this->assertSame(['A', 'Z'], MediaItem::mapGroups('Day')->keys()->all());
+        $this->assertSame(['Bravo'], MediaItem::mapGroups('Day')['A']->pluck('title')->all());
+        $this->assertSame(['Day' => 2, 'Night' => 1], MediaItem::mapTagCounts());
+    }
+
+    public function test_agnostic_collection_is_never_listed_as_a_system_with_media(): void
+    {
+        $this->map('BattleMats/c.png', null, 'BattleMats', [], MediaSource::Maps);
+
+        $this->assertNotContains('BattleMats', MediaItem::systemsWithMedia()->keys()->all());
+    }
+
+    public function test_url_does_not_need_a_configured_maps_disk(): void
+    {
+        config(['filesystems.disks.maps.root' => null, 'filesystems.disks.maps.url' => 'https://x.test/_maps']);
+        $item = new MediaItem(['path' => 'BattleMats/a b.png', 'source' => MediaSource::Maps]);
+
+        $this->assertSame('https://x.test/_maps/BattleMats/a%20b.png', $item->url());
     }
 }

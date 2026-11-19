@@ -6,8 +6,10 @@ use App\Exceptions;
 use App\Jobs\ScanDirectory;
 use App\Jobs\ScanFile;
 use App\Service\Indexer\ElasticSearch;
+use App\Service\Media\MediaClassifier;
 use App\Service\Media\MediaIngestService;
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use App\Service\ParserService;
 use App\Service\ParseTextService;
 use App\Service\PDFBoxService;
@@ -32,6 +34,11 @@ class LibrisService implements LibrisInterface
 
     public function addDocument($file, $log = false)
     {
+        // A map PDF is media, not a Document: never index it, however it got here.
+        if (MediaClassifier::isMapPath($file)) {
+            return $this->scanFile($file);
+        }
+
         $boom = explode('/', $file);
         $title = array_pop($boom);
         $this->title = $title;
@@ -152,13 +159,28 @@ class LibrisService implements LibrisInterface
 
     }// end deleteIndex()
 
-    public function scanFile($filename)
+    public function scanFile($filename, string $source = 'library')
     {
         Log::debug('[Scanfile] Got lock for '.$filename.' = '.md5($filename));
 
-        // Images and music are cached in media_items, never indexed in Elasticsearch.
-        if (MediaKind::fromPath($filename) !== null) {
+        $source = MediaSource::from($source);
+
+        // The maps tree is only ever media.
+        if ($source === MediaSource::Maps) {
+            app(MediaIngestService::class)->ingest($filename, false, $source);
+            Log::info('[Scanfile] Finished map '.$filename);
+
+            return 0;
+        }
+
+        // Images and music, and PDFs in Maps folders, are cached in media_items, never indexed in Elasticsearch.
+        if (MediaKind::fromPath($filename) !== null || MediaClassifier::isMapPath($filename)) {
             app(MediaIngestService::class)->ingest($filename);
+
+            if (MediaKind::isPdf($filename)) {
+                $this->removeFromIndex($filename);
+            }
+
             Log::info('[Scanfile] Finished media '.$filename);
 
             return 0;
@@ -185,6 +207,20 @@ class LibrisService implements LibrisInterface
         return $returnValue;
 
     }// end scanFile()
+
+    /**
+     * A PDF that has become a map must stop being a Document: drop any copy of it from the index.
+     */
+    private function removeFromIndex($filename): void
+    {
+        $doc = $this->fetchDocument($filename);
+
+        if ($doc) {
+            $this->deleteDocument($doc['_id']);
+            Log::info('[Scanfile] Removed map '.$filename.' from the index');
+        }
+
+    }// end removeFromIndex()
 
     public function dispatchIndexFile($filename)
     {

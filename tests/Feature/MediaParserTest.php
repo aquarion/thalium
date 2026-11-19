@@ -6,6 +6,7 @@ use App\Service\Media\MediaKind;
 use App\Service\Media\MediaParserFactory;
 use App\Service\Media\ParseAudioService;
 use App\Service\Media\ParseImageService;
+use App\Service\Media\ParsePdfMapService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesMediaFiles;
@@ -72,10 +73,12 @@ class MediaParserTest extends TestCase
         Storage::disk('libris')->put('Sys/a.png', $this->png(1, 1));
         Storage::disk('libris')->put('Sys/b.wav', $this->wav());
         Storage::disk('libris')->put('Sys/c.pdf', '%PDF');
+        Storage::disk('libris')->put('Sys/d.txt', 'x');
 
         $this->assertInstanceOf(ParseImageService::class, MediaParserFactory::make('Sys/a.png'));
         $this->assertInstanceOf(ParseAudioService::class, MediaParserFactory::make('Sys/b.wav'));
-        $this->assertNull(MediaParserFactory::make('Sys/c.pdf'));
+        $this->assertInstanceOf(ParsePdfMapService::class, MediaParserFactory::make('Sys/c.pdf'));
+        $this->assertNull(MediaParserFactory::make('Sys/d.txt'));
     }
 
     public function test_audio_parser_reads_id3_tags_including_track_number(): void

@@ -55,4 +55,35 @@ class ElasticSearchSetupTest extends TestCase
 
         (new ElasticSearch)->setup();
     }
+
+    private function indexerWithOpenPointInTime(int $closeStatus): ElasticSearch
+    {
+        $client = Mockery::mock();
+        $client->shouldReceive('openPointInTime')->andReturn(['id' => 'pit-1']);
+        $client->shouldReceive('closePointInTime')->once()->andThrow(new ClientResponseException('closing', $closeStatus));
+        ElasticSearchClient::swap($client);
+
+        $indexer = new ElasticSearch;
+        $indexer->openPointInTime();
+
+        return $indexer;
+    }
+
+    public function test_an_expired_point_in_time_is_not_an_error_when_the_indexer_is_destroyed(): void
+    {
+        $indexer = $this->indexerWithOpenPointInTime(404);
+
+        unset($indexer); // __destruct closes the point in time
+
+        $this->addToAssertionCount(1); // reaching here means the 404 was swallowed
+    }
+
+    public function test_other_errors_closing_a_point_in_time_still_surface(): void
+    {
+        $indexer = $this->indexerWithOpenPointInTime(500);
+
+        $this->expectException(ClientResponseException::class);
+
+        unset($indexer);
+    }
 }

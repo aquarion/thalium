@@ -11,15 +11,19 @@ use App\Service\ParserService;
 class MediaParserFactory
 {
     /**
-     * The parser for an image or audio path, or null for anything else. The
+     * The parser for an image, audio or map-PDF path, or null for anything else. The
      * parser constructors may throw LibrisNotFound / LibrisTooLarge.
      */
-    public static function make(string $file): ?ParserService
+    public static function make(string $file, MediaSource $source = MediaSource::Library): ?ParserService
     {
+        if (MediaKind::isPdf($file)) {
+            return new ParsePdfMapService($file, $source->disk());
+        }
+
         return match (MediaKind::fromPath($file)) {
-            MediaKind::Art => new ParseImageService($file),
-            MediaKind::Music => new ParseAudioService($file),
-            null => null,
+            MediaKind::Art => new ParseImageService($file, $source->disk()),
+            MediaKind::Music => new ParseAudioService($file, $source->disk()),
+            default => null,
         };
 
     }// end make()

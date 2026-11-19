@@ -654,7 +654,20 @@ class ElasticSearch implements IndexerInterface
         $params = [
             'body' => ['id' => $this->pointInTime],
         ];
-        ElasticSearchClient::closePointInTime($params);
+
+        try {
+            ElasticSearchClient::closePointInTime($params);
+        } catch (ClientResponseException $e) {
+            // A point in time lives for a minute after its last use; one that has already
+            // expired is closed, which is all this wanted, so it is not an error.
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+
+            Log::debug('[ES] Point in time had already expired');
+        }
+
+        $this->pointInTime = null;
     } // end closePointInTime()
 
     public function getDocThumbnail($doc)

@@ -23,7 +23,7 @@ class ParseAudioService extends ParserService implements MediaParserInterface
     public function metadata(): array
     {
         try {
-            $info = (new \getID3)->analyze(Storage::disk('libris')->path($this->filename));
+            $info = (new \getID3)->analyze(Storage::disk($this->disk)->path($this->filename));
         } catch (\Throwable $e) {
             Log::warning("[Parser] Could not read audio tags for {$this->filename}: ".$e->getMessage(), ['exception' => $e]);
 

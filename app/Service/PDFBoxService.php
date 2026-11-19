@@ -16,15 +16,15 @@ class PDFBoxService extends ParserService
 
     protected $pages;
 
-    public function __construct($file)
+    public function __construct($file, string $disk = 'libris')
     {
-        parent::__construct($file);
+        parent::__construct($file, $disk);
 
         set_time_limit(120);
         ini_set('memory_limit', '2G');
 
         $this->tempFile = tempnam(sys_get_temp_dir(), 'pdfbox-');
-        $PDFContent = Storage::disk('libris')->get($this->filename);
+        $PDFContent = Storage::disk($this->disk)->get($this->filename);
         file_put_contents($this->tempFile, $PDFContent);
 
     }// end __construct()

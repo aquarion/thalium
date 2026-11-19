@@ -5,6 +5,7 @@ namespace App\Service\Media;
 use App\Exceptions\LibrisNotFound;
 use App\Exceptions\LibrisTooLarge;
 use App\Models\MediaItem;
+use App\Service\ParserService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\FilesystemException;
@@ -14,42 +15,31 @@ class MediaIngestService
     private const TEXT_LIMIT = 255;
 
     /**
-     * An image/audio file inside a system directory, outside any hidden
-     * (dot-prefixed) file or directory such as `.thalium/`.
+     * Whether a path is media in this source: an image/audio file inside a system
+     * directory, or a map (an image or PDF in a Maps folder, or anywhere in the maps
+     * tree), outside any hidden (dot-prefixed) file or directory such as `.thalium/`.
      */
-    public function shouldIngest(string $path): bool
+    public function shouldIngest(string $path, MediaSource $source = MediaSource::Library): bool
     {
-        if (MediaKind::fromPath($path) === null) {
-            return false;
-        }
-
-        $segments = explode('/', $path);
-
-        if (count($segments) < 2) {
-            return false;
-        }
-
-        foreach ($segments as $segment) {
-            if (str_starts_with($segment, '.')) {
-                return false;
-            }
-        }
-
-        return true;
+        return MediaClassifier::classify($source, $path) !== null;
 
     }// end shouldIngest()
 
     /**
      * Create or refresh the row for one file. Null when the file is not
-     * ingestible or has gone; an unchanged mtime is a no-op unless $force.
+     * ingestible or has gone; an unchanged mtime is a no-op unless $force or the
+     * row's kind no longer matches where the file sits (a file moved into a Maps
+     * folder keeps its mtime).
      */
-    public function ingest(string $path, bool $force = false): ?MediaItem
+    public function ingest(string $path, bool $force = false, MediaSource $source = MediaSource::Library): ?MediaItem
     {
-        if (! $this->shouldIngest($path)) {
+        $classification = MediaClassifier::classify($source, $path);
+
+        if ($classification === null) {
             return null;
         }
 
-        $disk = Storage::disk('libris');
+        $disk = Storage::disk($source->disk());
 
         try {
             if ($disk->missing($path)) {
@@ -59,13 +49,13 @@ class MediaIngestService
             }
 
             $mtime = (int) $disk->lastModified($path);
-            $existing = MediaItem::query()->where('path_hash', MediaItem::hashPath($path))->first();
+            $existing = MediaItem::query()->where('path_hash', MediaItem::hashPath($path, $source))->first();
 
-            if (! $force && $existing && (int) $existing->mtime === $mtime) {
+            if (! $force && $existing && (int) $existing->mtime === $mtime && $existing->kind === $classification->kind) {
                 return $existing;
             }
 
-            $parser = MediaParserFactory::make($path);
+            $parser = MediaParserFactory::make($path, $source);
             $size = $disk->size($path);
         } catch (LibrisNotFound|LibrisTooLarge|FilesystemException $e) {
             Log::warning("[Media] Skipping $path: ".$e->getMessage());
@@ -74,14 +64,16 @@ class MediaIngestService
         }
 
         $metadata = $parser->metadata();
-        $kind = $parser->kind();
+        $kind = $classification->kind;
 
         $item = $existing ?? new MediaItem;
         $item->fill([
             'path' => $path,
+            'source' => $source,
             'kind' => $kind,
-            'system' => $parser->system,
-            'tags' => array_values($parser->tags),
+            'system' => $classification->system,
+            'collection' => $classification->collection,
+            'tags' => array_values($classification->tags),
             'title' => $this->clean($metadata['title'] ?? '') ?: $this->clean($parser->title),
             'mtime' => $mtime,
             'size' => $size,
@@ -91,7 +83,7 @@ class MediaIngestService
             'album' => $this->clean($metadata['album'] ?? null),
             'track_number' => $metadata['track_number'] ?? null,
             'duration_seconds' => $metadata['duration_seconds'] ?? null,
-            'thumbnail' => $kind === MediaKind::Art ? $this->makeThumbnail($parser, $path) : null,
+            'thumbnail' => $kind === MediaKind::Music ? null : $this->makeThumbnail($parser, $path, $source),
         ]);
         $item->save();
 
@@ -100,14 +92,14 @@ class MediaIngestService
     }// end ingest()
 
     /**
-     * Every ingestible path under $root.
+     * Every ingestible path under $root in the source.
      *
      * @return \Generator<int,string>
      */
-    public function paths(string $root = '.'): \Generator
+    public function paths(string $root = '.', MediaSource $source = MediaSource::Library): \Generator
     {
-        foreach (Storage::disk('libris')->allFiles($root) as $path) {
-            if ($this->shouldIngest($path)) {
+        foreach (Storage::disk($source->disk())->allFiles($root) as $path) {
+            if ($this->shouldIngest($path, $source)) {
                 yield $path;
             }
         }
@@ -115,26 +107,30 @@ class MediaIngestService
     }// end paths()
 
     /**
-     * Ingestible paths that have no row yet or whose mtime has moved on, so the
-     * hourly run doesn't queue a job for every unchanged file.
+     * Ingestible paths that have no row yet, whose mtime has moved on, or whose row
+     * has the wrong kind for where the file sits, so the hourly run doesn't queue a
+     * job for every unchanged file.
      *
      * @return \Generator<int,string>
      */
-    public function changedPaths(string $root = '.'): \Generator
+    public function changedPaths(string $root = '.', MediaSource $source = MediaSource::Library): \Generator
     {
-        $known = MediaItem::query()->pluck('mtime', 'path_hash');
-        $disk = Storage::disk('libris');
+        $known = MediaItem::query()->where('source', $source->value)->get(['path_hash', 'mtime', 'kind'])->keyBy('path_hash');
+        $disk = Storage::disk($source->disk());
 
-        foreach ($this->paths($root) as $path) {
+        foreach ($this->paths($root, $source) as $path) {
             try {
                 $mtime = (int) $disk->lastModified($path);
             } catch (FilesystemException $e) {
                 continue;
             }
 
-            $recorded = $known[MediaItem::hashPath($path)] ?? null;
+            $row = $known[MediaItem::hashPath($path, $source)] ?? null;
 
-            if ($recorded === null || (int) $recorded !== $mtime) {
+            if ($row === null
+                || (int) $row->mtime !== $mtime
+                || $row->kind !== MediaClassifier::classify($source, $path)->kind
+            ) {
                 yield $path;
             }
         }
@@ -142,24 +138,26 @@ class MediaIngestService
     }// end changedPaths()
 
     /**
-     * Delete rows (and thumbnails) whose file no longer exists. Returns null,
-     * deleting nothing, when the library root has no directories at all: that is
-     * an unmounted or emptied library, not one that lost all its media, and
+     * Delete the source's rows (and thumbnails) whose file no longer exists. Returns
+     * null, deleting nothing, when the source's root has no directories at all: that
+     * is an unmounted or emptied library, not one that lost all its media, and
      * pruning would empty the gallery until the next run.
      */
-    public function prune(): ?int
+    public function prune(MediaSource $source = MediaSource::Library): ?int
     {
-        if (Storage::disk('libris')->directories('.') === []) {
-            Log::warning('[Media] The library has no directories; skipping prune');
+        $disk = Storage::disk($source->disk());
+
+        if ($disk->directories('.') === []) {
+            Log::warning("[Media] The {$source->value} library has no directories; skipping prune");
 
             return null;
         }
 
         $removed = 0;
 
-        MediaItem::query()->chunkById(200, function ($items) use (&$removed) {
+        MediaItem::query()->where('source', $source->value)->chunkById(200, function ($items) use (&$removed, $disk) {
             foreach ($items as $item) {
-                if (Storage::disk('libris')->missing($item->path)) {
+                if ($disk->missing($item->path)) {
                     if ($item->thumbnail) {
                         Storage::disk('thumbnails')->delete($item->thumbnail);
                     }
@@ -187,10 +185,12 @@ class MediaIngestService
 
     }// end clean()
 
-    private function makeThumbnail(ParseImageService $parser, string $path): ?string
+    private function makeThumbnail(ParserService $parser, string $path, MediaSource $source): ?string
     {
         try {
-            $name = md5($path).'.png';
+            // Library names are the bare path hash (shared with the PDF thumbnails); the
+            // maps tree is hashed apart so equal relative paths don't share a file.
+            $name = md5($source === MediaSource::Library ? $path : $source->value.':'.$path).'.png';
 
             // put() returns false rather than throwing unless the disk sets `throw`.
             if (! Storage::disk('thumbnails')->put($name, $parser->generateDocThumbnail()->getImageBlob())) {

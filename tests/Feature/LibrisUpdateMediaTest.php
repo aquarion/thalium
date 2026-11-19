@@ -7,6 +7,7 @@ use App\Libris\LibrisInterface;
 use App\Models\MediaItem;
 use App\Service\Media\MediaIngestService;
 use App\Service\Media\MediaKind;
+use App\Service\Media\MediaSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -28,9 +29,9 @@ class LibrisUpdateMediaTest extends TestCase
 
     private function putFiles(): void
     {
-        Storage::disk('libris')->put('SysA/Maps/a.png', $this->png(1, 1));
+        Storage::disk('libris')->put('SysA/Pictures/a.png', $this->png(1, 1));
         Storage::disk('libris')->put('SysA/Ambience/d.mp3', 'x');
-        Storage::disk('libris')->put('SysB/Maps/e.png', $this->png(1, 1));
+        Storage::disk('libris')->put('SysB/Pictures/e.png', $this->png(1, 1));
         Storage::disk('libris')->put('SysA/b.pdf', '%PDF');
         Storage::disk('libris')->put('.thalium/c.png', $this->png(1, 1));
     }
@@ -56,7 +57,7 @@ class LibrisUpdateMediaTest extends TestCase
         $this->artisan('libris:update_media')->assertSuccessful();
 
         $this->assertSame(
-            ['ScanFile <SysA/Ambience/d.mp3>', 'ScanFile <SysA/Maps/a.png>', 'ScanFile <SysB/Maps/e.png>'],
+            ['ScanFile <SysA/Ambience/d.mp3>', 'ScanFile <SysA/Pictures/a.png>', 'ScanFile <SysB/Pictures/e.png>'],
             $this->pushedPaths()
         );
     }
@@ -66,8 +67,8 @@ class LibrisUpdateMediaTest extends TestCase
         Queue::fake();
         $this->putFiles();
         $service = new MediaIngestService;
-        $service->ingest('SysA/Maps/a.png');
-        $service->ingest('SysB/Maps/e.png');
+        $service->ingest('SysA/Pictures/a.png');
+        $service->ingest('SysB/Pictures/e.png');
 
         $this->artisan('libris:update_media')->assertSuccessful();
 
@@ -81,15 +82,15 @@ class LibrisUpdateMediaTest extends TestCase
 
         $this->artisan('libris:update_media', ['--start' => 'SysB'])->assertSuccessful();
 
-        $this->assertSame(['ScanFile <SysB/Maps/e.png>'], $this->pushedPaths());
+        $this->assertSame(['ScanFile <SysB/Pictures/e.png>'], $this->pushedPaths());
     }
 
     public function test_foreground_ingests_and_prunes(): void
     {
         $this->putFiles();
         MediaItem::create([
-            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
-            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+            'path' => 'SysA/Pictures/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Pictures'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
         ]);
 
         $this->artisan('libris:update_media', ['--foreground' => true])
@@ -98,7 +99,7 @@ class LibrisUpdateMediaTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(3, MediaItem::count());
-        $this->assertNull(MediaItem::where('path', 'SysA/Maps/stale.png')->first());
+        $this->assertNull(MediaItem::where('path', 'SysA/Pictures/stale.png')->first());
 
         $this->artisan('libris:update_media', ['--foreground' => true])
             ->expectsOutputToContain('Added 0, updated 0, unchanged 3');
@@ -124,8 +125,8 @@ class LibrisUpdateMediaTest extends TestCase
     public function test_pruning_is_skipped_with_a_warning_when_the_library_looks_empty(): void
     {
         MediaItem::create([
-            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
-            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+            'path' => 'SysA/Pictures/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Pictures'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
         ]);
 
         $this->artisan('libris:update_media', ['--foreground' => true])
@@ -148,8 +149,8 @@ class LibrisUpdateMediaTest extends TestCase
         $this->fakeLibris();
         $this->putFiles();
         MediaItem::create([
-            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
-            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+            'path' => 'SysA/Pictures/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Pictures'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
         ]);
 
         $this->artisan('libris:update')
@@ -164,8 +165,8 @@ class LibrisUpdateMediaTest extends TestCase
         Queue::fake();
         $this->fakeLibris();
         MediaItem::create([
-            'path' => 'SysA/Maps/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
-            'tags' => ['Maps'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
+            'path' => 'SysA/Pictures/stale.png', 'kind' => MediaKind::Art, 'system' => 'SysA',
+            'tags' => ['Pictures'], 'title' => 'stale', 'mtime' => 1, 'size' => 1,
         ]);
 
         $this->artisan('libris:update')
@@ -178,5 +179,42 @@ class LibrisUpdateMediaTest extends TestCase
     public function test_is_scheduled_hourly(): void
     {
         $this->artisan('schedule:list')->expectsOutputToContain('libris:update_media');
+    }
+
+    public function test_update_media_ingests_the_maps_tree(): void
+    {
+        Storage::fake('maps');
+        config(['filesystems.disks.maps.root' => Storage::disk('maps')->path('')]);
+        Storage::disk('libris')->put('Sys/Pictures/keep.png', $this->png(1, 1));
+        Storage::disk('maps')->put('BattleMats/Day/a.png', $this->png(1, 1));
+        Storage::disk('maps')->put('BattleMats/b.zip', 'x');
+
+        $this->artisan('libris:update_media', ['--foreground' => true])->assertSuccessful();
+
+        $item = MediaItem::where('path', 'BattleMats/Day/a.png')->first();
+        $this->assertSame(MediaSource::Maps, $item->source);
+        $this->assertSame(2, MediaItem::count());
+    }
+
+    public function test_update_media_skips_an_unconfigured_maps_source(): void
+    {
+        config(['filesystems.disks.maps.root' => null]);
+        $this->putFiles();
+
+        $this->artisan('libris:update_media', ['--foreground' => true])->assertSuccessful();
+
+        $this->assertSame(0, MediaItem::where('source', 'maps')->count());
+        $this->assertSame(3, MediaItem::count());
+    }
+
+    public function test_an_empty_maps_root_does_not_fail_the_run_or_touch_library_rows(): void
+    {
+        Storage::fake('maps');
+        config(['filesystems.disks.maps.root' => Storage::disk('maps')->path('')]);
+        $this->putFiles();
+
+        $this->artisan('libris:update_media', ['--foreground' => true])->assertSuccessful();
+
+        $this->assertSame(3, MediaItem::count());
     }
 }
