@@ -23,7 +23,7 @@ class HorizonEnvironmentsTest extends TestCase
         foreach (config('horizon.environments') as $environment => $supervisors) {
             $this->assertNotEmpty($supervisors, "No Horizon supervisors for [$environment]");
 
-            $queues = array_merge(...array_map(fn (array $supervisor) => (array) $supervisor['queue'], $supervisors));
+            $queues = array_merge(...array_column($supervisors, 'queue'));
 
             $this->assertContains('default', $queues, "[$environment] does not work the default queue");
             $this->assertGreaterThan(
