@@ -67,25 +67,34 @@ class ScanFile implements ShouldQueue
 
         Log::info('[Scanfile] Hello '.$this->filename);
 
-        Redis::funnel('ScanFile')->limit(5)->then(
-            function () {
-                try {
-                    $this->libris->scanFile($this->filename, $this->source);
-                } catch (\Exception $e) {
-                    Log::info('[Scanfile] Caught Exception');
-                    $this->fail($e);
+        // A worker outlives its jobs, and parsing a PDF (PDFBoxService) caps the whole process
+        // at 120 seconds of CPU. Left armed it kills the worker later, in its own loop. Horizon's
+        // job timeout is what supervises a job, so clear the cap before and after each one.
+        set_time_limit(0);
 
-                    return;
+        try {
+            Redis::funnel('ScanFile')->limit(5)->then(
+                function () {
+                    try {
+                        $this->libris->scanFile($this->filename, $this->source);
+                    } catch (\Exception $e) {
+                        Log::info('[Scanfile] Caught Exception');
+                        $this->fail($e);
+
+                        return;
+                    }
+                },
+                function () {
+                    $release = (60 + rand(0, 20));
+                    // Could not obtain lock...
+                    Log::debug('[Scanfile] '.$this->filename.' bounced '.$release);
+
+                    return $this->release($release);
                 }
-            },
-            function () {
-                $release = (60 + rand(0, 20));
-                // Could not obtain lock...
-                Log::debug('[Scanfile] '.$this->filename.' bounced '.$release);
-
-                return $this->release($release);
-            }
-        );
+            );
+        } finally {
+            set_time_limit(0);
+        }
 
         // Log::debug("[ScanFile] Bye ".$this->filename);
 
